@@ -11,15 +11,22 @@ class ErrorEmbed(Embed):
             title = 'Error :('
 
         super().__init__(
-            type = 'rich',
-            colour = Colour.red(),
-            title = title,
-            description = message,
+            type='rich',
+            colour=Colour.red(),
+            title=title,
+            description=message,
             *args, **kwargs
         )
 
 
 def pretty_list(items):
 
-    format_item = lambda item: f"     ● {item.capitalize()}"
-    return '\n'.join(map(format_item, items))
+    format_item = lambda item: f"● {item.capitalize()}"
+    items = map(format_item, items)
+    lst = ''
+    for item in items:
+        if len(lst) + len(item) > 2040:
+            lst += '\n ● ...'
+            break
+        lst += '\n' + item
+    return lst
