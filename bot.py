@@ -17,11 +17,14 @@ async def info(ctx):
         title = "Psychotropic",
     )
     embed.set_image(url=AVATAR_URL)
-    embed.add_field(name="Commands", value=
-            ">info"
-            "\n>factsheet [drug]")
-    embed.add_field(name="Data providers", value=
-            "TripSit (https://tripsit.me/)")
+    embed.add_field(
+        name="Help",
+        value="Type >help to display help page."
+    )
+    embed.add_field(
+        name="Data providers",
+        value="TripSit (https://tripsit.me/)"
+    )
     embed.set_footer(
         text="Psychotropic was carefully trained by xyzt_",
         icon_url=AUTHOR_URL
