@@ -9,6 +9,7 @@ bot = commands.Bot(command_prefix='>', description="A bot built for harm reducti
 
 @bot.command(name='info', aliases=('psycho', 'psychotropic'))
 async def info(ctx):
+
     """Display various informations about the bot"""
 
     embed = Embed(
@@ -23,7 +24,10 @@ async def info(ctx):
     )
     embed.add_field(
         name="Data providers",
-        value="TripSit (https://tripsit.me/)"
+        value=(
+            "TripSit (https://tripsit.me/)"
+            "\nPubMed (https://www.ncbi.nlm.nih.gov/pmc/)"
+        )
     )
     embed.set_footer(
         text="Psychotropic was carefully trained by xyzt_",
@@ -34,6 +38,7 @@ async def info(ctx):
 
 @bot.event
 async def on_ready():
+    
     print(f"Logged in as {bot.user.name} ({bot.user.id}).")
     await bot.change_presence(activity=Activity(name="Wandering"))
 

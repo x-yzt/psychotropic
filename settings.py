@@ -3,7 +3,8 @@ from os import getenv
 
 
 EXTENSIONS = [
-    'cogs.factsheets'
+    'cogs.factsheets',
+    'cogs.science'
 ]
 
 COLOUR = Colour.from_rgb(86, 126, 255)

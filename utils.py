@@ -19,9 +19,13 @@ class ErrorEmbed(Embed):
         )
 
 
-def pretty_list(items):
+def pretty_list(items, capitalize=True):
 
-    format_item = lambda item: f"● {item.capitalize()}"
+    if capitalize:
+        format_item = lambda item: f"● {item.capitalize()}"
+    else:
+        format_item = lambda item: f"● {item}"
+    
     items = map(format_item, items)
     lst = ''
     for item in items:

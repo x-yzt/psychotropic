@@ -19,7 +19,7 @@ class TripSitEmbed(Embed):
         )
 
 
-class FactsheetsCog(Cog, name='Factsheets'):
+class FactsheetsCog(Cog, name='Drug factsheets module'):
     
     def __init__(self, bot):
         
@@ -34,38 +34,6 @@ class FactsheetsCog(Cog, name='Factsheets'):
                 params={'name': drug.lower()}
             )
         return json.loads(r.text)
-
-
-    @command(name='articles', aliases=('papers', 'publications', 'sources'))
-    async def papers(self, ctx, drug: str):
-
-        """Display scientific publications about a certain drug."""
-
-        data = await self.load_ts_data(drug)
-
-        if data['err']:
-            embed = ErrorEmbed(f"Can't find drug {drug}")
-        
-        else:
-            data = data['data'][0]
-
-            articles_text = list(chain(*data['sources'].values()))
-            articles = []
-            for text in articles_text:
-                name, url = text.split(' - ')
-                if len(name) > 122:
-                    name = name[:120] + '...'
-                articles.append(name + ' - ' + url)
-
-            embed = TripSitEmbed(
-                type = 'rich',
-                colour = COLOUR,
-                title = "Articles about " + data['pretty_name'],
-                description = pretty_list(articles),
-                url = f"http://drugs.tripsit.me/{drug.lower()}#references"
-            )
-
-        await ctx.send(embed=embed)
 
     
     @command(name='factsheet', aliases=('facts',))
