@@ -36,7 +36,7 @@ class FactsheetsCog(Cog, name='Drug factsheets module'):
         return json.loads(r.text)
 
     
-    @command(name='factsheet', aliases=('facts',))
+    @command(name='factsheet', aliases=('facts', 'drug'))
     async def factsheet(self, ctx, drug: str):
         
         """Display a short factsheet concerning a certain drug"""
