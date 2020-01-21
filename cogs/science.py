@@ -1,8 +1,9 @@
 import json
 import httpx
+import asyncio
 from discord import Embed
 from discord.ext.commands import command, Cog
-from settings import COLOUR, COMPOUNDS_DESCRIPTION_PROVIDERS
+from settings import COLOUR, COMPOUNDS_DESCRIPTION_PROVIDERS, HTTP_COOLDOWN
 from utils import pretty_list, ErrorEmbed
 
 
@@ -45,29 +46,35 @@ class ScienceCog(Cog, name='Scientific module'):
 
         query = ' '.join(query)
 
-        async with httpx.AsyncClient() as client:
-            r = await client.get(
-                "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi",
-                params={
-                    'retmode': 'json',
-                    'db': 'pmc',
-                    'sort': 'relevance',
-                    'term': f'{query} AND Open Access[Filter]'
-                }
-            )
+        try:
+            async with httpx.AsyncClient() as client:
+                r = await client.get(
+                    "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi",
+                    params={
+                        'retmode': 'json',
+                        'db': 'pmc',
+                        'sort': 'relevance',
+                        'term': f'{query} AND Open Access[Filter]'
+                    }
+                )
+                await asyncio.sleep(HTTP_COOLDOWN)
 
-            data = json.loads(r.text)['esearchresult']
-            count = data['count']
-            ids = data['idlist']
+                data = json.loads(r.text)['esearchresult']
+                count = data['count']
+                ids = data['idlist']
 
-            r = await client.get(
-                "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi",
-                params={
-                    'retmode': 'json',
-                    'db': 'pmc',
-                    'id': ','.join(ids)
-                }
-            )
+                r = await client.get(
+                    "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi",
+                    params={
+                        'retmode': 'json',
+                        'db': 'pmc',
+                        'id': ','.join(ids)
+                    }
+                )
+        
+        except httpx.exceptions.ConnectionClosed:
+            await ctx.send(embed=ErrorEmbed("Can't connect to PubChem servers"))
+            return
 
         data = json.loads(r.text)['result']
 
@@ -106,9 +113,11 @@ class ScienceCog(Cog, name='Scientific module'):
                 url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/{substance}"
 
                 r_syn = await client.get(url + "/synonyms/TXT")
+                await asyncio.sleep(.1)
                 r_desc = await client.get(url + "/description/JSON")
+                await asyncio.sleep(.1)
                 r_prop = await client.get(url + "/property/MolecularFormula,MolecularWeight,IUPACName,HBondDonorCount,HBondAcceptorCount,Complexity/JSON")
-        
+
         except httpx.exceptions.ConnectionClosed:
             await ctx.send(embed=ErrorEmbed("Can't connect to PubChem servers"))
             return

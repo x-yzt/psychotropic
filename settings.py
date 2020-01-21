@@ -12,6 +12,8 @@ COMPOUNDS_DESCRIPTION_PROVIDERS = (
     "CAMEO Chemicals"
 )
 
+HTTP_COOLDOWN = .1 # Delay between HTTP requests in seconds
+
 COLOUR = Colour.from_rgb(86, 126, 255)
 
 AVATAR_URL = "https://cdn.discordapp.com/avatars/665177975053877259/0532c68773e3b586d503498a6a670f7b.png?size=512"
