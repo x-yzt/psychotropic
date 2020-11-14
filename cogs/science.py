@@ -1,11 +1,10 @@
 import json
 import httpx
 import asyncio
-from discord import Embed
 from discord.ext.commands import command, Cog
-from settings import COLOUR, COMPOUNDS_DESCRIPTION_PROVIDERS, HTTP_COOLDOWN
 from embeds import DefaultEmbed, ErrorEmbed
 from utils import pretty_list
+import settings
 
 
 class PubMedEmbed(DefaultEmbed):
@@ -33,10 +32,15 @@ class PubChemEmbed(DefaultEmbed):
 
 
 class ScienceCog(Cog, name='Scientific module'):
+
+    entrez_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
+    pug_url = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/"
     
     def __init__(self, bot):
         
         self.bot = bot
+        self.entrez_client = httpx.AsyncClient(base_url=self.entrez_url)
+        self.pug_client = httpx.AsyncClient(base_url=self.pug_url)
 
     
     @command(name='articles', aliases=('papers', 'publications'))
@@ -48,9 +52,9 @@ class ScienceCog(Cog, name='Scientific module'):
         query = ' '.join(query)
 
         try:
-            async with httpx.AsyncClient() as client:
+            async with self.entrez_client as client:
                 r = await client.get(
-                    "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi",
+                    "esearch.fcgi",
                     params = {
                         'retmode': 'json',
                         'db': 'pmc',
@@ -58,27 +62,26 @@ class ScienceCog(Cog, name='Scientific module'):
                         'term': f'{query} AND Open Access[Filter]'
                     }
                 )
-                await asyncio.sleep(HTTP_COOLDOWN)
+                await asyncio.sleep(settings.HTTP_COOLDOWN)
 
                 data = json.loads(r.text)['esearchresult']
                 count = data['count']
                 ids = data['idlist']
 
                 r = await client.get(
-                    "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi",
-                    params={
+                    "esummary.fcgi",
+                    params = {
                         'retmode': 'json',
                         'db': 'pmc',
                         'id': ','.join(ids)
                     }
                 )
-        
-        except httpx.RequestError:
+            
+        except httpx.RequestError as e:
             await ctx.send(embed=ErrorEmbed("Can't connect to PubChem servers"))
             return
 
         data = json.loads(r.text)['result']
-
         articles = []
 
         for uid, art_data in data.items():
@@ -107,15 +110,14 @@ class ScienceCog(Cog, name='Scientific module'):
         """Display general information about a given chemical substance or compound.
         Aliases names are supported."""
 
+        url = self.pug_url + substance
         try:
-            async with httpx.AsyncClient() as client:
-                url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/{substance}"
-
-                r_syn = await client.get(url + "/synonyms/TXT")
-                await asyncio.sleep(.1)
-                r_desc = await client.get(url + "/description/JSON")
-                await asyncio.sleep(.1)
-                r_prop = await client.get(url + "/property/MolecularFormula,MolecularWeight,IUPACName,HBondDonorCount,HBondAcceptorCount,Complexity/JSON")
+            async with self.pug_client as client:
+                r_syn = await client.get(f"{substance}/synonyms/TXT")
+                await asyncio.sleep(settings.HTTP_COOLDOWN)
+                r_desc = await client.get(f"{substance}/description/JSON")
+                await asyncio.sleep(settings.HTTP_COOLDOWN)
+                r_prop = await client.get(f"{substance}/property/MolecularFormula,MolecularWeight,IUPACName,HBondDonorCount,HBondAcceptorCount,Complexity/JSON")
 
         except httpx.RequestError:
             await ctx.send(embed=ErrorEmbed("Can't connect to PubChem servers"))
@@ -132,7 +134,7 @@ class ScienceCog(Cog, name='Scientific module'):
             description = descriptions[1]['Description'] # Default value
         except IndexError:
             description = "No description avalaible 🤔"
-        for provider in COMPOUNDS_DESCRIPTION_PROVIDERS:
+        for provider in settings.COMPOUNDS_DESCRIPTION_PROVIDERS:
             for desc in descriptions:
                 try:
                     if provider.lower() in desc['DescriptionSourceName'].lower():
