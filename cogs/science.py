@@ -72,7 +72,7 @@ class ScienceCog(Cog, name='Scientific module'):
                     }
                 )
         
-        except httpx.exceptions.ConnectionClosed:
+        except httpx.RequestError:
             await ctx.send(embed=ErrorEmbed("Can't connect to PubChem servers"))
             return
 
@@ -118,7 +118,7 @@ class ScienceCog(Cog, name='Scientific module'):
                 await asyncio.sleep(.1)
                 r_prop = await client.get(url + "/property/MolecularFormula,MolecularWeight,IUPACName,HBondDonorCount,HBondAcceptorCount,Complexity/JSON")
 
-        except httpx.exceptions.ConnectionClosed:
+        except httpx.RequestError:
             await ctx.send(embed=ErrorEmbed("Can't connect to PubChem servers"))
             return
         
