@@ -3,7 +3,8 @@ import httpx
 from itertools import chain
 from discord import Embed
 from discord.ext.commands import command, Cog
-from utils import ErrorEmbed, pretty_list
+from embeds import ErrorEmbed
+from utils import pretty_list
 from settings import COLOUR
 
 

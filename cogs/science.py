@@ -4,7 +4,8 @@ import asyncio
 from discord import Embed
 from discord.ext.commands import command, Cog
 from settings import COLOUR, COMPOUNDS_DESCRIPTION_PROVIDERS, HTTP_COOLDOWN
-from utils import pretty_list, ErrorEmbed
+from embeds import ErrorEmbed
+from utils import pretty_list
 
 
 class PubMedEmbed(Embed):
