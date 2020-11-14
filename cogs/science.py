@@ -4,31 +4,31 @@ import asyncio
 from discord import Embed
 from discord.ext.commands import command, Cog
 from settings import COLOUR, COMPOUNDS_DESCRIPTION_PROVIDERS, HTTP_COOLDOWN
-from embeds import ErrorEmbed
+from embeds import DefaultEmbed, ErrorEmbed
 from utils import pretty_list
 
 
-class PubMedEmbed(Embed):
+class PubMedEmbed(DefaultEmbed):
     
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
         self.set_author(
-            name="NCBI / PubMed",
-            url="https://www.ncbi.nlm.nih.gov/pmc/",
-            icon_url="https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/US-NLM-NCBI-Logo.svg/1200px-US-NLM-NCBI-Logo.svg.png"
+            name = "NCBI / PubMed",
+            url = "https://www.ncbi.nlm.nih.gov/pmc/",
+            icon_url = "https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/US-NLM-NCBI-Logo.svg/1200px-US-NLM-NCBI-Logo.svg.png"
         )
 
 
-class PubChemEmbed(Embed):
+class PubChemEmbed(DefaultEmbed):
     
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
         self.set_author(
-            name="PubChem",
-            url="https://pubchem.ncbi.nlm.nih.gov/",
-            icon_url=""
+            name = "PubChem",
+            url = "https://pubchem.ncbi.nlm.nih.gov/",
+            icon_url = "https://pubchemblog.files.wordpress.com/2019/12/pubchem_splash.png?w=200"
         )
 
 
@@ -51,7 +51,7 @@ class ScienceCog(Cog, name='Scientific module'):
             async with httpx.AsyncClient() as client:
                 r = await client.get(
                     "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi",
-                    params={
+                    params = {
                         'retmode': 'json',
                         'db': 'pmc',
                         'sort': 'relevance',
@@ -94,8 +94,6 @@ class ScienceCog(Cog, name='Scientific module'):
                 articles.append(f"*{title}* (🗓 {date})\n🌎 {url}")
         
         embed = PubMedEmbed(
-            type = 'rich',
-            colour = COLOUR,
             title = "Most revelant articles about " + query,
             description = pretty_list(articles, capitalize=False)
         )
@@ -154,8 +152,6 @@ class ScienceCog(Cog, name='Scientific module'):
         schem_url = url + "/PNG"
         
         embed = PubChemEmbed(
-            type = 'rich',
-            colour = COLOUR,
             title = "Substance information: " + synonyms[0].capitalize(),
             description = description
         )

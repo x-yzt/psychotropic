@@ -3,20 +3,20 @@ import httpx
 from itertools import chain
 from discord import Embed
 from discord.ext.commands import command, Cog
-from embeds import ErrorEmbed
+from embeds import DefaultEmbed, ErrorEmbed
 from utils import pretty_list
 from settings import COLOUR
 
 
-class TripSitEmbed(Embed):
+class TripSitEmbed(DefaultEmbed):
     
     def __init__(self, *args, **kwargs):
         
         super().__init__(*args, **kwargs)
         self.set_author(
-            name="TripSit",
-            url="https://tripsit.me/",
-            icon_url="https://cdn.discordapp.com/attachments/665208722372427782/665223281032560680/Vojr95_q_400x4001.png"
+            name = "TripSit",
+            url = "https://tripsit.me/",
+            icon_url = "https://cdn.discordapp.com/attachments/665208722372427782/665223281032560680/Vojr95_q_400x4001.png"
         )
 
 
@@ -32,7 +32,7 @@ class FactsheetsCog(Cog, name='Drug factsheets module'):
         async with httpx.AsyncClient() as client:
             r = await client.get(
                 "http://tripbot.tripsit.me/api/tripsit/getDrug",
-                params={'name': drug.lower()}
+                params = {'name': drug.lower()}
             )
         return json.loads(r.text)
 
@@ -50,16 +50,14 @@ class FactsheetsCog(Cog, name='Drug factsheets module'):
         else:
             data = data['data'][0]
             embed = TripSitEmbed(
-                type = 'rich',
-                colour = COLOUR,
                 title = "Drug factsheet: " + data['pretty_name'],
                 description = data['properties']['summary'],
                 url = "http://drugs.tripsit.me/" + drug.lower()
             )
             embed.add_field(
-                name="⏲ Duration",
-                value=data['properties']['duration'],
-                inline=False
+                name = "⏲ Duration",
+                value = data['properties']['duration'],
+                inline = False
             )
 
             try:
@@ -67,8 +65,8 @@ class FactsheetsCog(Cog, name='Drug factsheets module'):
             except KeyError:
                 effects = "No data :c"
             embed.add_field(
-                name="✨ Effects",
-                value=effects
+                name = "✨ Effects",
+                value = effects
             )
 
             try:
@@ -76,8 +74,8 @@ class FactsheetsCog(Cog, name='Drug factsheets module'):
             except KeyError:
                 categories = "None"
             embed.add_field(
-                name="📚 Categories",
-                value=categories
+                name = "📚 Categories",
+                value = categories
             )
 
         await ctx.send(embed=embed)
