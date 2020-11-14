@@ -1,15 +1,16 @@
 def pretty_list(items, capitalize=True):
 
-    if capitalize:
-        format_item = lambda item: f"● {item.capitalize()}"
-    else:
-        format_item = lambda item: f"● {item}"
-    
-    items = map(format_item, items)
-    lst = ''
+    lst, chars = [], 0
     for item in items:
-        if len(lst) + len(item) > 2040:
-            lst += '\n ● ...'
+        item = item.strip()
+        if not item:
+            continue
+        if capitalize:
+            item = item.capitalize()
+        
+        chars += len(item)
+        if chars > 2040:
+            lst.append("● ...")
             break
-        lst += '\n' + item
-    return lst
+        lst.append(f"● {item}")
+    return '\n'.join(lst)
