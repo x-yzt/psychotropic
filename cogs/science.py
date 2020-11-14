@@ -6,6 +6,15 @@ from utils import pretty_list
 import settings
 
 
+def request_error_message(func):
+    async def inner(self, ctx, *args, **kwargs):
+        try:
+            return await func(self, ctx, *args, **kwargs)
+        except httpx.RequestError as e:
+            await ctx.send(embed=ErrorEmbed("Can't connect to PubChem servers"))
+    return inner
+
+    
 class PubMedEmbed(DefaultEmbed):
     
     def __init__(self, **kwargs):
@@ -41,8 +50,9 @@ class ScienceCog(Cog, name='Scientific module'):
         self.entrez_client = httpx.AsyncClient(base_url=self.entrez_url)
         self.pug_client = httpx.AsyncClient(base_url=self.pug_url)
 
-    
+        
     @command(name='articles', aliases=('papers', 'publications'))
+    @request_error_message
     async def articles(self, ctx, *query):
 
         """Display most revelant scientific publications about a certain drug or substance.
@@ -50,35 +60,29 @@ class ScienceCog(Cog, name='Scientific module'):
 
         query = ' '.join(query)
 
-        try:
-            async with self.entrez_client as client:
-                r = await client.get(
-                    "esearch.fcgi",
-                    params = {
-                        'retmode': 'json',
-                        'db': 'pmc',
-                        'sort': 'relevance',
-                        'term': f'{query} AND Open Access[Filter]'
-                    }
-                )
-                await asyncio.sleep(settings.HTTP_COOLDOWN)
+        async with self.entrez_client as client:
+            r = await client.get(
+                "esearch.fcgi",
+                params = {
+                    'retmode': 'json',
+                    'db': 'pmc',
+                    'sort': 'relevance',
+                    'term': f'{query} AND Open Access[Filter]'
+                }
+            )
+            await asyncio.sleep(settings.HTTP_COOLDOWN)
 
-                data = r.json()['esearchresult']
-                count = data['count']
-                ids = data['idlist']
-
-                r = await client.get(
-                    "esummary.fcgi",
-                    params = {
-                        'retmode': 'json',
-                        'db': 'pmc',
-                        'id': ','.join(ids)
-                    }
-                )
-            
-        except httpx.RequestError as e:
-            await ctx.send(embed=ErrorEmbed("Can't connect to PubChem servers"))
-            return
+            data = r.json()['esearchresult']
+            count = data['count']
+            ids = data['idlist']
+            r = await client.get(
+                "esummary.fcgi",
+                params = {
+                    'retmode': 'json',
+                    'db': 'pmc',
+                    'id': ','.join(ids)
+                }
+            )
 
         data = r.json()['result']
         articles = []
@@ -102,25 +106,20 @@ class ScienceCog(Cog, name='Scientific module'):
 
         await ctx.send(embed=embed)
     
-    	
+    
     @command(name='substance', aliases=('compound',))
+    @request_error_message
     async def substance(self, ctx, substance: str):
 
         """Display general information about a given chemical substance or compound.
         Aliases names are supported."""
 
-        url = self.pug_url + substance
-        try:
-            async with self.pug_client as client:
-                r_syn = await client.get(f"{substance}/synonyms/TXT")
-                await asyncio.sleep(settings.HTTP_COOLDOWN)
-                r_desc = await client.get(f"{substance}/description/JSON")
-                await asyncio.sleep(settings.HTTP_COOLDOWN)
-                r_prop = await client.get(f"{substance}/property/MolecularFormula,MolecularWeight,IUPACName,HBondDonorCount,HBondAcceptorCount,Complexity/JSON")
-
-        except httpx.RequestError:
-            await ctx.send(embed=ErrorEmbed("Can't connect to PubChem servers"))
-            return
+        async with self.pug_client as client:
+            r_syn = await client.get(f"{substance}/synonyms/TXT")
+            await asyncio.sleep(settings.HTTP_COOLDOWN)
+            r_desc = await client.get(f"{substance}/description/JSON")
+            await asyncio.sleep(settings.HTTP_COOLDOWN)
+            r_prop = await client.get(f"{substance}/property/MolecularFormula,MolecularWeight,IUPACName,HBondDonorCount,HBondAcceptorCount,Complexity/JSON")
         
         if r_syn.status_code == 404:
             await ctx.send(embed=ErrorEmbed(f"Can't find substance {substance}"))
@@ -150,7 +149,7 @@ class ScienceCog(Cog, name='Scientific module'):
         h_bond_acceptors = properties['HBondAcceptorCount']
         complexity = properties['Complexity']
 
-        schem_url = url + "/PNG"
+        schem_url = f"{self.pug_url}{substance}/PNG"
         
         embed = PubChemEmbed(
             title = "Substance information: " + synonyms[0].capitalize(),
@@ -198,22 +197,16 @@ class ScienceCog(Cog, name='Scientific module'):
             await ctx.send(embed=ErrorEmbed(f"Invalid mode {mode}", "Try with `2d` or `3d`."))
             return
         
-        try:
-            async with self.pug_client as client:
-                r_syn = await client.get(f"{substance}/synonyms/TXT")
-                await asyncio.sleep(settings.HTTP_COOLDOWN)
-                r_prop = await client.get(f"{substance}/property/MolecularFormula,IUPACName/JSON")
-
-        except httpx.RequestError:
-            await ctx.send(embed=ErrorEmbed("Can't connect to PubChem servers"))
-            return
+        async with self.pug_client as client:
+            r_syn = await client.get(f"{substance}/synonyms/TXT")
+            await asyncio.sleep(settings.HTTP_COOLDOWN)
+            r_prop = await client.get(f"{substance}/property/MolecularFormula,IUPACName/JSON")
         
         if r_syn.status_code == 404:
             await ctx.send(embed=ErrorEmbed(f"Can't find substance {substance}"))
             return
         
         synonyms = r_syn.text.split('\n')
-        
         properties = r_prop.json()['PropertyTable']['Properties'][0]
         formula = properties['MolecularFormula']
         iupac_name = properties['IUPACName']
