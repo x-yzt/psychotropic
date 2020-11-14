@@ -1,4 +1,3 @@
-import json
 import httpx
 import asyncio
 from discord.ext.commands import command, Cog
@@ -64,7 +63,7 @@ class ScienceCog(Cog, name='Scientific module'):
                 )
                 await asyncio.sleep(settings.HTTP_COOLDOWN)
 
-                data = json.loads(r.text)['esearchresult']
+                data = r.json()['esearchresult']
                 count = data['count']
                 ids = data['idlist']
 
@@ -81,7 +80,7 @@ class ScienceCog(Cog, name='Scientific module'):
             await ctx.send(embed=ErrorEmbed("Can't connect to PubChem servers"))
             return
 
-        data = json.loads(r.text)['result']
+        data = r.json()['result']
         articles = []
 
         for uid, art_data in data.items():
@@ -129,7 +128,7 @@ class ScienceCog(Cog, name='Scientific module'):
         
         synonyms = r_syn.text.split('\n')
 
-        descriptions = json.loads(r_desc.text)['InformationList']['Information']
+        descriptions = r_desc.json()['InformationList']['Information']
         try:
             description = descriptions[1]['Description'] # Default value
         except IndexError:
@@ -143,7 +142,7 @@ class ScienceCog(Cog, name='Scientific module'):
                 except KeyError:
                     pass
         
-        properties = json.loads(r_prop.text)['PropertyTable']['Properties'][0]
+        properties = r_prop.json()['PropertyTable']['Properties'][0]
         formula = properties['MolecularFormula']
         weight = properties['MolecularWeight']
         iupac_name = properties['IUPACName']
@@ -215,7 +214,7 @@ class ScienceCog(Cog, name='Scientific module'):
         
         synonyms = r_syn.text.split('\n')
         
-        properties = json.loads(r_prop.text)['PropertyTable']['Properties'][0]
+        properties = r_prop.json()['PropertyTable']['Properties'][0]
         formula = properties['MolecularFormula']
         iupac_name = properties['IUPACName']
 
