@@ -187,4 +187,55 @@ class ScienceCog(Cog, name='Scientific module'):
         await ctx.send(embed=embed)
 
 
+    @command(name='schem', aliases=('schematic', 'draw'))
+    async def schem(self, ctx, substance: str, mode: str='2d'):
+
+        """Display the shematic of a given chemical substance or compound.
+        2D and 3D modes are supported."""
+
+        mode = mode.lower()
+
+        if mode not in ('2d', '3d'):
+            await ctx.send(embed=ErrorEmbed(f"Invalid mode {mode}", "Try with `2d` or `3d`."))
+            return
+        
+        try:
+            async with self.pug_client as client:
+                r_syn = await client.get(f"{substance}/synonyms/TXT")
+                await asyncio.sleep(settings.HTTP_COOLDOWN)
+                r_prop = await client.get(f"{substance}/property/MolecularFormula,IUPACName/JSON")
+
+        except httpx.RequestError:
+            await ctx.send(embed=ErrorEmbed("Can't connect to PubChem servers"))
+            return
+        
+        if r_syn.status_code == 404:
+            await ctx.send(embed=ErrorEmbed(f"Can't find substance {substance}"))
+            return
+        
+        synonyms = r_syn.text.split('\n')
+        
+        properties = json.loads(r_prop.text)['PropertyTable']['Properties'][0]
+        formula = properties['MolecularFormula']
+        iupac_name = properties['IUPACName']
+
+        schem_url = f"{self.pug_url}{substance}/PNG?record_type={mode}"
+        
+        embed = PubChemEmbed(
+            title = "Substance schematic: " + synonyms[0].capitalize(),
+        )
+        embed.add_field(
+            name = "🔬 IUPAC Name",
+            value = iupac_name.capitalize(),
+            inline = False
+        )
+        embed.add_field(
+            name = "🧪 Formula",
+            value = f"**{formula}**",
+        )
+        embed.set_image(url=schem_url)
+
+        await ctx.send(embed=embed)
+
+
 setup = lambda bot: bot.add_cog(ScienceCog(bot))
