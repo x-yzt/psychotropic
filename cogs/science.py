@@ -246,7 +246,6 @@ class ScienceCog(Cog, name='Scientific module'):
     @command(name='solubility', aliases=('solub',))
     async def solubility(self, ctx, substance: str):
         async with LoadingEmbedContextManager(ctx):
-            # await asyncio.sleep(1)
             data = await dsstox.get_properties(substance)
 
             embed = EPAEmbed(
@@ -274,16 +273,23 @@ class ScienceCog(Cog, name='Scientific module'):
                     .replace('^3', '³')
                     if prop_data['unit'] else ''
                 )
+
                 prop_text = ''
                 for method in ('predicted', 'experimental'):
                     try:
                         vals = prop_data[method]
                     except KeyError:
                         continue
-                    if vals['count'] == 1:
-                        prop_text += f"**{vals['mean']:.3n} {unit}**\n*({method})*\n"
+                    val = vals.get('median', vals['mean'])
+                    count = vals['count']
+                    low, up = vals['min'], vals['max']
+                    
+                    prop_text += f"**{val:.3n} {unit}**"
+                    if count == 1:
+                        prop_text += f"\n*({method})*\n"
                     else:
-                        prop_text += f"**{vals['median']:.3n} {unit}**, {vals['min']:.3n}\xa0~\xa0{vals['max']:.3n}\n*({method}, {vals['count']} sources)*\n"
+                        prop_text += f", {low:.3n}\xa0~\xa0{up:.3n}\n*({method}, {count} sources)*\n"
+                
                 embed.add_field(
                     name = prop_data['name'],
                     value = prop_text.strip(),
