@@ -12,7 +12,7 @@ COMPOUNDS_DESCRIPTION_PROVIDERS = (
     "CAMEO Chemicals"
 )
 
-HTTP_COOLDOWN = .1 # Delay between HTTP requests in seconds
+HTTP_COOLDOWN = .2 # Delay between HTTP requests in seconds
 
 COLOUR = Colour.from_rgb(86, 126, 255)
 
