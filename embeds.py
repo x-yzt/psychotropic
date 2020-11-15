@@ -5,7 +5,6 @@ import settings
 class DefaultEmbed(Embed):
 
     def __init__(self, **kwargs):
-
         super().__init__(
             type = 'rich',
             colour = settings.COLOUR,
@@ -16,7 +15,6 @@ class DefaultEmbed(Embed):
 class ErrorEmbed(Embed):
 
     def __init__(self, msg=None, info=None, **kwargs):
-
         msg = msg or "Something went wrong"
         super().__init__(
             type = 'rich',
@@ -25,3 +23,22 @@ class ErrorEmbed(Embed):
             description = info,
             **kwargs
         )
+
+
+loading_embed = DefaultEmbed(
+    title = "Computing...",
+    description = "Relax, it will just take a year or two"
+)
+
+
+class LoadingEmbedContextManager:
+   
+    def __init__(self, ctx):
+        self.ctx = ctx
+    
+    async def __aenter__(self):
+        self.msg = await self.ctx.send(embed=loading_embed)
+        return self.msg
+    
+    async def __aexit__(self, type, value, traceback):
+        await self.msg.delete()

@@ -1,8 +1,9 @@
 import httpx
 import asyncio
 from discord.ext.commands import command, Cog
-from embeds import DefaultEmbed, ErrorEmbed
+from embeds import DefaultEmbed, ErrorEmbed, LoadingEmbedContextManager
 from utils import pretty_list
+import dsstox
 import settings
 
 
@@ -36,6 +37,18 @@ class PubChemEmbed(DefaultEmbed):
             name = "PubChem",
             url = "https://pubchem.ncbi.nlm.nih.gov/",
             icon_url = "https://pubchemblog.files.wordpress.com/2019/12/pubchem_splash.png?w=200"
+        )
+
+
+class EPAEmbed(DefaultEmbed):
+
+    def __init__(self, **kwargs):
+
+        super().__init__(**kwargs)
+        self.set_author(
+            name = "EPA",
+            url = "https://www.epa.gov/",
+            icon_url = "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Seal_of_the_United_States_Environmental_Protection_Agency.svg/320px-Seal_of_the_United_States_Environmental_Protection_Agency.svg.png"
         )
 
 
@@ -228,6 +241,56 @@ class ScienceCog(Cog, name='Scientific module'):
         embed.set_image(url=schem_url)
 
         await ctx.send(embed=embed)
+    
+
+    @command(name='solubility', aliases=('solub',))
+    async def solubility(self, ctx, substance: str):
+        async with LoadingEmbedContextManager(ctx):
+            # await asyncio.sleep(1)
+            data = await dsstox.get_properties(substance)
+
+            embed = EPAEmbed(
+                title = f"Solubility information: {data['preferred_name']}",
+            )
+            embed.add_field(
+                name = "🧪 Formula",
+                value = f"**{data['mol_formula']}**",
+                inline = False
+            )
+            embed.add_field(
+                name = "🏋 Molar mass",
+                value = f"**{data['mol_weight']} g/mol**",
+                inline = False
+            )
+
+            for prop_name in ('mv', 'density', 'wsol', 'logkow', 'logkoa',
+                    'polarizability', 'mr', 'mp', 'viscosity'):
+                try:
+                    prop_data = data['physprop'][prop_name]
+                except KeyError:
+                    continue
+                unit = (prop_data['unit']
+                    .replace('^2', '²')
+                    .replace('^3', '³')
+                    if prop_data['unit'] else ''
+                )
+                prop_text = ''
+                for method in ('predicted', 'experimental'):
+                    try:
+                        vals = prop_data[method]
+                    except KeyError:
+                        continue
+                    if vals['count'] == 1:
+                        prop_text += f"**{vals['mean']:.3n} {unit}**\n*({method})*\n"
+                    else:
+                        prop_text += f"**{vals['median']:.3n} {unit}**, {vals['min']:.3n}\xa0~\xa0{vals['max']:.3n}\n*({method}, {vals['count']} sources)*\n"
+                embed.add_field(
+                    name = prop_data['name'],
+                    value = prop_text.strip(),
+                    inline = True
+                )
+
+            await ctx.send(embed=embed)
 
 
 setup = lambda bot: bot.add_cog(ScienceCog(bot))
