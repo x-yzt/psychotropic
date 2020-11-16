@@ -244,7 +244,7 @@ class ScienceCog(Cog, name='Scientific module'):
                     
                     vals = [
                         r['value'] for r in method_data['raw_data']
-                        if r['model_name'] not in settings.DSSTOX_EXCLUDED_MODELS
+                        if r.get('model_name') not in settings.DSSTOX_EXCLUDED_MODELS
                     ]
                     if not vals:
                         continue
