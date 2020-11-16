@@ -280,23 +280,33 @@ class ScienceCog(Cog, name='Scientific module'):
 
                 prop_text = ''
                 for method in ('predicted', 'experimental'):
-                        r['value'] for r in method_data['raw_data']
+                    method_data = prop_data.get(method)
+                    if not method_data:
                         continue
-                    val = vals.get('median', vals['mean'])
-                    count = vals['count']
-                    low, up = vals['min'], vals['max']
                     
-                    prop_text += f"**{val:.3n} {unit}**"
+                    vals = [
+                        r['value'] for r in method_data['raw_data']
+                        if r['model_name'] not in settings.DSSTOX_EXCLUDED_MODELS
+                    ]
+                    if not vals:
+                        continue
+                   
+                    count = len(vals)
+                    avg = sum(vals) / count
+                    low, up = min(vals), max(vals)
+                    
+                    prop_text += f"**{avg:.3n} {unit}**"
                     if count == 1:
                         prop_text += f"\n*({method})*\n"
                     else:
                         prop_text += f", {low:.3n}\xa0~\xa0{up:.3n}\n*({method}, {count} sources)*\n"
                 
-                embed.add_field(
-                    name = prop_data['name'],
-                    value = prop_text.strip(),
-                    inline = True
-                )
+                if prop_text:
+                    embed.add_field(
+                        name = prop_data['name'],
+                        value = prop_text.strip(),
+                        inline = True
+                    )
 
             await ctx.send(embed=embed)
 
