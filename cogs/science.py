@@ -3,7 +3,7 @@ import asyncio
 from discord.ext.commands import command, Cog
 from embeds import ErrorEmbed, LoadingEmbedContextManager, send_embed_on_exception
 from providers import PubMedEmbed, PubChemEmbed, EPAEmbed
-from utils import pretty_list
+from utils import pretty_list, setup_cog
 import dsstox
 import settings
 
@@ -269,4 +269,4 @@ class ScienceCog(Cog, name='Scientific module'):
             await ctx.send(embed=embed)
 
 
-setup = lambda bot: bot.add_cog(ScienceCog(bot))
+setup = setup_cog(ScienceCog)

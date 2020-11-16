@@ -5,7 +5,7 @@ from discord import Embed
 from discord.ext.commands import command, Cog
 from embeds import ErrorEmbed
 from providers import TripSitEmbed
-from utils import pretty_list
+from utils import pretty_list, setup_cog
 from settings import COLOUR
 
 
@@ -70,4 +70,4 @@ class FactsheetsCog(Cog, name='Drug factsheets module'):
         await ctx.send(embed=embed)
 
 
-setup = lambda bot: bot.add_cog(FactsheetsCog(bot))
+setup = setup_cog(FactsheetsCog)

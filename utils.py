@@ -14,3 +14,10 @@ def pretty_list(items, capitalize=True):
             break
         lst.append(f"● {item}")
     return '\n'.join(lst)
+
+
+def setup_cog(cog):
+    """Helper function to be used in cog modules. Usage:
+    setup = setup_cog(MyAwesomeCog)
+    """
+    return lambda bot: bot.add_cog(cog(bot))
