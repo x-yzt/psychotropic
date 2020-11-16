@@ -1,21 +1,13 @@
 import httpx
 import asyncio
 from discord.ext.commands import command, Cog
-from embeds import DefaultEmbed, ErrorEmbed, LoadingEmbedContextManager
+from embeds import (DefaultEmbed, ErrorEmbed, LoadingEmbedContextManager, 
+    send_embed_on_exception)
 from utils import pretty_list
 import dsstox
 import settings
 
 
-def request_error_message(func):
-    async def inner(self, ctx, *args, **kwargs):
-        try:
-            return await func(self, ctx, *args, **kwargs)
-        except httpx.RequestError as e:
-            await ctx.send(embed=ErrorEmbed("Can't connect to PubChem servers"))
-    return inner
-
-    
 class PubMedEmbed(DefaultEmbed):
     
     def __init__(self, **kwargs):
@@ -65,7 +57,7 @@ class ScienceCog(Cog, name='Scientific module'):
 
         
     @command(name='articles', aliases=('papers', 'publications'))
-    @request_error_message
+    @send_embed_on_exception
     async def articles(self, ctx, *query):
 
         """Display most revelant scientific publications about a certain drug or substance.
@@ -121,7 +113,7 @@ class ScienceCog(Cog, name='Scientific module'):
     
     
     @command(name='substance', aliases=('compound',))
-    @request_error_message
+    @send_embed_on_exception
     async def substance(self, ctx, substance: str):
 
         """Display general information about a given chemical substance or compound.
@@ -199,6 +191,7 @@ class ScienceCog(Cog, name='Scientific module'):
 
 
     @command(name='schem', aliases=('schematic', 'draw'))
+    @send_embed_on_exception
     async def schem(self, ctx, substance: str, mode: str='2d'):
 
         """Display the shematic of a given chemical substance or compound.
@@ -244,12 +237,13 @@ class ScienceCog(Cog, name='Scientific module'):
     
 
     @command(name='solubility', aliases=('solub',))
+    @send_embed_on_exception
     async def solubility(self, ctx, substance: str):
         async with LoadingEmbedContextManager(ctx):
             data = await dsstox.get_properties(substance)
 
             if not data:
-                await ctx.send(embed=ErrorEmbed("Can't find substance {substance}"))
+                await ctx.send(embed=ErrorEmbed(f"Can't find substance {substance}"))
                 return
             
             embed = EPAEmbed(

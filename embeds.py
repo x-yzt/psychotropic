@@ -1,3 +1,4 @@
+import httpx
 from discord import Embed, Colour
 import settings
 
@@ -42,3 +43,22 @@ class LoadingEmbedContextManager:
     
     async def __aexit__(self, type, value, traceback):
         await self.msg.delete()
+
+
+def send_embed_on_exception(func):
+    """Decorator to send an embed if errors occurs during command
+    processing. Exceptions are still raised after the embed is sent.
+    """
+    async def inner(self, ctx, *args, **kwargs):
+        try:
+            return await func(self, ctx, *args, **kwargs)
+        except httpx.RequestError:
+            await ctx.send(embed=ErrorEmbed(
+                "Can't connect to external server",
+                "Maybe you should retry later?")
+            )
+            raise
+        except Exception:
+            await ctx.send(embed=ErrorEmbed())
+            raise
+    return inner
