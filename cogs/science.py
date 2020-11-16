@@ -276,9 +276,7 @@ class ScienceCog(Cog, name='Scientific module'):
 
                 prop_text = ''
                 for method in ('predicted', 'experimental'):
-                    try:
-                        vals = prop_data[method]
-                    except KeyError:
+                        r['value'] for r in method_data['raw_data']
                         continue
                     val = vals.get('median', vals['mean'])
                     count = vals['count']

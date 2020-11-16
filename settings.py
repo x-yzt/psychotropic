@@ -12,6 +12,12 @@ COMPOUNDS_DESCRIPTION_PROVIDERS = (
     "CAMEO Chemicals"
 )
 
+# Entries to be excluded from the DSSTox results.
+# This is matched against the `model_name` field DSSTox provides.
+DSSTOX_EXCLUDED_MODELS = (
+    'ACD_Sol',
+)
+
 HTTP_COOLDOWN = .2 # Delay between HTTP requests in seconds
 
 COLOUR = Colour.from_rgb(86, 126, 255)
