@@ -1,47 +1,11 @@
 import httpx
 import asyncio
 from discord.ext.commands import command, Cog
-from embeds import (DefaultEmbed, ErrorEmbed, LoadingEmbedContextManager, 
-    send_embed_on_exception)
+from embeds import ErrorEmbed, LoadingEmbedContextManager, send_embed_on_exception
+from providers import PubMedEmbed, PubChemEmbed, EPAEmbed
 from utils import pretty_list
 import dsstox
 import settings
-
-
-class PubMedEmbed(DefaultEmbed):
-    
-    def __init__(self, **kwargs):
-        
-        super().__init__(**kwargs)
-        self.set_author(
-            name = "NCBI / PubMed",
-            url = "https://www.ncbi.nlm.nih.gov/pmc/",
-            icon_url = "https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/US-NLM-NCBI-Logo.svg/1200px-US-NLM-NCBI-Logo.svg.png"
-        )
-
-
-class PubChemEmbed(DefaultEmbed):
-    
-    def __init__(self, **kwargs):
-        
-        super().__init__(**kwargs)
-        self.set_author(
-            name = "PubChem",
-            url = "https://pubchem.ncbi.nlm.nih.gov/",
-            icon_url = "https://pubchemblog.files.wordpress.com/2019/12/pubchem_splash.png?w=200"
-        )
-
-
-class EPAEmbed(DefaultEmbed):
-
-    def __init__(self, **kwargs):
-
-        super().__init__(**kwargs)
-        self.set_author(
-            name = "EPA",
-            url = "https://www.epa.gov/",
-            icon_url = "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Seal_of_the_United_States_Environmental_Protection_Agency.svg/320px-Seal_of_the_United_States_Environmental_Protection_Agency.svg.png"
-        )
 
 
 class ScienceCog(Cog, name='Scientific module'):

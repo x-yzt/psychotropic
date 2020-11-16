@@ -3,21 +3,10 @@ import httpx
 from itertools import chain
 from discord import Embed
 from discord.ext.commands import command, Cog
-from embeds import DefaultEmbed, ErrorEmbed
+from embeds import ErrorEmbed
+from providers import TripSitEmbed
 from utils import pretty_list
 from settings import COLOUR
-
-
-class TripSitEmbed(DefaultEmbed):
-    
-    def __init__(self, *args, **kwargs):
-        
-        super().__init__(*args, **kwargs)
-        self.set_author(
-            name = "TripSit",
-            url = "https://tripsit.me/",
-            icon_url = "https://cdn.discordapp.com/attachments/665208722372427782/665223281032560680/Vojr95_q_400x4001.png"
-        )
 
 
 class FactsheetsCog(Cog, name='Drug factsheets module'):
