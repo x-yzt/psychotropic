@@ -248,6 +248,10 @@ class ScienceCog(Cog, name='Scientific module'):
         async with LoadingEmbedContextManager(ctx):
             data = await dsstox.get_properties(substance)
 
+            if not data:
+                await ctx.send(embed=ErrorEmbed("Can't find substance {substance}"))
+                return
+            
             embed = EPAEmbed(
                 title = f"Solubility information: {data['preferred_name']}",
             )
