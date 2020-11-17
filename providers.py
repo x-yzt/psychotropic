@@ -3,7 +3,7 @@ from embeds import DefaultEmbed
 
 PROVIDERS = {
     'pubmed': {
-        'name': "PubMed / NCBI",
+        'name': "PubMed",
         'url': "https://www.ncbi.nlm.nih.gov/pmc/",
         'icon_url': "https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/US-NLM-NCBI-Logo.svg/1200px-US-NLM-NCBI-Logo.svg.png"
     },
