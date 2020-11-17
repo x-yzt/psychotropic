@@ -1,5 +1,5 @@
 import sys
-from discord import Embed, Activity
+from discord import Embed, Activity, ActivityType
 from discord.ext import commands
 from providers import PROVIDERS
 from settings import *
@@ -27,7 +27,7 @@ async def info(ctx):
     embed.add_field(
         name = "Data providers",
         value = '\n'.join([
-            "{name}, ({url})".format(**provider)
+            "{name} ({url})".format(**provider)
             for provider in PROVIDERS.values()
         ])
     )
@@ -40,9 +40,11 @@ async def info(ctx):
 
 @bot.event
 async def on_ready():
-    
     print(f"Logged in as {bot.user.name} ({bot.user.id}).")
-    await bot.change_presence(activity=Activity(name="Wandering"))
+    await bot.change_presence(activity=Activity(
+        type = ActivityType.listening,
+        name = "Sister Morphine"
+    ))
 
 
 if __name__ == '__main__':
