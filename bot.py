@@ -1,17 +1,19 @@
 import sys
 from discord import Embed, Activity
 from discord.ext import commands
+from providers import PROVIDERS
 from settings import *
 
 
-bot = commands.Bot(command_prefix='>', description="A bot built for harm reduction.")
+bot = commands.Bot(
+    command_prefix = '>',
+    description = "A bot built for chemistry and harm reduction."
+)
 
 
 @bot.command(name='info', aliases=('psycho', 'psychotropic'))
 async def info(ctx):
-
     """Display various informations about the bot"""
-
     embed = Embed(
         type = 'rich',
         colour = COLOUR,
@@ -19,19 +21,19 @@ async def info(ctx):
     )
     embed.set_image(url=AVATAR_URL)
     embed.add_field(
-        name="Help",
-        value="Type >help to display help page."
+        name = "Help",
+        value = "Type >help to display help page."
     )
     embed.add_field(
-        name="Data providers",
-        value=(
-            "TripSit (https://tripsit.me/)"
-            "\nPubMed (https://www.ncbi.nlm.nih.gov/pmc/)"
-        )
+        name = "Data providers",
+        value = '\n'.join([
+            "{name}, ({url})".format(**provider)
+            for provider in PROVIDERS.values()
+        ])
     )
     embed.set_footer(
-        text="Psychotropic was carefully trained by xyzt_",
-        icon_url=AUTHOR_URL
+        text = "Psychotropic was carefully trained by xyzt_",
+        icon_url = AUTHOR_URL
     )
     await ctx.send(embed=embed)
 
