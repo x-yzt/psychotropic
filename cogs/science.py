@@ -203,70 +203,74 @@ class ScienceCog(Cog, name='Scientific module'):
     @command(name='solubility', aliases=('solub',))
     @send_embed_on_exception
     async def solubility(self, ctx, substance: str):
+        """Display solubility-related properties about a given substance.
+        Multiple sources of experimental and predicted data are averaged to
+        improve result accuracy. Result ranges are provided when applicable."""
+        
         async with LoadingEmbedContextManager(ctx):
             data = await dsstox.get_properties(substance)
 
-            if not data:
-                await ctx.send(embed=ErrorEmbed(f"Can't find substance {substance}"))
-                return
-            
-            embed = EPAEmbed(
-                title = f"Solubility information: {data['preferred_name']}",
-            )
-            embed.add_field(
-                name = "🧪 Formula",
-                value = f"**{data['mol_formula']}**",
-                inline = False
-            )
-            embed.add_field(
-                name = "🏋 Molar mass",
-                value = f"**{data['mol_weight']} g/mol**",
-                inline = False
+        if not data:
+            await ctx.send(embed=ErrorEmbed(f"Can't find substance {substance}"))
+            return
+        
+        embed = EPAEmbed(
+            title = f"Solubility information: {data['preferred_name']}",
+        )
+        embed.add_field(
+            name = "🧪 Formula",
+            value = f"**{data['mol_formula']}**",
+            inline = False
+        )
+        embed.add_field(
+            name = "🏋 Molar mass",
+            value = f"**{data['mol_weight']} g/mol**",
+            inline = False
+        )
+
+        for prop_name in ('mv', 'density', 'wsol', 'logkow', 'logkoa',
+                'polarizability', 'mr', 'mp', 'viscosity'):
+            try:
+                prop_data = data['physprop'][prop_name]
+            except KeyError:
+                continue
+            unit = (prop_data['unit']
+                .replace('^2', '²')
+                .replace('^3', '³')
+                if prop_data['unit'] else ''
             )
 
-            for prop_name in ('mv', 'density', 'wsol', 'logkow', 'logkoa',
-                    'polarizability', 'mr', 'mp', 'viscosity'):
-                try:
-                    prop_data = data['physprop'][prop_name]
-                except KeyError:
+            prop_text = ''
+            for method in ('predicted', 'experimental'):
+                method_data = prop_data.get(method)
+                if not method_data:
                     continue
-                unit = (prop_data['unit']
-                    .replace('^2', '²')
-                    .replace('^3', '³')
-                    if prop_data['unit'] else ''
+                
+                vals = [
+                    r['value'] for r in method_data['raw_data']
+                    if r.get('model_name') not in settings.DSSTOX_EXCLUDED_MODELS
+                ]
+                if not vals:
+                    continue
+                
+                count = len(vals)
+                avg = sum(vals) / count
+                low, up = min(vals), max(vals)
+                
+                prop_text += f"**{avg:.3n} {unit}**"
+                if count == 1:
+                    prop_text += f"\n*({method})*\n"
+                else:
+                    prop_text += f", {low:.3n}\xa0~\xa0{up:.3n}\n*({method}, {count} sources)*\n"
+            
+            if prop_text:
+                embed.add_field(
+                    name = prop_data['name'],
+                    value = prop_text.strip(),
+                    inline = True
                 )
 
-                prop_text = ''
-                for method in ('predicted', 'experimental'):
-                    method_data = prop_data.get(method)
-                    if not method_data:
-                        continue
-                    
-                    vals = [
-                        r['value'] for r in method_data['raw_data']
-                        if r.get('model_name') not in settings.DSSTOX_EXCLUDED_MODELS
-                    ]
-                    if not vals:
-                        continue
-                   
-                    count = len(vals)
-                    avg = sum(vals) / count
-                    low, up = min(vals), max(vals)
-                    
-                    prop_text += f"**{avg:.3n} {unit}**"
-                    if count == 1:
-                        prop_text += f"\n*({method})*\n"
-                    else:
-                        prop_text += f", {low:.3n}\xa0~\xa0{up:.3n}\n*({method}, {count} sources)*\n"
-                
-                if prop_text:
-                    embed.add_field(
-                        name = prop_data['name'],
-                        value = prop_text.strip(),
-                        inline = True
-                    )
-
-            await ctx.send(embed=embed)
+        await ctx.send(embed=embed)
 
 
 setup = setup_cog(ScienceCog)
