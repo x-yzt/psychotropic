@@ -3,9 +3,9 @@ import json
 import httpx
 from discord.ext.commands import command, Cog
 
-from embeds import ErrorEmbed
-from providers import TripSitEmbed
-from utils import pretty_list, setup_cog
+from psychotropic.embeds import ErrorEmbed
+from psychotropic.providers import TripSitEmbed
+from psychotropic.utils import pretty_list, setup_cog
 
 
 class FactsheetsCog(Cog, name='Drug factsheets module'):

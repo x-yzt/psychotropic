@@ -1,1 +1,1 @@
-worker: python bot.py --log-file -
+worker: python -m psychotropic.bot --log-file -

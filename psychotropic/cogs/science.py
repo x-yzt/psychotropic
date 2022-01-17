@@ -3,11 +3,12 @@ import asyncio
 import httpx
 from discord.ext.commands import command, Cog
 
-import dsstox
-import settings
-from embeds import ErrorEmbed, LoadingEmbedContextManager, send_embed_on_exception
-from providers import PubChemEmbed, EPAEmbed
-from utils import pretty_list, setup_cog
+from psychotropic import dsstox
+from psychotropic import settings
+from psychotropic.embeds import (
+    ErrorEmbed, LoadingEmbedContextManager, send_embed_on_exception)
+from psychotropic.providers import PubChemEmbed, EPAEmbed
+from psychotropic.utils import pretty_list, setup_cog
 
 
 class ScienceCog(Cog, name='Scientific module'):

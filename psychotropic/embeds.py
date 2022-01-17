@@ -1,7 +1,7 @@
 import httpx
 from discord import Embed, Colour
 
-import settings
+from psychotropic import settings
 
 
 class DefaultEmbed(Embed):

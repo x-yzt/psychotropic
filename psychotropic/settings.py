@@ -4,8 +4,8 @@ from discord import Colour
 
 
 EXTENSIONS = [
-    'cogs.factsheets',
-    'cogs.science'
+    'psychotropic.cogs.factsheets',
+    'psychotropic.cogs.science'
 ]
 
 PREFIX = '>'
@@ -36,7 +36,7 @@ DSSTOX_EXCLUDED_MODELS = (
 
 
 try:
-    from localsettings import *
+    from psychotropic.localsettings import *
     print("Local settings module found, overriding production settings.")
 except ImportError:
     print("Using production settings.")

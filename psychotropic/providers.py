@@ -1,4 +1,4 @@
-from embeds import DefaultEmbed
+from psychotropic.embeds import DefaultEmbed
 
 
 PROVIDERS = {

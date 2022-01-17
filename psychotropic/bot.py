@@ -3,8 +3,8 @@ import sys
 from discord import Embed, Activity, ActivityType
 from discord.ext import commands
 
-import settings
-from providers import PROVIDERS
+from psychotropic import settings
+from psychotropic.providers import PROVIDERS
 
 
 bot = commands.Bot(
