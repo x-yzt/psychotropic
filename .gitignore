@@ -98,8 +98,6 @@ ENV/
 # mypy
 .mypy_cache/
 
-# local settings
+# local settings and databases
 localsettings.py
-
-# vsc
-.vscode
+scores.json
