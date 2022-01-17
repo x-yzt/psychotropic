@@ -1,5 +1,4 @@
 def pretty_list(items, capitalize=True):
-
     lst, chars = [], 0
     for item in items:
         item = item.strip()

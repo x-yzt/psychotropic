@@ -1,25 +1,27 @@
 import sys
+
 from discord import Embed, Activity, ActivityType
 from discord.ext import commands
+
+import settings
 from providers import PROVIDERS
-from settings import *
 
 
 bot = commands.Bot(
-    command_prefix = '>',
+    command_prefix = settings.PREFIX,
     description = "A bot built for chemistry and harm reduction."
 )
 
 
 @bot.command(name='info', aliases=('psycho', 'psychotropic'))
 async def info(ctx):
-    """Display various informations about the bot"""
+    """Display various informations about the bot."""
     embed = Embed(
         type = 'rich',
-        colour = COLOUR,
+        colour = settings.COLOUR,
         title = "Psychotropic",
     )
-    embed.set_image(url=AVATAR_URL)
+    embed.set_image(url=settings.AVATAR_URL)
     embed.add_field(
         name = "Help",
         value = "Type >help to display help page."
@@ -33,7 +35,7 @@ async def info(ctx):
     )
     embed.set_footer(
         text = "Psychotropic was carefully trained by xyzt_",
-        icon_url = AUTHOR_URL
+        icon_url = settings.AUTHOR_URL
     )
     await ctx.send(embed=embed)
 
@@ -48,11 +50,11 @@ async def on_ready():
 
 
 if __name__ == '__main__':
-    for extension in EXTENSIONS:
+    for extension in settings.EXTENSIONS:
         try:
             bot.load_extension(extension)
         except Exception as e:
             print(f"Failed to load extension {extension}.")
             print(sys.exc_info())
 
-    bot.run(DISCORD_TOKEN)
+    bot.run(settings.DISCORD_TOKEN)

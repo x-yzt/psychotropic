@@ -27,8 +27,7 @@ PROVIDERS = {
 
 def provider_embed_factory(provider_id):
     """Factory method intended to generate provider embed classes."""
-    class ProviderEmbed(DefaultEmbed):
-        
+    class ProviderEmbed(DefaultEmbed):    
         def __init__(self, **kwargs):
             super().__init__(**kwargs)
             provider_data = PROVIDERS[provider_id]

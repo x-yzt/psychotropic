@@ -1,10 +1,10 @@
 import httpx
 from discord import Embed, Colour
+
 import settings
 
 
 class DefaultEmbed(Embed):
-
     def __init__(self, **kwargs):
         super().__init__(
             type = 'rich',
@@ -14,7 +14,6 @@ class DefaultEmbed(Embed):
 
 
 class ErrorEmbed(Embed):
-
     def __init__(self, msg=None, info=None, **kwargs):
         msg = msg or "Something went wrong"
         super().__init__(

@@ -1,32 +1,31 @@
-import httpx
 import asyncio
+
+import httpx
 from discord.ext.commands import command, Cog
+
+import dsstox
+import settings
 from embeds import ErrorEmbed, LoadingEmbedContextManager, send_embed_on_exception
 from providers import PubMedEmbed, PubChemEmbed, EPAEmbed
 from utils import pretty_list, setup_cog
-import dsstox
-import settings
 
 
 class ScienceCog(Cog, name='Scientific module'):
-
     entrez_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
     pug_url = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/"
     
     def __init__(self, bot):
-        
         self.bot = bot
         self.entrez_client = httpx.AsyncClient(base_url=self.entrez_url)
         self.pug_client = httpx.AsyncClient(base_url=self.pug_url)
 
-        
     @command(name='articles', aliases=('papers', 'publications'))
     @send_embed_on_exception
     async def articles(self, ctx, *query):
-
-        """Display most revelant scientific publications about a certain drug or substance.
-        Additional queries and keywords are supported to refine the search."""
-
+        """Display most revelant scientific publications about a certain drug
+        or substance. Additional queries and keywords are supported to refine
+        the search.
+        """
         query = ' '.join(query)
 
         async with self.entrez_client as client:
@@ -75,14 +74,12 @@ class ScienceCog(Cog, name='Scientific module'):
 
         await ctx.send(embed=embed)
     
-    
     @command(name='substance', aliases=('compound',))
     @send_embed_on_exception
     async def substance(self, ctx, substance: str):
-
-        """Display general information about a given chemical substance or compound.
-        Aliases names are supported."""
-
+        """Display general information about a given chemical substance or
+        compound. Aliases names are supported.
+        """
         async with self.pug_client as client:
             r_syn = await client.get(f"{substance}/synonyms/TXT")
             await asyncio.sleep(settings.HTTP_COOLDOWN)
@@ -153,14 +150,12 @@ class ScienceCog(Cog, name='Scientific module'):
 
         await ctx.send(embed=embed)
 
-
     @command(name='schem', aliases=('schematic', 'draw'))
     @send_embed_on_exception
     async def schem(self, ctx, substance: str, mode: str='2d'):
-
         """Display the shematic of a given chemical substance or compound.
-        2D and 3D modes are supported."""
-
+        2D and 3D modes are supported.
+        """
         mode = mode.lower()
 
         if mode not in ('2d', '3d'):
@@ -199,14 +194,13 @@ class ScienceCog(Cog, name='Scientific module'):
 
         await ctx.send(embed=embed)
     
-
     @command(name='solubility', aliases=('solub',))
     @send_embed_on_exception
     async def solubility(self, ctx, substance: str):
         """Display solubility-related properties about a given substance.
         Multiple sources of experimental and predicted data are averaged to
-        improve result accuracy. Result ranges are provided when applicable."""
-        
+        improve result accuracy. Result ranges are provided when applicable.
+        """
         async with LoadingEmbedContextManager(ctx):
             data = await dsstox.get_properties(substance)
 

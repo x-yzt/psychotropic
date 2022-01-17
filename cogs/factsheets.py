@@ -1,23 +1,18 @@
 import json
+
 import httpx
-from itertools import chain
-from discord import Embed
 from discord.ext.commands import command, Cog
+
 from embeds import ErrorEmbed
 from providers import TripSitEmbed
 from utils import pretty_list, setup_cog
-from settings import COLOUR
 
 
 class FactsheetsCog(Cog, name='Drug factsheets module'):
-    
     def __init__(self, bot):
-        
         self.bot = bot
     
-
     async def load_ts_data(self, drug: str):
-
         async with httpx.AsyncClient() as client:
             r = await client.get(
                 "http://tripbot.tripsit.me/api/tripsit/getDrug",
@@ -25,12 +20,9 @@ class FactsheetsCog(Cog, name='Drug factsheets module'):
             )
         return json.loads(r.text)
 
-    
     @command(name='factsheet', aliases=('facts', 'drug'))
     async def factsheet(self, ctx, drug: str):
-        
-        """Display a short factsheet concerning a certain drug"""
-
+        """Display a short factsheet concerning a certain drug."""
         data = await self.load_ts_data(drug)
         
         if data['err']:
