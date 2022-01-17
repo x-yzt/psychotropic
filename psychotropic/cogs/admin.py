@@ -1,6 +1,5 @@
 import logging
 import sys
-from itertools import chain
 
 from discord.ext.commands import command, Cog, is_owner
 
