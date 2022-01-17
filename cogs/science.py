@@ -6,7 +6,7 @@ from discord.ext.commands import command, Cog
 import dsstox
 import settings
 from embeds import ErrorEmbed, LoadingEmbedContextManager, send_embed_on_exception
-from providers import PubMedEmbed, PubChemEmbed, EPAEmbed
+from providers import PubChemEmbed, EPAEmbed
 from utils import pretty_list, setup_cog
 
 
@@ -18,61 +18,6 @@ class ScienceCog(Cog, name='Scientific module'):
         self.bot = bot
         self.entrez_client = httpx.AsyncClient(base_url=self.entrez_url)
         self.pug_client = httpx.AsyncClient(base_url=self.pug_url)
-
-    @command(name='articles', aliases=('papers', 'publications'))
-    @send_embed_on_exception
-    async def articles(self, ctx, *query):
-        """Display most revelant scientific publications about a certain drug
-        or substance. Additional queries and keywords are supported to refine
-        the search.
-        """
-        query = ' '.join(query)
-
-        async with self.entrez_client as client:
-            r = await client.get(
-                "esearch.fcgi",
-                params = {
-                    'retmode': 'json',
-                    'db': 'pmc',
-                    'sort': 'relevance',
-                    'term': f'{query} AND Open Access[Filter]'
-                }
-            )
-            await asyncio.sleep(settings.HTTP_COOLDOWN)
-
-            data = r.json()['esearchresult']
-            count = data['count']
-            ids = data['idlist']
-            r = await client.get(
-                "esummary.fcgi",
-                params = {
-                    'retmode': 'json',
-                    'db': 'pmc',
-                    'id': ','.join(ids)
-                }
-            )
-
-        data = r.json()['result']
-        articles = []
-
-        for uid, art_data in data.items():
-            if uid != 'uids':
-                title = art_data['title']
-                date = art_data['pubdate']
-                source = art_data['source']
-                url = f"https://www.ncbi.nlm.nih.gov/pmc/articles/PMC{uid}/"
-                
-                if len(title) > 112:
-                    title = title[:110] + '...'
-
-                articles.append(f"*{title}* (🗓 {date})\n🌎 {url}")
-        
-        embed = PubMedEmbed(
-            title = "Most revelant articles about " + query,
-            description = pretty_list(articles, capitalize=False)
-        )
-
-        await ctx.send(embed=embed)
     
     @command(name='substance', aliases=('compound',))
     @send_embed_on_exception
