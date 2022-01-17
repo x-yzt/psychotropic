@@ -10,8 +10,9 @@ log = logging.getLogger(__name__)
 # General
 
 EXTENSIONS = [
+    'psychotropic.cogs.admin',
     'psychotropic.cogs.factsheets',
-    'psychotropic.cogs.science'
+    'psychotropic.cogs.science',
 ]
 
 PREFIX = '>'
@@ -31,7 +32,7 @@ DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
 
 COMPOUNDS_DESCRIPTION_PROVIDERS = (
     "NCI Thesaurus",
-    "CAMEO Chemicals"
+    "CAMEO Chemicals",
 )
 
 # Entries to be excluded from the DSSTox results.
