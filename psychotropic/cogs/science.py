@@ -13,7 +13,20 @@ from psychotropic.utils import pretty_list, setup_cog
 
 class ScienceCog(Cog, name='Scientific module'):
     entrez_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
+    
     pug_url = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/"
+    
+    dsstox_properties = (
+        'Water Solubility',
+        'LogKoa: Octanol-Air',
+        'LogKow: Octanol-Water',
+        'Melting Point',
+        'Molar Volume',
+        'Density',
+        'Molar Refractivity',
+        'Viscosity',
+        'Polarizability',
+    )
     
     def __init__(self, bot):
         self.bot = bot
@@ -148,47 +161,36 @@ class ScienceCog(Cog, name='Scientific module'):
         improve result accuracy. Result ranges are provided when applicable.
         """
         async with LoadingEmbedContextManager(ctx):
-            data = await dsstox.get_properties(substance)
-
-        if not data:
-            await ctx.send(embed=ErrorEmbed(f"Can't find substance {substance}"))
-            return
+            match = await dsstox.get_substance(substance)
+            if not match:
+                await ctx.send(embed=ErrorEmbed(
+                    f"Can't find substance {substance}"
+                ))
+                return
         
-        embed = EPAEmbed(
-            title = f"Solubility information: {data['preferred_name']}",
-        )
-        embed.add_field(
-            name = "🧪 Formula",
-            value = f"**{data['mol_formula']}**",
-            inline = False
-        )
-        embed.add_field(
-            name = "🏋 Molar mass",
-            value = f"**{data['mol_weight']} g/mol**",
-            inline = False
-        )
+            dsstox_id = match['dtxsid']
+            name = match['searchWord']
+            props = await dsstox.get_properties(dsstox_id)
 
-        for prop_name in ('mv', 'density', 'wsol', 'logkow', 'logkoa',
-                'polarizability', 'mr', 'mp', 'viscosity'):
-            try:
-                prop_data = data['physprop'][prop_name]
-            except KeyError:
+        embed = EPAEmbed(title = f"Solubility information: {name}")
+
+        props = props['data']
+        for prop in props:
+            prop_name = prop['name']
+            if prop_name not in self.dsstox_properties:
                 continue
-            unit = (prop_data['unit']
-                .replace('^2', '²')
-                .replace('^3', '³')
-                if prop_data['unit'] else ''
-            )
+                
+            unit = dsstox.format_units(prop['unit'])
 
             prop_text = ''
             for method in ('predicted', 'experimental'):
-                method_data = prop_data.get(method)
-                if not method_data:
+                results = prop[method]
+                if not results:
                     continue
                 
                 vals = [
-                    r['value'] for r in method_data['raw_data']
-                    if r.get('model_name') not in settings.DSSTOX_EXCLUDED_MODELS
+                    r['value'] for r in results['rawData']
+                    if r.get('modelName') not in settings.DSSTOX_EXCLUDED_MODELS
                 ]
                 if not vals:
                     continue
@@ -205,7 +207,7 @@ class ScienceCog(Cog, name='Scientific module'):
             
             if prop_text:
                 embed.add_field(
-                    name = prop_data['name'],
+                    name = prop_name,
                     value = prop_text.strip(),
                     inline = True
                 )
