@@ -33,7 +33,10 @@ loading_embed = DefaultEmbed(
 
 
 class LoadingEmbedContextManager:
-   
+    """Context manager to display a loading embed while inner code executes.
+    The loading embed will be removed as soon as the inner block finishes, even
+    if it raises an exception.
+    """
     def __init__(self, ctx):
         self.ctx = ctx
     
