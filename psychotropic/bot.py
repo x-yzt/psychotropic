@@ -1,3 +1,4 @@
+import logging
 import sys
 
 from discord import Embed, Activity, ActivityType
@@ -6,6 +7,8 @@ from discord.ext import commands
 from psychotropic import settings
 from psychotropic.providers import PROVIDERS
 
+
+log = logging.getLogger(__name__)
 
 bot = commands.Bot(
     command_prefix = settings.PREFIX,
@@ -42,7 +45,7 @@ async def info(ctx):
 
 @bot.event
 async def on_ready():
-    print(f"Logged in as {bot.user.name} ({bot.user.id}).")
+    log.info(f"Logged in as {bot.user.name} ({bot.user.id}).")
     await bot.change_presence(activity=Activity(
         type = ActivityType.listening,
         name = "Sister Morphine"
@@ -54,7 +57,7 @@ if __name__ == '__main__':
         try:
             bot.load_extension(extension)
         except Exception as e:
-            print(f"Failed to load extension {extension}.")
-            print(sys.exc_info())
+            log.error(f"Failed to load extension {extension}.")
+            log.error(sys.exc_info())
 
     bot.run(settings.DISCORD_TOKEN)

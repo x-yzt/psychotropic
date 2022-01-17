@@ -1,7 +1,13 @@
-from os import getenv
+import logging
+import os
 
 from discord import Colour
 
+
+log = logging.getLogger(__name__)
+
+
+# General
 
 EXTENSIONS = [
     'psychotropic.cogs.factsheets',
@@ -18,7 +24,7 @@ AVATAR_URL = "https://cdn.discordapp.com/avatars/665177975053877259/0532c68773e3
 
 AUTHOR_URL = "https://avatars.githubusercontent.com/u/62727704"
 
-DISCORD_TOKEN = getenv('DISCORD_TOKEN')
+DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
 
 
 # Science cog
@@ -37,6 +43,6 @@ DSSTOX_EXCLUDED_MODELS = (
 
 try:
     from psychotropic.localsettings import *
-    print("Local settings module found, overriding production settings.")
+    log.info("Local settings module found, overriding production settings.")
 except ImportError:
-    print("Using production settings.")
+    log.info("Using production settings.")
