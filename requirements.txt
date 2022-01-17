@@ -1,3 +1,2 @@
-beautifulsoup4==4.10.0
 discord.py==1.5.1
 httpx==0.16.1
