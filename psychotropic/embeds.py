@@ -31,6 +31,16 @@ loading_embed = DefaultEmbed(
 )
 
 
+def provider_embed_factory(provider):
+    """Factory method intended to generate provider embed classes."""
+    class ProviderEmbed(DefaultEmbed):    
+        def __init__(self, **kwargs):
+            super().__init__(**kwargs)
+            self.set_author(**provider)
+    
+    return ProviderEmbed
+
+
 class LoadingEmbedContextManager:
     """Context manager to display a loading embed while inner code executes.
     The loading embed will be removed as soon as the inner block finishes, even

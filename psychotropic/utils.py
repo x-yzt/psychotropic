@@ -1,5 +1,8 @@
+import asyncio as aio
 import unicodedata
 from random import sample
+
+import httpx
 
 
 def pretty_list(items, capitalize=True):
@@ -51,3 +54,22 @@ def unaccent(string):
 def shuffled(collection):
     """Not inplace equivalent to usual random.shuffle."""
     return sample(collection, len(collection))
+
+
+class ThrottledAsyncClient(httpx.AsyncClient):
+    """An `httpx.AsyncClient` with a rate limit on the `get` method."""
+    def __init__(self, *args, cooldown=0.1, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.cooldown = cooldown
+        self.semaphore = aio.BoundedSemaphore(1, loop=aio.get_event_loop())
+    
+    async def wait_and_release(self):
+        await aio.sleep(self.cooldown)
+        self.semaphore.release()
+
+    async def get(self, *args, **kwargs):
+        await self.semaphore.acquire()
+        
+        r = await super().get(*args, **kwargs)
+        aio.get_event_loop().create_task(self.wait_and_release())
+        return r

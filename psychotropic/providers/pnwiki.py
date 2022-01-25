@@ -62,5 +62,6 @@ async def get_substance(query):
 
     return r.json()
 
+
 def get_schematic_url(substance, width=500):
     return f'{PNWIKI_URL}thumb.php?f={substance}.svg&width={width}'

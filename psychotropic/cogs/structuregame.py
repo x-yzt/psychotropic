@@ -10,9 +10,9 @@ from random import choice
 from discord.ext.commands import Cog, group
 from discord.ext.tasks import loop
 
-from psychotropic import pnwiki
 from psychotropic.embeds import (DefaultEmbed, ErrorEmbed,
     LoadingEmbedContextManager)
+from psychotropic.providers import pnwiki
 from psychotropic.utils import (pretty_list, setup_cog, classproperty,
     unaccent, shuffled)
 

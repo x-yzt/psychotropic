@@ -1,4 +1,9 @@
-from psychotropic.embeds import DefaultEmbed
+import sys
+
+from psychotropic.embeds import provider_embed_factory
+
+
+module = sys.modules[__name__]
 
 
 PROVIDERS = {
@@ -30,18 +35,9 @@ PROVIDERS = {
 }
 
 
-def provider_embed_factory(provider_id):
-    """Factory method intended to generate provider embed classes."""
-    class ProviderEmbed(DefaultEmbed):    
-        def __init__(self, **kwargs):
-            super().__init__(**kwargs)
-            provider_data = PROVIDERS[provider_id]
-            self.set_author(**provider_data)
-    
-    return ProviderEmbed
+# Define an Embed subclass for each provider at module level
+for provider in PROVIDERS.values():
+    class_name = provider['name'] + 'Embed'
+    embed_class = provider_embed_factory(provider)
 
-
-PubMedEmbed = provider_embed_factory('pubmed')
-PubChemEmbed = provider_embed_factory('pubchem')
-EPAEmbed = provider_embed_factory('epa')
-TripSitEmbed = provider_embed_factory('tripsit')
+    setattr(module, class_name, embed_class)

@@ -1,10 +1,7 @@
-import json
-
-import httpx
 from discord.ext.commands import command, Cog
 
 from psychotropic.embeds import ErrorEmbed
-from psychotropic.providers import TripSitEmbed
+from psychotropic.providers import tripsit, TripSitEmbed
 from psychotropic.utils import pretty_list, setup_cog
 
 
@@ -12,18 +9,10 @@ class FactsheetsCog(Cog, name='Drug factsheets module'):
     def __init__(self, bot):
         self.bot = bot
     
-    async def load_ts_data(self, drug: str):
-        async with httpx.AsyncClient() as client:
-            r = await client.get(
-                "http://tripbot.tripsit.me/api/tripsit/getDrug",
-                params = {'name': drug.lower()}
-            )
-        return json.loads(r.text)
-
     @command(name='factsheet', aliases=('facts', 'drug'))
     async def factsheet(self, ctx, drug: str):
         """Display a short factsheet concerning a certain drug."""
-        data = await self.load_ts_data(drug)
+        data = await tripsit.get_drug(drug)
         
         if data['err']:
             embed = ErrorEmbed(f"Can't find drug {drug}")
@@ -33,7 +22,7 @@ class FactsheetsCog(Cog, name='Drug factsheets module'):
             embed = TripSitEmbed(
                 title = "Drug factsheet: " + data['pretty_name'],
                 description = data['properties']['summary'],
-                url = "http://drugs.tripsit.me/" + drug.lower()
+                url = tripsit.get_drug_url(drug)
             )
             embed.add_field(
                 name = "⏲ Duration",

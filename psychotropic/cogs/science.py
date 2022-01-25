@@ -1,22 +1,25 @@
-import asyncio
-
-import httpx
 from discord.ext.commands import command, Cog
 
-from psychotropic import dsstox
 from psychotropic import settings
-from psychotropic.embeds import (
-    ErrorEmbed, LoadingEmbedContextManager, send_embed_on_exception)
-from psychotropic.providers import PubChemEmbed, EPAEmbed
+from psychotropic.embeds import (ErrorEmbed, LoadingEmbedContextManager,
+    send_embed_on_exception)
+from psychotropic.providers import dsstox, pubchem, PubChemEmbed, EPAEmbed
 from psychotropic.utils import pretty_list, setup_cog
 
 
 class ScienceCog(Cog, name='Scientific module'):
-    entrez_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
-    
-    pug_url = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/"
-    
-    dsstox_properties = (
+    # PUG properties that will be shown in substance information embeds
+    DEFAULT_PROPERTIES = (
+        'MolecularFormula',
+        'MolecularWeight',
+        'IUPACName',
+        'HBondDonorCount',
+        'HBondAcceptorCount',
+        'Complexity',
+    )
+
+    # DSSTox propetries names that will be shown in solubility embeds    
+    DSSTOX_PROPERTIES = (
         'Water Solubility',
         'LogKoa: Octanol-Air',
         'LogKow: Octanol-Water',
@@ -30,8 +33,7 @@ class ScienceCog(Cog, name='Scientific module'):
     
     def __init__(self, bot):
         self.bot = bot
-        self.entrez_client = httpx.AsyncClient(base_url=self.entrez_url)
-        self.pug_client = httpx.AsyncClient(base_url=self.pug_url)
+        self.pug_client = pubchem.AsyncPUGClient()
     
     @command(name='substance', aliases=('compound',))
     @send_embed_on_exception
@@ -40,19 +42,15 @@ class ScienceCog(Cog, name='Scientific module'):
         compound. Aliases names are supported.
         """
         async with self.pug_client as client:
-            r_syn = await client.get(f"{substance}/synonyms/TXT")
-            await asyncio.sleep(settings.HTTP_COOLDOWN)
-            r_desc = await client.get(f"{substance}/description/JSON")
-            await asyncio.sleep(settings.HTTP_COOLDOWN)
-            r_prop = await client.get(f"{substance}/property/MolecularFormula,MolecularWeight,IUPACName,HBondDonorCount,HBondAcceptorCount,Complexity/JSON")
-        
-        if r_syn.status_code == 404:
-            await ctx.send(embed=ErrorEmbed(f"Can't find substance {substance}"))
-            return
-        
-        synonyms = r_syn.text.split('\n')
+            synonyms = await client.get_synonyms(substance)
+            descriptions = await client.get_descriptions(substance)
+            properties = await client.get_properties(substance, self.DEFAULT_PROPERTIES)
 
-        descriptions = r_desc.json()['InformationList']['Information']
+        if not synonyms:
+            await ctx.send(embed=ErrorEmbed(
+                f"Can't find substance {substance}"
+            ))
+        
         try:
             description = descriptions[1]['Description'] # Default value
         except IndexError:
@@ -66,7 +64,6 @@ class ScienceCog(Cog, name='Scientific module'):
                 except KeyError:
                     pass
         
-        properties = r_prop.json()['PropertyTable']['Properties'][0]
         formula = properties['MolecularFormula']
         weight = properties['MolecularWeight']
         iupac_name = properties['IUPACName']
@@ -74,7 +71,7 @@ class ScienceCog(Cog, name='Scientific module'):
         h_bond_acceptors = properties['HBondAcceptorCount']
         complexity = properties['Complexity']
 
-        schem_url = f"{self.pug_url}{substance}/PNG"
+        schem_url = pubchem.get_schematic_url(substance)
         
         embed = PubChemEmbed(
             title = "Substance information: " + synonyms[0].capitalize(),
@@ -118,24 +115,27 @@ class ScienceCog(Cog, name='Scientific module'):
         mode = mode.lower()
 
         if mode not in ('2d', '3d'):
-            await ctx.send(embed=ErrorEmbed(f"Invalid mode {mode}", "Try with `2d` or `3d`."))
+            await ctx.send(embed=ErrorEmbed(
+                f"Invalid mode {mode}", "Try with `2d` or `3d`."
+            ))
             return
         
         async with self.pug_client as client:
-            r_syn = await client.get(f"{substance}/synonyms/TXT")
-            await asyncio.sleep(settings.HTTP_COOLDOWN)
-            r_prop = await client.get(f"{substance}/property/MolecularFormula,IUPACName/JSON")
+            synonyms = await client.get_synonyms(substance)
+            properties = await client.get_properties(
+                substance, ('MolecularFormula','IUPACName')
+            )
         
-        if r_syn.status_code == 404:
-            await ctx.send(embed=ErrorEmbed(f"Can't find substance {substance}"))
+        if not synonyms:
+            await ctx.send(embed=ErrorEmbed(
+                f"Can't find substance {substance}"
+            ))
             return
         
-        synonyms = r_syn.text.split('\n')
-        properties = r_prop.json()['PropertyTable']['Properties'][0]
         formula = properties['MolecularFormula']
         iupac_name = properties['IUPACName']
 
-        schem_url = f"{self.pug_url}{substance}/PNG?record_type={mode}"
+        schem_url = pubchem.get_schematic_url(substance, mode)
         
         embed = PubChemEmbed(
             title = "Substance schematic: " + synonyms[0].capitalize(),
@@ -177,7 +177,7 @@ class ScienceCog(Cog, name='Scientific module'):
         props = props['data']
         for prop in props:
             prop_name = prop['name']
-            if prop_name not in self.dsstox_properties:
+            if prop_name not in self.DSSTOX_PROPERTIES:
                 continue
                 
             unit = dsstox.format_units(prop['unit'])
