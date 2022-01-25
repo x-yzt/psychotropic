@@ -21,6 +21,11 @@ PROVIDERS = {
         'name': "TripSit",
         'url': "https://tripsit.me/",
         'icon_url': "https://cdn.discordapp.com/attachments/665208722372427782/665223281032560680/Vojr95_q_400x4001.png"
+    },
+    'psychonautwiki': {
+        'name': "PsychonautWiki",
+        'url': "https://psychonautwiki.org/",
+        'icon_url': "https://psychonautwiki.org/eye.png"
     }
 }
 

@@ -41,6 +41,29 @@ A discord bot built for harm reduction.
 
     Display a short factsheet concerning a certain drug.
 
+### Structure Game module
+
+The *Structure Game* is a drug chemical structure guessing game. It is a
+complete rewrite of a proof of concept from Arli, thanks to them for sharing
+it! ✨
+
+- `>game start`:
+
+    Start a new Structure Game. The bot will pick a random molecule schematic,
+    and the first player to write its name in the chat will win.
+
+    A certain number of coins (🪙), corresponding to the number of letters
+    guessed will be awarded to the winner.
+
+- `>game end`:
+
+    End a running Structure Game. To end a game, you must either own it or have
+    permission to manage messages in the current channel.
+
+- `>game scores <page number>`:
+
+    Show a given page of the scoreboard.
+
 ## Running your own instance
 
 ### Installing
