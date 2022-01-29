@@ -262,7 +262,7 @@ class StructureGameCog(Cog, name='Structure Game module'):
         if game.is_correct(msg.content):
             time = running_game.time_since_start.total_seconds()
             running_game.end()
-            self.scoreboard[msg.author.id] += game.reward
+            self.scoreboard[str(msg.author.id)] += game.reward
 
             file = File(game.schematic, filename='schematic.png')
             embed = DefaultEmbed(
