@@ -1,5 +1,6 @@
 import logging
 import os
+from pathlib import Path
 
 from discord import Colour
 
@@ -15,6 +16,8 @@ EXTENSIONS = [
     'psychotropic.cogs.science',
     'psychotropic.cogs.structuregame',
 ]
+
+STORAGE_DIR = Path('storage')
 
 PREFIX = '>'
 

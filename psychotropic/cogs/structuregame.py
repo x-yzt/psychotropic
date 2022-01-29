@@ -7,45 +7,103 @@ from itertools import chain, count, islice
 from operator import itemgetter
 from random import choice
 
+from discord import File
 from discord.ext.commands import Cog, group
 from discord.ext.tasks import loop
 
+from psychotropic import settings
 from psychotropic.embeds import (DefaultEmbed, ErrorEmbed,
     LoadingEmbedContextManager)
 from psychotropic.providers import pnwiki
-from psychotropic.utils import (pretty_list, setup_cog, classproperty,
-    unaccent, shuffled)
+from psychotropic.utils import pretty_list, setup_cog, unaccent, shuffled
 
 
 log = logging.getLogger(__name__)
 
 
+class SchematicRegistry:
+    def __init__(self, path):
+        path.mkdir(parents=True, exist_ok=True)
+
+        self.path = path
+        self.schematics = []
+    
+    async def fetch_schematics(self):
+        """Populate the list of all substances to play the game with from
+        PNWiki."""
+        log.info("Populating cache with schematics from PNWiki...")
+
+        for substance in await pnwiki.list_substances():
+            image_path = self.build_schematic_path(substance)
+            if image_path.exists():
+                continue
+            
+            image = await pnwiki.get_schematic_image(
+                substance,
+                width=600,
+                background_color='WHITE'
+            )
+            if image:            
+                image.save(image_path)
+
+        self.schematics = list(self.path.glob('*.png'))
+
+        log.info(f"Done, {len(self.schematics)} schematics avalaible in cache")
+    
+    @property
+    def schematics(cls):
+        if not cls._schematics:
+            raise cls.UnfetchedRegistryError()
+        return cls._schematics
+    
+    @schematics.setter
+    def schematics(self, value):
+        self._schematics = value
+
+    def pick_substance(self):
+        """Pick a random substance name from what is avalaible in the 
+        registry."""
+        return choice(self.schematics).stem
+
+    def build_schematic_path(self, substance):
+        """Build the path of a given substance's schematic. There is no
+        guarantee this path will actually exist."""
+        return self.path / (substance + '.png')
+
+    def get_schematic(self, substance):
+        """Get the path of a given substance's schematic, raises an
+        exception if no schematic is found for this substance."""
+        path = self.build_schematic_path(substance)
+
+        if path not in self.schematics:
+            raise FileNotFoundError()
+        
+        return path
+    
+    class UnfetchedRegistryError(RuntimeError):
+        def __init__(self, *args):
+            super().__init__(
+                "SchematicRegistry needs schematics to be cached before they "
+                "are used. Please `await` for `fetch_schematics`.",
+                *args
+            )
+
+
 class StructureGame:
     """This Discord-agnostic class encapsulates bare game-related logic."""
 
-    # Blacklisted substances that will not be picked
-    BLACKLIST = {
-        '25H-NBOMe',
-        'Antihistamine',
-        'Ayahuasca', 
-        'Barbiturates',
-        'Cannabinoid',
-        'Entactogens',
-        'Experience: I-Doser (\'audio-drug\') and meditation',
-        'MiPLA',
-        'Morning glory',
-        'Orphenadrine',
-        'Stimulants',
-    }
+    # This is where molecules schematics will be downloaded
+    CACHE_DIR = settings.STORAGE_DIR / 'cache' / 'schematics'
 
     # Non-word chars often encoutered in substance names
     NON_WORD = '();-, '
 
-    # A list of all substances to play the game with
-    _substances = []
+    schematic_registry = SchematicRegistry(CACHE_DIR)
 
     def __init__(self):
-        self.substance = choice(tuple(self.substances))
+        """To populate the substance registry, `prepare_registry` must be
+        awaited before instanciation."""
+        self.substance = self.schematic_registry.pick_substance()
         self.secret_chars = shuffled([
             i for i, c in enumerate(self.substance)
             if c not in self.NON_WORD
@@ -54,9 +112,9 @@ class StructureGame:
         self.tries = 0
     
     @property
-    def schematic_url(self):
-        return pnwiki.get_schematic_url(self.substance)
-    
+    def schematic(self):
+        return self.schematic_registry.get_schematic(self.substance)
+
     @property
     def clue(self):
         return ''.join(
@@ -67,16 +125,6 @@ class StructureGame:
     @property
     def reward(self):
         return len(self.secret_chars) / (1 if self.tries <= 1 else 2)
-    
-    @classproperty
-    def substances(cls):
-        if not cls._substances:
-            raise RuntimeError(
-                "Substances need to be fetched before a game is created. "
-                "Please `await` for `StructureGame.fetch_substances` before "
-                "instanciating this class."
-            )
-        return cls._substances
 
     def is_correct(self, guess):
         """Check if a string contains an unformated substring of the right
@@ -98,12 +146,9 @@ class StructureGame:
         return f"{type(self).__name__} ({self.substance})"
 
     @classmethod
-    async def fetch_substances(cls):
-        """Populate the list of all substances to play the game with from
-        PNWiki."""
-        cls._substances = set(await pnwiki.list_substances()) - cls.BLACKLIST
-
-        log.info(f"Fetched {len(cls.substances)} substances from PNWiki")
+    async def prepare_registry(cls):
+        """Prepare the registry of all substances to play the game with."""
+        await cls.schematic_registry.fetch_schematics()
 
     @staticmethod
     def unformat(string):
@@ -167,6 +212,8 @@ class RunningGame:
 
 
 class StructureGameCog(Cog, name='Structure Game module'):
+    SCORES_PATH = settings.STORAGE_DIR / 'scores.json'
+
     PAGE_LEN = 15
 
     def __init__(self, bot):
@@ -177,7 +224,13 @@ class StructureGameCog(Cog, name='Structure Game module'):
     
     def load_scoreboard(self):
         """Synchronously load scoreboard from filesystem."""
-        with open('scores.json') as f:
+        self.SCORES_PATH.parent.mkdir(parents=True, exist_ok=True)
+        
+        if not self.SCORES_PATH.exists():
+            with open(self.SCORES_PATH, 'w') as f:
+                json.dump({}, f)
+        
+        with open(self.SCORES_PATH) as f:
             self.scoreboard.update(json.load(f))
         
         log.info(f"Loaded {len(self.scoreboard)} scoreboard entries from FS")
@@ -185,14 +238,14 @@ class StructureGameCog(Cog, name='Structure Game module'):
     @loop(seconds=60)
     async def save_scoreboard(self):
         """Asynchronously save current scoreboard to filesystem."""
-        with open('scores.json', 'w') as f:
+        with open(self.SCORES_PATH, 'w') as f:
             json.dump(self.scoreboard, f)
         
         log.debug(f"Saved {len(self.scoreboard)} scoreboard entries to FS")
     
     @Cog.listener()
     async def on_ready(self):
-        await StructureGame.fetch_substances()
+        await StructureGame.prepare_registry()
     
     @Cog.listener()
     async def on_message(self, msg):
@@ -211,11 +264,12 @@ class StructureGameCog(Cog, name='Structure Game module'):
             running_game.end()
             self.scoreboard[msg.author.id] += game.reward
 
+            file = File(game.schematic, filename='schematic.png')
             embed = DefaultEmbed(
                 title=f"✅ Correct answer, {msg.author}!",
                 description=f"Well played! The answer was **{game.substance}**."
             )
-            embed.set_thumbnail(url=game.schematic_url)
+            embed.set_thumbnail(url='attachment://schematic.png')
             embed.add_field(
                 name="⏱️ Elapsed time",
                 value=f"You answered in {time:.2f} seconds."
@@ -230,7 +284,7 @@ class StructureGameCog(Cog, name='Structure Game module'):
                     value="Yay!"
                 )
             
-            await msg.channel.send(embed=embed)
+            await msg.channel.send(embed=embed, file=file)
     
     @group()
     async def game(self, ctx):
@@ -251,16 +305,25 @@ class StructureGameCog(Cog, name='Structure Game module'):
                 "Please end the current game before starting another one."
             ))
             return
+    
+        try:
+            game = StructureGame()
+        except SchematicRegistry.UnfetchedRegistryError:
+            await ctx.send(embed=ErrorEmbed(
+                "The Structure Game is warming up",
+                "Please retry in a few moments!"
+            ))
+            return
 
-        game = StructureGame()
         running_game = RunningGame(game, ctx)
 
+        file = File(game.schematic, filename='schematic.png')  
         embed = DefaultEmbed(
             title=f"🚀 {ctx.author} started a new game!",
             description="What substance is this?"
         )
-        embed.set_image(url=game.schematic_url)
-        await ctx.send(embed=embed)
+        embed.set_image(url='attachment://schematic.png')
+        await ctx.send(embed=embed, file=file)
 
         async def send_clue():
             await aio.sleep(10)

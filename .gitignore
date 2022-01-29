@@ -100,4 +100,4 @@ ENV/
 
 # local settings and databases
 localsettings.py
-scores.json
+storage/

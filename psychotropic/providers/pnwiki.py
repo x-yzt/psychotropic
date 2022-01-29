@@ -1,6 +1,8 @@
+from io import BytesIO
 from operator import itemgetter
 
 import httpx
+from PIL import Image
 
 
 PNWIKI_URL = 'https://psychonautwiki.org/w/'
@@ -57,7 +59,7 @@ async def get_substance(query):
             }
         }
     """ % query
-    async with PNWikiAPIClient as client:
+    async with PNWikiAPIClient() as client:
         r = await client.post_graphql(query)
 
     return r.json()
@@ -65,3 +67,22 @@ async def get_substance(query):
 
 def get_schematic_url(substance, width=500):
     return f'{PNWIKI_URL}thumb.php?f={substance}.svg&width={width}'
+
+
+async def get_schematic_image(substance, width=500, background_color=None):
+    """Get a PIL `Image` of a given substance by fetching its schematic on
+    PNWiki. Return `None` if no schematic is found."""
+    async with httpx.AsyncClient() as client:
+        r = await client.get(get_schematic_url(substance, width))
+
+    if r.status_code != 200:
+        return None
+
+    image = Image.open(BytesIO(r.content))
+
+    if background_color:
+        background = Image.new("RGB", image.size, background_color)
+        background.paste(image, mask=image)
+        image = background
+
+    return image
