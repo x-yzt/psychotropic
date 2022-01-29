@@ -44,7 +44,7 @@ A discord bot built for harm reduction.
 ### Structure Game module
 
 The *Structure Game* is a drug chemical structure guessing game. It is a
-complete rewrite of a proof of concept from Arli, thanks to them for sharing
+complete rewrite of a proof of concept from arli, thanks to them for sharing
 it! ✨
 
 - `>game start`:
