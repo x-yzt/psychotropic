@@ -1,9 +1,9 @@
 import httpx
 
 
-TRIPSIT_URL = "http://drugs.tripsit.me/"
+TRIPSIT_URL = "https://drugs.tripsit.me/"
 
-TRIPSIT_API_URL = "http://tripbot.tripsit.me/api/tripsit/"
+TRIPSIT_API_URL = "https://tripbot.tripsit.me/api/tripsit/"
 
 
 async def get_drug(drug):
