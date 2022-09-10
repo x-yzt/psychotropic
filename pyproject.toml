@@ -21,15 +21,12 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: CPython",
 ]
 dependencies = [
-  "discord.py==1.5.1",
-  "httpx==0.16.1",
-  "Pillow==8.4.0",
+  "discord.py~=2.0",
+  "httpx~=0.23",
+  "Pillow~=9.2",
 ]
 
 [project.urls]
 Documentation = "https://github.com/x-yzt/psychotropic#readme"
 Issues = "https://github.com/x-yzt/psychotropic/issues"
 Source = "https://github.com/x-yzt/psychotropic"
-
-[tool.hatch.version]
-
