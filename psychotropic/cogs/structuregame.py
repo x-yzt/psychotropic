@@ -1,9 +1,11 @@
 import asyncio as aio
+from functools import partial
 import json
 import logging
 from collections import defaultdict
 from datetime import datetime
 from itertools import chain, count, islice
+from math import ceil
 from operator import itemgetter
 from random import choice
 
@@ -11,6 +13,7 @@ from discord import File
 from discord.app_commands import Group, Range
 from discord.ext.commands import Cog
 from discord.ext.tasks import loop
+from discord.ui import View, Button
 
 from psychotropic import settings
 from psychotropic.embeds import DefaultEmbed, ErrorEmbed
@@ -19,6 +22,68 @@ from psychotropic.utils import pretty_list, setup_cog, unaccent, shuffled
 
 
 log = logging.getLogger(__name__)
+
+
+class Paginator(View):
+    def __init__(self, make_embed, page=1, last_page=None):
+        """Agnostic embed paginator using buttons to navigate between pages.
+
+        - `make_embed` is a coroutine taking a page number as argument which
+          will be called to regenerate the embed content;
+        - `page` is the default page number;
+        - `last_page` is the number of the last page. If `None`, the paginator
+          will be endless.
+        """
+        super().__init__()
+        
+        self.make_embed = make_embed
+        self.page = page
+        self.last_page = last_page
+
+        for offset, id_, label, emoji in (
+            (-1, 'prev', "Previous", "⏮️"), 
+            (1,  'next', "Next",     "⏭️")
+        ):
+            button = Button(custom_id=id_, label=label, emoji=emoji)
+            button.callback = partial(self.change_page, offset)
+            self.add_item(button)
+
+        self._update_button_status()
+
+    def _update_button_status(self):
+        for child in self.children:
+            match child.custom_id:
+                case 'prev':
+                    child.disabled = self.page <= 1
+                case 'next':
+                    child.disabled = (
+                        self.last_page and self.page >= self.last_page
+                    )
+
+    async def change_page(self, offset, interaction):
+        page = self.page + offset
+        
+        if page < 1 or (self.last_page and page > self.last_page):
+            raise ValueError(f"Out of bounds page number {page}.")
+        
+        await interaction.response.edit_message(
+            embed = DefaultEmbed(
+                title = "Computing...",
+                description = "Relax, it will just take a year or two."
+            ),
+            view = None
+        )
+        
+        # This can be a bit long because user accounts need to be fetched
+        embed = await self.make_embed(page)
+        self.page = page
+        self._update_button_status()
+
+        await interaction.followup.edit_message(
+            interaction.message.id,
+            embed = embed,
+            view = self
+        )
 
 
 class SchematicRegistry:
@@ -229,6 +294,10 @@ class StructureGameCog(Cog, name='Structure Game module'):
         self.load_scoreboard()
         self.save_scoreboard.start()
     
+    @property
+    def scoreboard_page_count(self):
+        return ceil(len(self.scoreboard) / self.PAGE_LEN)
+    
     def load_scoreboard(self):
         """Synchronously load scoreboard from filesystem."""
         self.SCORES_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -241,6 +310,38 @@ class StructureGameCog(Cog, name='Structure Game module'):
             self.scoreboard.update(json.load(f))
         
         log.info(f"Loaded {len(self.scoreboard)} scoreboard entries from FS")
+    
+    async def make_scoreboard_embed(self, page):
+        """Generate an embed showing the scoreboard at a given page."""
+        bounds = self.PAGE_LEN * (page-1), self.PAGE_LEN * page
+
+        scores = [
+            "**{emoji} - {user}:** {score} 🪙".format(
+                emoji=emoji,
+                user=await self.bot.fetch_user(uid),
+                score=score
+            )
+            for emoji, (uid, score) in islice(zip(
+                chain("🥇🥈🥉", count(4)),
+                sorted(
+                    self.scoreboard.items(),
+                    key=itemgetter(1),
+                    reverse=True
+                )
+            ), *bounds)
+        ]
+
+        embed = ErrorEmbed("Empty page")
+        if scores:
+            embed = DefaultEmbed(
+                title = "🏆 Scoreboard",
+                description = pretty_list(scores, capitalize=False)
+            )
+
+        return embed.add_field(
+            name = "📄 Page number",
+            value = f"**{page}** / **{self.scoreboard_page_count}**"
+        )
 
     @loop(seconds=60)
     async def save_scoreboard(self):
@@ -385,28 +486,13 @@ class StructureGameCog(Cog, name='Structure Game module'):
         """Show a given page of the scoreboard."""
         await interaction.response.defer(thinking=True)
 
-        bounds = self.PAGE_LEN * (page-1), self.PAGE_LEN * page
-        scores = [
-            "**{emoji} - {user}:** {score} 🪙".format(
-                emoji=emoji,
-                user=await self.bot.fetch_user(uid),
-                score=score
-            )
-            for emoji, (uid, score) in islice(zip(
-                chain("🥇🥈🥉", count(4)),
-                sorted(
-                    self.scoreboard.items(),
-                    key=itemgetter(1),
-                    reverse=True
-                )
-            ), *bounds)
-        ]
-
         await interaction.followup.send(
-            embed = DefaultEmbed(
-                title = "🏆 Scoreboard",
-                description = pretty_list(scores, capitalize=False)
-            ) if scores else ErrorEmbed("No such page")
+            embed = await self.make_scoreboard_embed(page),
+            view = Paginator(
+                make_embed = self.make_scoreboard_embed,
+                page = page,
+                last_page = self.scoreboard_page_count
+            )
         )
 
 
