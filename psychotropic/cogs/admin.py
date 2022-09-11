@@ -28,8 +28,8 @@ class AdminCog(Cog):
         extension = resolve_relative(extension)
 
         try:
-            self.bot.unload_extension(extension)
-            self.bot.load_extension(extension)
+            await self.bot.unload_extension(extension)
+            await self.bot.load_extension(extension)
         except Exception as e:
             log.error(f"Error while reloading extension {extension}")
             log.error(sys.exc_info())

@@ -1,13 +1,46 @@
-from discord.ext.commands import command, Cog
+from functools import partial
+from typing import Literal, get_args
+from discord import Interaction
+
+from discord.ext.commands import Cog
+from discord.app_commands import command
+from discord.ui import Button, View
 
 from psychotropic import settings
-from psychotropic.embeds import (ErrorEmbed, LoadingEmbedContextManager,
-    send_embed_on_exception)
+from psychotropic.embeds import ErrorEmbed, send_embed_on_exception
 from psychotropic.providers import dsstox, pubchem, PubChemEmbed, EPAEmbed
 from psychotropic.utils import pretty_list, setup_cog
 
 
-class ScienceCog(Cog, name='Scientific module'):
+Mode = Literal['2D', '3D']
+
+
+class SchematicView(View):
+    def __init__(self, substance: str, mode: Mode):
+        super().__init__()
+        self.substance = substance
+        self.mode = mode
+
+        for label in get_args(Mode):
+            button = Button(label=label, disabled=label == self.mode)
+            button.callback = partial(self.toggle_mode, button)
+            self.add_item(button)
+
+    async def toggle_mode(self, button, interaction):
+        self.mode = button.label
+
+        for children in self.children:
+            children.disabled = children.label == self.mode
+        
+        embed = interaction.message.embeds[0]
+        embed.set_image(
+            url = pubchem.get_schematic_url(self.substance, self.mode)
+        )
+
+        await interaction.response.edit_message(embed=embed, view=self)
+
+
+class ScienceCog(Cog, name="Scientific module"):
     # PUG properties that will be shown in substance information embeds
     DEFAULT_PROPERTIES = (
         'MolecularFormula',
@@ -33,26 +66,28 @@ class ScienceCog(Cog, name='Scientific module'):
     
     def __init__(self, bot):
         self.bot = bot
-        self.pug_client = pubchem.AsyncPUGClient()
     
-    @command(name='substance', aliases=('compound',))
+    @command(name='substance')
     @send_embed_on_exception
-    async def substance(self, ctx, substance: str):
+    async def substance(self, interaction, substance: str):
         """Display general information about a given chemical substance or
         compound. Aliases names are supported.
         """
-        async with self.pug_client as client:
+        async with pubchem.AsyncPUGClient() as client:
             synonyms = await client.get_synonyms(substance)
             descriptions = await client.get_descriptions(substance)
-            properties = await client.get_properties(substance, self.DEFAULT_PROPERTIES)
+            properties = await client.get_properties(
+                substance, self.DEFAULT_PROPERTIES
+            )
 
         if not synonyms:
-            await ctx.send(embed=ErrorEmbed(
+            await interaction.response.send_message(embed=ErrorEmbed(
                 f"Can't find substance {substance}"
             ))
+            return
         
         try:
-            description = descriptions[1]['Description'] # Default value
+            description = descriptions[1]['Description']  # Default value
         except IndexError:
             description = "No description avalaible 🤔"
         for provider in settings.COMPOUNDS_DESCRIPTION_PROVIDERS:
@@ -73,61 +108,53 @@ class ScienceCog(Cog, name='Scientific module'):
 
         schem_url = pubchem.get_schematic_url(substance)
         
-        embed = PubChemEmbed(
-            title = "Substance information: " + synonyms[0].capitalize(),
-            description = description
-        )
-        embed.set_thumbnail(url=schem_url)
-        embed.add_field(
-            name = "🔬 IUPAC Name",
-            value = iupac_name.capitalize(),
-            inline = False
-        )
-        embed.add_field(
-            name = "🏷 Synonyms",
-            value = pretty_list(synonyms[1:7])
-        )
-        embed.add_field(
-            name = "🧪 Formula",
-            value = f"**{formula}**",
-        )
-        embed.add_field(
-            name = "🏋 Molar mass",
-            value = f"{weight} g/mol",
-        )
-        embed.add_field(
-            name = "🔗 Hydrogen bonds",
-            value = f"Donors: {h_bond_donors}\nAcceptors: {h_bond_acceptors}",
-        )
-        embed.add_field(
-            name = "🌀 Molecular complexity",
-            value = complexity,
+        await interaction.response.send_message(
+            embed = PubChemEmbed(
+                title = "Substance information: " + synonyms[0].capitalize(),
+                description = description
+            )
+            .set_thumbnail(url=schem_url)
+            .add_field(
+                name = "🔬 IUPAC Name",
+                value = iupac_name.capitalize(),
+                inline = False
+            )
+            .add_field(
+                name = "🏷 Synonyms",
+                value = pretty_list(synonyms[1:7])
+            )
+            .add_field(
+                name = "🧪 Formula",
+                value = f"**{formula}**",
+            )
+            .add_field(
+                name = "🏋 Molar mass",
+                value = f"{weight} g/mol",
+            )
+            .add_field(
+                name = "🔗 Hydrogen bonds",
+                value = f"Donors: {h_bond_donors}\nAcceptors: {h_bond_acceptors}",
+            )
+            .add_field(
+                name = "🌀 Molecular complexity",
+                value = complexity,
+            )
         )
 
-        await ctx.send(embed=embed)
-
-    @command(name='schem', aliases=('schematic', 'draw'))
+    @command(name='schematic')
     @send_embed_on_exception
-    async def schem(self, ctx, substance: str, mode: str='2d'):
-        """Display the shematic of a given chemical substance or compound.
-        2D and 3D modes are supported.
-        """
-        mode = mode.lower()
-
-        if mode not in ('2d', '3d'):
-            await ctx.send(embed=ErrorEmbed(
-                f"Invalid mode {mode}", "Try with `2d` or `3d`."
-            ))
-            return
-        
-        async with self.pug_client as client:
+    async def schematic(self, interaction, substance: str, mode: Mode = '2D'):
+        """Display the shematic of a given chemical substance or compound. 2D
+        and 3D modes are supported.
+        """        
+        async with pubchem.AsyncPUGClient() as client:
             synonyms = await client.get_synonyms(substance)
             properties = await client.get_properties(
-                substance, ('MolecularFormula','IUPACName')
+                substance, ('MolecularFormula', 'IUPACName')
             )
         
         if not synonyms:
-            await ctx.send(embed=ErrorEmbed(
+            await interaction.response.send_message(embed=ErrorEmbed(
                 f"Can't find substance {substance}"
             ))
             return
@@ -137,42 +164,46 @@ class ScienceCog(Cog, name='Scientific module'):
 
         schem_url = pubchem.get_schematic_url(substance, mode)
         
-        embed = PubChemEmbed(
-            title = "Substance schematic: " + synonyms[0].capitalize(),
+        await interaction.response.send_message(
+            embed = (
+                PubChemEmbed(
+                    title = "Substance schematic: " + synonyms[0].capitalize(),
+                )
+                .add_field(
+                    name = "🔬 IUPAC Name",
+                    value = iupac_name.capitalize(),
+                    inline = False
+                )
+                .add_field(
+                    name = "🧪 Formula",
+                    value = f"**{formula}**",
+                )
+                .set_image(url=schem_url)
+            ),
+            view = SchematicView(substance, mode)
         )
-        embed.add_field(
-            name = "🔬 IUPAC Name",
-            value = iupac_name.capitalize(),
-            inline = False
-        )
-        embed.add_field(
-            name = "🧪 Formula",
-            value = f"**{formula}**",
-        )
-        embed.set_image(url=schem_url)
-
-        await ctx.send(embed=embed)
     
-    @command(name='solubility', aliases=('solub',))
+    @command(name='solubility')
     @send_embed_on_exception
-    async def solubility(self, ctx, substance: str):
+    async def solubility(self, interaction, substance: str):
         """Display solubility-related properties about a given substance.
         Multiple sources of experimental and predicted data are averaged to
         improve result accuracy. Result ranges are provided when applicable.
         """
-        async with LoadingEmbedContextManager(ctx):
-            match = await dsstox.get_substance(substance)
-            if not match:
-                await ctx.send(embed=ErrorEmbed(
-                    f"Can't find substance {substance}"
-                ))
-                return
-        
-            dsstox_id = match['dtxsid']
-            name = match['searchWord']
-            props = await dsstox.get_properties(dsstox_id)
+        await interaction.response.defer(thinking=True)
 
-        embed = EPAEmbed(title = f"Solubility information: {name}")
+        match = await dsstox.get_substance(substance)
+        if not match:
+            await interaction.followup.send(
+                embed = ErrorEmbed(f"Can't find substance {substance}")
+            )
+            return
+        
+        dsstox_id = match['dtxsid']
+        name = match['searchWord']
+        props = await dsstox.get_properties(dsstox_id)
+
+        embed = EPAEmbed(title=f"Solubility information: {name}")
 
         props = props['data']
         for prop in props:
@@ -212,7 +243,7 @@ class ScienceCog(Cog, name='Scientific module'):
                     inline = True
                 )
 
-        await ctx.send(embed=embed)
+        await interaction.followup.send(embed=embed)
 
 
 setup = setup_cog(ScienceCog)

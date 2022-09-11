@@ -1,24 +1,38 @@
 import asyncio as aio
+from functools import partial
 import json
 import logging
 from collections import defaultdict
 from datetime import datetime
 from itertools import chain, count, islice
+from math import ceil
 from operator import itemgetter
 from random import choice
 
-from discord import File
-from discord.ext.commands import Cog, group
+from discord import ButtonStyle, File
+from discord.app_commands import Group, Range
+from discord.ext.commands import Cog
 from discord.ext.tasks import loop
+from discord.ui import View, button
 
 from psychotropic import settings
-from psychotropic.embeds import (DefaultEmbed, ErrorEmbed,
-    LoadingEmbedContextManager)
+from psychotropic.embeds import DefaultEmbed, ErrorEmbed
 from psychotropic.providers import pnwiki
+from psychotropic.ui import Paginator
 from psychotropic.utils import pretty_list, setup_cog, unaccent, shuffled
 
 
 log = logging.getLogger(__name__)
+
+
+class ReplayView(View):
+    def __init__(self, callback):
+        super().__init__()
+        self.callback = callback
+
+    @button(label="Play again", style=ButtonStyle.primary, emoji="🏓")
+    async def replay(self, interaction, button):
+        await self.callback(interaction)
 
 
 class SchematicRegistry:
@@ -31,24 +45,25 @@ class SchematicRegistry:
     async def fetch_schematics(self):
         """Populate the list of all substances to play the game with from
         PNWiki."""
-        log.info("Populating cache with schematics from PNWiki...")
+        if settings.FETCH_SCHEMATICS:
+            log.info("Populating cache with schematics from PNWiki...")
 
-        for substance in await pnwiki.list_substances():
-            image_path = self.build_schematic_path(substance)
-            if image_path.exists():
-                continue
-            
-            image = await pnwiki.get_schematic_image(
-                substance,
-                width=600,
-                background_color='WHITE'
-            )
-            if image:            
-                image.save(image_path)
+            for substance in await pnwiki.list_substances():
+                image_path = self.build_schematic_path(substance)
+                if image_path.exists():
+                    continue
+
+                image = await pnwiki.get_schematic_image(
+                    substance,
+                    width=600,
+                    background_color='WHITE'
+                )
+                if image:            
+                    image.save(image_path)
 
         self.schematics = list(self.path.glob('*.png'))
 
-        log.info(f"Done, {len(self.schematics)} schematics avalaible in cache")
+        log.info(f"{len(self.schematics)} schematics avalaible in cache")
     
     @property
     def schematics(cls):
@@ -160,6 +175,78 @@ class StructureGame:
         )
     
 
+class Scoreboard:
+    """This class encapsulated scoreboard related logic."""
+    SCORES_PATH = settings.STORAGE_DIR / 'scores.json'
+
+    PAGE_LEN = 15
+
+    def __init__(self):
+        self.scores = defaultdict(lambda: 0)
+    
+    def __setitem__(self, player, score):
+        self.scores[player] = score
+       
+    def __getitem__(self, player):
+        return self.scores[player]
+
+    @property
+    def page_count(self):
+        return ceil(len(self.scores) / self.PAGE_LEN)
+
+    def load(self):
+        """Synchronously load scoreboard from filesystem."""
+        self.SCORES_PATH.parent.mkdir(parents=True, exist_ok=True)
+        
+        if not self.SCORES_PATH.exists():
+            with open(self.SCORES_PATH, 'w') as f:
+                json.dump({}, f)
+        
+        with open(self.SCORES_PATH) as f:
+            self.scores.update(json.load(f))
+        
+        log.info(f"Loaded {len(self.scores)} scoreboard entries from FS")
+    
+    @loop(seconds=60)
+    async def save(self):
+        """Asynchronously save current scoreboard to filesystem."""
+        with open(self.SCORES_PATH, 'w') as f:
+            json.dump(self.scores, f)
+        
+        log.debug(f"Saved {len(self.scores)} scoreboard entries to FS")
+
+    async def make_embed(self, client, page):
+        """Generate an embed showing the scoreboard at a given page."""
+        bounds = self.PAGE_LEN * (page-1), self.PAGE_LEN * page
+
+        scores = [
+            "**{emoji} - {user}:** {score} 🪙".format(
+                emoji = emoji,
+                user = await client.fetch_user(uid),
+                score = score
+            )
+            for emoji, (uid, score) in islice(zip(
+                chain("🥇🥈🥉", count(4)),
+                sorted(
+                    self.scores.items(),
+                    key = itemgetter(1),
+                    reverse = True
+                )
+            ), *bounds)
+        ]
+
+        embed = ErrorEmbed("Empty page")
+        if scores:
+            embed = DefaultEmbed(
+                title = "🏆 Scoreboard",
+                description = pretty_list(scores, capitalize=False)
+            )
+
+        return embed.add_field(
+            name = "📄 Page number",
+            value = f"**{page}** / **{self.page_count}**"
+        )
+
 class RunningGame:
     """This class encapsulates game related, Discord-aware logic."""
 
@@ -167,13 +254,13 @@ class RunningGame:
     # class instances. 
     registry = {}
 
-    def __init__(self, game, ctx):
+    def __init__(self, game, interaction):
         self.game = game
-        self.owner = ctx.author
-        self.channel = ctx.channel
+        self.owner = interaction.user
+        self.channel = interaction.channel
         self.start_time = datetime.now()
         self.tasks = set()
-        self.registry[ctx.channel] = self
+        self.registry[self.channel] = self
 
         log.info(f"Started {self}")
     
@@ -181,11 +268,12 @@ class RunningGame:
     def time_since_start(self):
         return datetime.now() - self.start_time
 
-    def can_be_ended(self, ctx):
-        """Check if a this running game can be ended in a given context."""
+    def can_be_ended(self, interaction):
+        """Check if this running game can be ended in a given interaction
+        context."""
         return (
-            ctx.author == self.owner
-            or ctx.author.permissions_in(ctx.channel).manage_messages
+            interaction.user == self.owner
+            or interaction.user.permissions_in(interaction.channel).manage_messages
         )
     
     def end(self):
@@ -209,39 +297,20 @@ class RunningGame:
     
     def __str__(self):
         return f"{self.game} in {self.channel}"
+    
+    @classmethod
+    def get_from_context(cls, interaction):
+        """Get a running game from an interaction context. Return `None` if
+        no game can be found."""
+        return cls.registry.get(interaction.channel)
 
 
 class StructureGameCog(Cog, name='Structure Game module'):
-    SCORES_PATH = settings.STORAGE_DIR / 'scores.json'
-
-    PAGE_LEN = 15
-
     def __init__(self, bot):
         self.bot = bot
-        self.scoreboard = defaultdict(lambda: 0)
-        self.load_scoreboard()
-        self.save_scoreboard.start()
-    
-    def load_scoreboard(self):
-        """Synchronously load scoreboard from filesystem."""
-        self.SCORES_PATH.parent.mkdir(parents=True, exist_ok=True)
-        
-        if not self.SCORES_PATH.exists():
-            with open(self.SCORES_PATH, 'w') as f:
-                json.dump({}, f)
-        
-        with open(self.SCORES_PATH) as f:
-            self.scoreboard.update(json.load(f))
-        
-        log.info(f"Loaded {len(self.scoreboard)} scoreboard entries from FS")
-
-    @loop(seconds=60)
-    async def save_scoreboard(self):
-        """Asynchronously save current scoreboard to filesystem."""
-        with open(self.SCORES_PATH, 'w') as f:
-            json.dump(self.scoreboard, f)
-        
-        log.debug(f"Saved {len(self.scoreboard)} scoreboard entries to FS")
+        self.scoreboard = Scoreboard()
+        self.scoreboard.load()
+        self.scoreboard.save.start()
     
     @Cog.listener()
     async def on_ready(self):
@@ -265,42 +334,42 @@ class StructureGameCog(Cog, name='Structure Game module'):
             self.scoreboard[str(msg.author.id)] += game.reward
 
             file = File(game.schematic, filename='schematic.png')
-            embed = DefaultEmbed(
-                title=f"✅ Correct answer, {msg.author}!",
-                description=f"Well played! The answer was **{game.substance}**."
-            )
-            embed.set_thumbnail(url='attachment://schematic.png')
-            embed.add_field(
-                name="⏱️ Elapsed time",
-                value=f"You answered in {time:.2f} seconds."
-            )
-            embed.add_field(
-                name="🪙 Reward",
-                value=f"You won **{game.reward} coins**."
+            embed = (
+                DefaultEmbed(
+                    title=f"✅ Correct answer, {msg.author}!",
+                    description=f"Well played! The answer was **{game.substance}**."
+                )
+                .set_thumbnail(url='attachment://schematic.png')
+                .add_field(
+                    name="⏱️ Elapsed time",
+                    value=f"You answered in {time:.2f} seconds."
+                )
+                .add_field(
+                    name="🪙 Reward",
+                    value=f"You won **{game.reward} coins**."
+                )
             )
             if game.tries == 1:
                 embed.add_field(
                     name="🥇 First try bonus!",
                     value="Yay!"
                 )
+            view = ReplayView(partial(self.start.callback, self))
             
-            await msg.channel.send(embed=embed, file=file)
-    
-    @group()
-    async def game(self, ctx):
-        """Structure Game command group."""
-        ctx.running_game = RunningGame.registry.get(ctx.channel)
+            await msg.channel.send(embed=embed, file=file, view=view)
 
-    @game.command(aliases=('begin',))
-    async def start(self, ctx):
+    game = Group(name='game', description="Manage structure games.")
+
+    @game.command(name='start')
+    async def start(self, interaction):
         """Start a new Structure Game. The bot will pick a random molecule
         schematic, and the first player to write its name in the chat will win.
 
         A certain number of coins (🪙), corresponding to the number of letters
         guessed will be awarded to the winner.
         """
-        if ctx.running_game:
-            await ctx.send(embed=ErrorEmbed(
+        if RunningGame.get_from_context(interaction):
+            await interaction.response.send_message(embed=ErrorEmbed(
                 "Another game is running in this channel!",
                 "Please end the current game before starting another one."
             ))
@@ -309,99 +378,90 @@ class StructureGameCog(Cog, name='Structure Game module'):
         try:
             game = StructureGame()
         except SchematicRegistry.UnfetchedRegistryError:
-            await ctx.send(embed=ErrorEmbed(
+            await interaction.response.send_message(embed=ErrorEmbed(
                 "The Structure Game is warming up",
                 "Please retry in a few moments!"
             ))
             return
 
-        running_game = RunningGame(game, ctx)
+        running_game = RunningGame(game, interaction)
 
         file = File(game.schematic, filename='schematic.png')  
-        embed = DefaultEmbed(
-            title=f"🚀 {ctx.author} started a new game!",
-            description="What substance is this?"
+        embed = (
+            DefaultEmbed(
+                title=f"🚀 {interaction.user} started a new game!",
+                description="What substance is this?"
+            )
+            .set_image(url='attachment://schematic.png')
         )
-        embed.set_image(url='attachment://schematic.png')
-        await ctx.send(embed=embed, file=file)
+        await interaction.response.send_message(embed=embed, file=file)
 
         async def send_clue():
             await aio.sleep(10)
             clue = game.get_clue()
             
             if game.secret_chars:
-                await ctx.send(embed=DefaultEmbed(
+                await interaction.followup.send(embed=DefaultEmbed(
                     title=f"💡 Here's a bit of help:",
                     description=f"```{clue}```"
                 ))
                 await send_clue()
             else:
-                await ctx.send(embed=DefaultEmbed(
-                    title="😔 No one found the solution.",
-                    description=f"The answer was **{game.substance}**."
-                ))
+                await interaction.followup.send(
+                    embed = DefaultEmbed(
+                        title = "😔 No one found the solution.",
+                        description = f"The answer was **{game.substance}**."
+                    ),
+                    view = ReplayView(partial(self.start.callback, self))
+                )
                 running_game.end()
 
         running_game.create_task(send_clue)
 
-    @game.command(aliases=('stop', 'quit'))
-    async def end(self, ctx):
+    @game.command(name='end')
+    async def end(self, interaction):
         """End a running Structure Game. To end a game, you must either own it
         or have permission to manage messages in the current channel.
         """
-        if not ctx.running_game:
-            await ctx.send(embed=ErrorEmbed(
+        running_game = RunningGame.get_from_context(interaction)
+
+        if not running_game:
+            await interaction.response.send_message(embed=ErrorEmbed(
                 "There is no game running in this channel!",
             ))
             return
         
-        if not ctx.running_game.can_be_ended(ctx):
-            await ctx.send(embed=ErrorEmbed(
+        if not running_game.can_be_ended(interaction):
+            await interaction.response.send_message(embed=ErrorEmbed(
                 "You are not allowed to end this game!",
                 "You need to own this game or have permission to manage "
                 "messages in this channel."
             ))
             return
         
-        ctx.running_game.end()
+        running_game.end()
         
-        ans = ctx.running_game.game.substance
-        await ctx.send(embed=DefaultEmbed(
-            title=f"🛑 {ctx.author} ended the game.",
-            description=f"The answer was **{ans}**."
-        ))
-    
-    @game.command(aliases=('scoreboard', 'board'))
-    async def scores(self, ctx, page: int=1):
-        """Show a given page of the scoreboard."""
-        bounds = self.PAGE_LEN * (page-1), self.PAGE_LEN * page
-
-        async with LoadingEmbedContextManager(ctx):
-            scores = [
-                "**{emoji} - {user}:** {score} 🪙".format(
-                    emoji=emoji,
-                    user=await self.bot.fetch_user(uid),
-                    score=score
-                )
-                for emoji, (uid, score) in islice(zip(
-                    chain("🥇🥈🥉", count(4)),
-                    sorted(
-                        self.scoreboard.items(),
-                        key=itemgetter(1),
-                        reverse=True
-                    )
-                ), *bounds)
-            ]
-
-        if not scores:
-            await ctx.send(embed=ErrorEmbed("No such page"))
-            return
-
-        embed = DefaultEmbed(
-            title="🏆 Scoreboard",
-            description=pretty_list(scores, capitalize=False)
+        await interaction.response.send_message(
+            embed = DefaultEmbed(
+                title = f"🛑 {interaction.user} ended the game.",
+                description = f"The answer was **{running_game.game.substance}**."
+            ),
+            view = ReplayView(partial(self.start.callback, self))
         )
-        await ctx.send(embed=embed)
     
+    @game.command(name='scores')
+    async def scores(self, interaction, page: Range[int, 1] = 1):
+        """Show a given page of the scoreboard."""
+        await interaction.response.defer(thinking=True)
+
+        await interaction.followup.send(
+            embed = await self.scoreboard.make_embed(self.bot, page),
+            view = Paginator(
+                make_embed = partial(self.scoreboard.make_embed, self.bot),
+                page = page,
+                last_page = self.scoreboard.page_count
+            )
+        )
+
 
 setup = setup_cog(StructureGameCog)

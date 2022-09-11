@@ -1,3 +1,4 @@
+from typing import Literal
 from psychotropic import settings
 from psychotropic.utils import ThrottledAsyncClient
 
@@ -31,7 +32,6 @@ class AsyncPUGClient(ThrottledAsyncClient):
         return r.json()['PropertyTable']['Properties'][0]
 
 
-def get_schematic_url(substance, mode='2d'):
-    """Get the URL of the schematic of a given substance. `mode` can either be
-    `2d` or ``3d."""
-    return f"{PUG_URL}{substance}/PNG?record_type={mode}"
+def get_schematic_url(substance, mode: Literal['2D', '3D'] = '2D'):
+    """Get the URL of the schematic of a given substance."""
+    return f"{PUG_URL}{substance}/PNG?record_type={mode.lower()}"
