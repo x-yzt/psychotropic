@@ -8,12 +8,12 @@ from operator import itemgetter
 from random import choice
 
 from discord import File
-from discord.ext.commands import Cog, group
+from discord.app_commands import Group, Range
+from discord.ext.commands import Cog
 from discord.ext.tasks import loop
 
 from psychotropic import settings
-from psychotropic.embeds import (DefaultEmbed, ErrorEmbed,
-    LoadingEmbedContextManager)
+from psychotropic.embeds import DefaultEmbed, ErrorEmbed
 from psychotropic.providers import pnwiki
 from psychotropic.utils import pretty_list, setup_cog, unaccent, shuffled
 
@@ -167,13 +167,13 @@ class RunningGame:
     # class instances. 
     registry = {}
 
-    def __init__(self, game, ctx):
+    def __init__(self, game, interaction):
         self.game = game
-        self.owner = ctx.author
-        self.channel = ctx.channel
+        self.owner = interaction.user
+        self.channel = interaction.channel
         self.start_time = datetime.now()
         self.tasks = set()
-        self.registry[ctx.channel] = self
+        self.registry[self.channel] = self
 
         log.info(f"Started {self}")
     
@@ -181,11 +181,12 @@ class RunningGame:
     def time_since_start(self):
         return datetime.now() - self.start_time
 
-    def can_be_ended(self, ctx):
-        """Check if a this running game can be ended in a given context."""
+    def can_be_ended(self, interaction):
+        """Check if this running game can be ended in a given interaction
+        context."""
         return (
-            ctx.author == self.owner
-            or ctx.author.permissions_in(ctx.channel).manage_messages
+            interaction.user == self.owner
+            or interaction.user.permissions_in(interaction.channel).manage_messages
         )
     
     def end(self):
@@ -209,6 +210,12 @@ class RunningGame:
     
     def __str__(self):
         return f"{self.game} in {self.channel}"
+    
+    @classmethod
+    def get_from_context(cls, interaction):
+        """Get a running game from an interaction context. Return `None` if
+        no game can be found."""
+        return cls.registry.get(interaction.channel)
 
 
 class StructureGameCog(Cog, name='Structure Game module'):
@@ -265,18 +272,20 @@ class StructureGameCog(Cog, name='Structure Game module'):
             self.scoreboard[str(msg.author.id)] += game.reward
 
             file = File(game.schematic, filename='schematic.png')
-            embed = DefaultEmbed(
-                title=f"✅ Correct answer, {msg.author}!",
-                description=f"Well played! The answer was **{game.substance}**."
-            )
-            embed.set_thumbnail(url='attachment://schematic.png')
-            embed.add_field(
-                name="⏱️ Elapsed time",
-                value=f"You answered in {time:.2f} seconds."
-            )
-            embed.add_field(
-                name="🪙 Reward",
-                value=f"You won **{game.reward} coins**."
+            embed = (
+                DefaultEmbed(
+                    title=f"✅ Correct answer, {msg.author}!",
+                    description=f"Well played! The answer was **{game.substance}**."
+                )
+                .set_thumbnail(url='attachment://schematic.png')
+                .add_field(
+                    name="⏱️ Elapsed time",
+                    value=f"You answered in {time:.2f} seconds."
+                )
+                .add_field(
+                    name="🪙 Reward",
+                    value=f"You won **{game.reward} coins**."
+                )
             )
             if game.tries == 1:
                 embed.add_field(
@@ -286,21 +295,18 @@ class StructureGameCog(Cog, name='Structure Game module'):
             
             await msg.channel.send(embed=embed, file=file)
     
-    @group()
-    async def game(self, ctx):
-        """Structure Game command group."""
-        ctx.running_game = RunningGame.registry.get(ctx.channel)
+    game = Group(name='game', description="Manage structure games.")
 
-    @game.command(aliases=('begin',))
-    async def start(self, ctx):
+    @game.command(name='start')
+    async def start(self, interaction):
         """Start a new Structure Game. The bot will pick a random molecule
         schematic, and the first player to write its name in the chat will win.
 
         A certain number of coins (🪙), corresponding to the number of letters
         guessed will be awarded to the winner.
         """
-        if ctx.running_game:
-            await ctx.send(embed=ErrorEmbed(
+        if RunningGame.get_from_context(interaction):
+            await interaction.response.send_message(embed=ErrorEmbed(
                 "Another game is running in this channel!",
                 "Please end the current game before starting another one."
             ))
@@ -309,34 +315,36 @@ class StructureGameCog(Cog, name='Structure Game module'):
         try:
             game = StructureGame()
         except SchematicRegistry.UnfetchedRegistryError:
-            await ctx.send(embed=ErrorEmbed(
+            await interaction.send(embed=ErrorEmbed(
                 "The Structure Game is warming up",
                 "Please retry in a few moments!"
             ))
             return
 
-        running_game = RunningGame(game, ctx)
+        running_game = RunningGame(game, interaction)
 
         file = File(game.schematic, filename='schematic.png')  
-        embed = DefaultEmbed(
-            title=f"🚀 {ctx.author} started a new game!",
-            description="What substance is this?"
+        embed = (
+            DefaultEmbed(
+                title=f"🚀 {interaction.user} started a new game!",
+                description="What substance is this?"
+            )
+            .set_image(url='attachment://schematic.png')
         )
-        embed.set_image(url='attachment://schematic.png')
-        await ctx.send(embed=embed, file=file)
+        await interaction.response.send_message(embed=embed, file=file)
 
         async def send_clue():
             await aio.sleep(10)
             clue = game.get_clue()
             
             if game.secret_chars:
-                await ctx.send(embed=DefaultEmbed(
+                await interaction.followup.send(embed=DefaultEmbed(
                     title=f"💡 Here's a bit of help:",
                     description=f"```{clue}```"
                 ))
                 await send_clue()
             else:
-                await ctx.send(embed=DefaultEmbed(
+                await interaction.followup.send(embed=DefaultEmbed(
                     title="😔 No one found the solution.",
                     description=f"The answer was **{game.substance}**."
                 ))
@@ -344,64 +352,62 @@ class StructureGameCog(Cog, name='Structure Game module'):
 
         running_game.create_task(send_clue)
 
-    @game.command(aliases=('stop', 'quit'))
-    async def end(self, ctx):
+    @game.command(name='end')
+    async def end(self, interaction):
         """End a running Structure Game. To end a game, you must either own it
         or have permission to manage messages in the current channel.
         """
-        if not ctx.running_game:
-            await ctx.send(embed=ErrorEmbed(
+        running_game = RunningGame.get_from_context(interaction)
+
+        if not running_game:
+            await interaction.response.send_message(embed=ErrorEmbed(
                 "There is no game running in this channel!",
             ))
             return
         
-        if not ctx.running_game.can_be_ended(ctx):
-            await ctx.send(embed=ErrorEmbed(
+        if not running_game.can_be_ended(interaction):
+            await interaction.response.send_message(embed=ErrorEmbed(
                 "You are not allowed to end this game!",
                 "You need to own this game or have permission to manage "
                 "messages in this channel."
             ))
             return
         
-        ctx.running_game.end()
+        running_game.end()
         
-        ans = ctx.running_game.game.substance
-        await ctx.send(embed=DefaultEmbed(
-            title=f"🛑 {ctx.author} ended the game.",
-            description=f"The answer was **{ans}**."
+        await interaction.response.send_message(embed=DefaultEmbed(
+            title = f"🛑 {interaction.user} ended the game.",
+            description = f"The answer was **{running_game.game.substance}**."
         ))
     
-    @game.command(aliases=('scoreboard', 'board'))
-    async def scores(self, ctx, page: int=1):
+    @game.command(name='scoreboard')
+    async def scoreboard(self, interaction, page: Range[int, 1] = 1):
         """Show a given page of the scoreboard."""
+        await interaction.response.defer(thinking=True)
+
         bounds = self.PAGE_LEN * (page-1), self.PAGE_LEN * page
-
-        async with LoadingEmbedContextManager(ctx):
-            scores = [
-                "**{emoji} - {user}:** {score} 🪙".format(
-                    emoji=emoji,
-                    user=await self.bot.fetch_user(uid),
-                    score=score
+        scores = [
+            "**{emoji} - {user}:** {score} 🪙".format(
+                emoji=emoji,
+                user=await self.bot.fetch_user(uid),
+                score=score
+            )
+            for emoji, (uid, score) in islice(zip(
+                chain("🥇🥈🥉", count(4)),
+                sorted(
+                    self.scoreboard.items(),
+                    key=itemgetter(1),
+                    reverse=True
                 )
-                for emoji, (uid, score) in islice(zip(
-                    chain("🥇🥈🥉", count(4)),
-                    sorted(
-                        self.scoreboard.items(),
-                        key=itemgetter(1),
-                        reverse=True
-                    )
-                ), *bounds)
-            ]
+            ), *bounds)
+        ]
 
-        if not scores:
-            await ctx.send(embed=ErrorEmbed("No such page"))
-            return
-
-        embed = DefaultEmbed(
-            title="🏆 Scoreboard",
-            description=pretty_list(scores, capitalize=False)
+        await interaction.followup.send(
+            embed = DefaultEmbed(
+                title = "🏆 Scoreboard",
+                description = pretty_list(scores, capitalize=False)
+            ) if scores else ErrorEmbed("No such page")
         )
-        await ctx.send(embed=embed)
-    
+
 
 setup = setup_cog(StructureGameCog)

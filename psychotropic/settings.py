@@ -14,7 +14,7 @@ EXTENSIONS = [
     'psychotropic.cogs.admin',
     'psychotropic.cogs.factsheets',
     'psychotropic.cogs.science',
-    # 'psychotropic.cogs.structuregame',
+    'psychotropic.cogs.structuregame',
 ]
 
 STORAGE_DIR = Path('storage')
