@@ -1,5 +1,6 @@
+import functools
 import httpx
-from discord import Embed, Colour
+from discord import Embed, Colour, Interaction
 
 from psychotropic import settings
 
@@ -25,12 +26,6 @@ class ErrorEmbed(Embed):
         )
 
 
-loading_embed = DefaultEmbed(
-    title = "Computing...",
-    description = "Relax, it will just take a year or two"
-)
-
-
 def provider_embed_factory(provider):
     """Factory method intended to generate provider embed classes."""
     class ProviderEmbed(DefaultEmbed):    
@@ -41,36 +36,21 @@ def provider_embed_factory(provider):
     return ProviderEmbed
 
 
-class LoadingEmbedContextManager:
-    """Context manager to display a loading embed while inner code executes.
-    The loading embed will be removed as soon as the inner block finishes, even
-    if it raises an exception.
-    """
-    def __init__(self, ctx):
-        self.ctx = ctx
-    
-    async def __aenter__(self):
-        self.msg = await self.ctx.send(embed=loading_embed)
-        return self.msg
-    
-    async def __aexit__(self, type, value, traceback):
-        await self.msg.delete()
-
-
 def send_embed_on_exception(func):
     """Decorator to send an embed if errors occurs during command
     processing. Exceptions are still raised after the embed is sent.
     """
-    async def inner(self, ctx, *args, **kwargs):
+    @functools.wraps(func)
+    async def inner(self, interaction, *args, **kwargs):
         try:
-            return await func(self, ctx, *args, **kwargs)
+            return await func(self, interaction, *args, **kwargs)
         except httpx.RequestError:
-            await ctx.send(embed=ErrorEmbed(
+            await interaction.response.send_message(embed=ErrorEmbed(
                 "Can't connect to external server",
                 "Maybe you should retry later?")
             )
             raise
         except Exception:
-            await ctx.send(embed=ErrorEmbed())
+            await interaction.response.send_message(embed=ErrorEmbed())
             raise
     return inner

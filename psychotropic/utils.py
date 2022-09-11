@@ -46,7 +46,7 @@ class ThrottledAsyncClient(httpx.AsyncClient):
     def __init__(self, *args, cooldown=0.1, **kwargs):
         super().__init__(*args, **kwargs)
         self.cooldown = cooldown
-        self.semaphore = aio.BoundedSemaphore(1, loop=aio.get_event_loop())
+        self.semaphore = aio.BoundedSemaphore(1)
     
     async def wait_and_release(self):
         await aio.sleep(self.cooldown)
