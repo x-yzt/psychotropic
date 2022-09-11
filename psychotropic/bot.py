@@ -1,11 +1,13 @@
 import logging
 import sys
 
-from discord import Embed, Activity, ActivityType, Intents, Permissions
+from discord import Activity, ActivityType, Intents, Permissions
+from discord.app_commands import Command
 from discord.ext.commands import Bot
 from discord.utils import oauth_url
 
 from psychotropic import settings
+from psychotropic.embeds import DefaultEmbed
 from psychotropic.providers import PROVIDERS
 
 
@@ -23,6 +25,7 @@ class PsychotropicBot(Bot):
 
         super().__init__(
             command_prefix=settings.PREFIX,
+            help_command=None,
             intents=intents,
             activity=activity,
             description="A Discord bot built for harm reduction and chemistry."
@@ -80,22 +83,21 @@ bot = PsychotropicBot()
 async def info(interaction):
     """Display various informations about the Psychotropic bot."""
     await interaction.response.send_message(
-        embed=Embed(
-            type = 'rich',
-            colour = settings.COLOUR,
-            title = "Psychotropic",
+        embed = DefaultEmbed(
+            title = "🧪 Psychotropic",
+            description = bot.description
         )
         .set_image(url=settings.AVATAR_URL)
         .add_field(
-            name = "Help",
-            value = "Type >help to display help page."
-        )
-        .add_field(
-            name = "Data providers",
+            name = "📄 Data providers",
             value = '\n'.join([
                 "{name} ({url})".format(**provider)
                 for provider in PROVIDERS.values()
             ])
+        )
+        .add_field(
+            name = "💡 Help",
+            value = "Use `/help` to display help page."
         )
         .set_footer(
             text = "Psychotropic was carefully trained by xyzt_",
@@ -104,5 +106,48 @@ async def info(interaction):
     )
 
 
+@bot.tree.command(name='help')
+async def help(interaction):
+    """Display Psychotropic help."""
+    embed = (
+        DefaultEmbed(
+            title = "💡 Psychotropic help",
+            description = bot.description
+        )
+        .set_thumbnail(url=settings.AVATAR_URL)
+    )
+
+    for cmd in bot.tree.walk_commands():
+        if not isinstance(cmd, Command):
+            continue
+        
+        params = ''
+        if cmd.parameters:
+            params += "**Parameters:**\n"
+            
+            for param in cmd.parameters:
+                params += f"- `{param.name}`"
+
+                if param.choices:
+                    params += f" [{'|'.join(c.name for c in param.choices)}]"
+
+                if param.description != '…':
+                    params += f": *{param.description}*"
+                
+                params += '\n'
+        
+        embed.add_field(
+            name = f"⌨️  /{cmd.qualified_name}",
+            value = '\n'.join((
+                cmd.callback.__doc__.strip().replace('\n', ' '),
+                params
+            )),
+            inline = False
+        )
+
+    await interaction.response.send_message(embed=embed)
+
+
 if __name__ == '__main__':
+    # Log handler is configured in __init__.py
     bot.run(settings.DISCORD_TOKEN, log_handler=None)
