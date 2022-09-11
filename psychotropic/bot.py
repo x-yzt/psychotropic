@@ -5,6 +5,7 @@ from discord import Activity, ActivityType, Intents, Permissions
 from discord.app_commands import Command
 from discord.ext.commands import Bot
 from discord.utils import oauth_url
+from discord.ui import View, Button
 
 from psychotropic import settings
 from psychotropic.embeds import DefaultEmbed
@@ -76,6 +77,18 @@ class PsychotropicBot(Bot):
         log.info(f"Logged in as {self.user.name} ({self.user.id}).")
         
 
+class InviteView(View):
+    def __init__(self):
+        super().__init__()
+        self.add_item(
+            Button(
+                label = "Invite me to your guild!",
+                url = bot.oauth_url,
+                emoji = "✨"
+            )
+        )
+
+
 bot = PsychotropicBot()
 
 
@@ -83,26 +96,29 @@ bot = PsychotropicBot()
 async def info(interaction):
     """Display various informations about the Psychotropic bot."""
     await interaction.response.send_message(
-        embed = DefaultEmbed(
-            title = "🧪 Psychotropic",
-            description = bot.description
-        )
-        .set_image(url=settings.AVATAR_URL)
-        .add_field(
-            name = "📄 Data providers",
-            value = '\n'.join([
-                "{name} ({url})".format(**provider)
-                for provider in PROVIDERS.values()
-            ])
-        )
-        .add_field(
-            name = "💡 Help",
-            value = "Use `/help` to display help page."
-        )
-        .set_footer(
-            text = "Psychotropic was carefully trained by xyzt_",
-            icon_url = settings.AUTHOR_AVATAR_URL
-        )
+        embed = (
+            DefaultEmbed(
+                title = "🧪 Psychotropic",
+                description = bot.description
+            )
+            .set_image(url=settings.AVATAR_URL)
+            .add_field(
+                name = "📄 Data providers",
+                value = '\n'.join([
+                    "{name} ({url})".format(**provider)
+                    for provider in PROVIDERS.values()
+                ])
+            )
+            .add_field(
+                name = "💡 Help",
+                value = "Use `/help` to display help page."
+            )
+            .set_footer(
+                text = "Psychotropic was carefully trained by xyzt_",
+                icon_url = settings.AUTHOR_AVATAR_URL
+            )
+        ),
+        view = InviteView()
     )
 
 
