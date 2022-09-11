@@ -9,10 +9,11 @@ from math import ceil
 from operator import itemgetter
 from random import choice
 
-from discord import File
+from discord import ButtonStyle, File
 from discord.app_commands import Group, Range
 from discord.ext.commands import Cog
 from discord.ext.tasks import loop
+from discord.ui import View, button
 
 from psychotropic import settings
 from psychotropic.embeds import DefaultEmbed, ErrorEmbed
@@ -22,6 +23,16 @@ from psychotropic.utils import pretty_list, setup_cog, unaccent, shuffled
 
 
 log = logging.getLogger(__name__)
+
+
+class ReplayView(View):
+    def __init__(self, callback):
+        super().__init__()
+        self.callback = callback
+
+    @button(label="Play again", style=ButtonStyle.primary, emoji="🏓")
+    async def replay(self, interaction, button):
+        await self.callback(interaction)
 
 
 class SchematicRegistry:
@@ -34,24 +45,25 @@ class SchematicRegistry:
     async def fetch_schematics(self):
         """Populate the list of all substances to play the game with from
         PNWiki."""
-        log.info("Populating cache with schematics from PNWiki...")
+        if settings.FETCH_SCHEMATICS:
+            log.info("Populating cache with schematics from PNWiki...")
 
-        for substance in await pnwiki.list_substances():
-            image_path = self.build_schematic_path(substance)
-            if image_path.exists():
-                continue
-            
-            image = await pnwiki.get_schematic_image(
-                substance,
-                width=600,
-                background_color='WHITE'
-            )
-            if image:            
-                image.save(image_path)
+            for substance in await pnwiki.list_substances():
+                image_path = self.build_schematic_path(substance)
+                if image_path.exists():
+                    continue
+
+                image = await pnwiki.get_schematic_image(
+                    substance,
+                    width=600,
+                    background_color='WHITE'
+                )
+                if image:            
+                    image.save(image_path)
 
         self.schematics = list(self.path.glob('*.png'))
 
-        log.info(f"Done, {len(self.schematics)} schematics avalaible in cache")
+        log.info(f"{len(self.schematics)} schematics avalaible in cache")
     
     @property
     def schematics(cls):
@@ -342,9 +354,10 @@ class StructureGameCog(Cog, name='Structure Game module'):
                     name="🥇 First try bonus!",
                     value="Yay!"
                 )
+            view = ReplayView(partial(self.start.callback, self))
             
-            await msg.channel.send(embed=embed, file=file)
-    
+            await msg.channel.send(embed=embed, file=file, view=view)
+
     game = Group(name='game', description="Manage structure games.")
 
     @game.command(name='start')
@@ -365,7 +378,7 @@ class StructureGameCog(Cog, name='Structure Game module'):
         try:
             game = StructureGame()
         except SchematicRegistry.UnfetchedRegistryError:
-            await interaction.send(embed=ErrorEmbed(
+            await interaction.response.send_message(embed=ErrorEmbed(
                 "The Structure Game is warming up",
                 "Please retry in a few moments!"
             ))
@@ -394,10 +407,13 @@ class StructureGameCog(Cog, name='Structure Game module'):
                 ))
                 await send_clue()
             else:
-                await interaction.followup.send(embed=DefaultEmbed(
-                    title="😔 No one found the solution.",
-                    description=f"The answer was **{game.substance}**."
-                ))
+                await interaction.followup.send(
+                    embed = DefaultEmbed(
+                        title = "😔 No one found the solution.",
+                        description = f"The answer was **{game.substance}**."
+                    ),
+                    view = ReplayView(partial(self.start.callback, self))
+                )
                 running_game.end()
 
         running_game.create_task(send_clue)
@@ -425,10 +441,13 @@ class StructureGameCog(Cog, name='Structure Game module'):
         
         running_game.end()
         
-        await interaction.response.send_message(embed=DefaultEmbed(
-            title = f"🛑 {interaction.user} ended the game.",
-            description = f"The answer was **{running_game.game.substance}**."
-        ))
+        await interaction.response.send_message(
+            embed = DefaultEmbed(
+                title = f"🛑 {interaction.user} ended the game.",
+                description = f"The answer was **{running_game.game.substance}**."
+            ),
+            view = ReplayView(partial(self.start.callback, self))
+        )
     
     @game.command(name='scores')
     async def scores(self, interaction, page: Range[int, 1] = 1):

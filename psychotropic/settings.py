@@ -44,6 +44,12 @@ COMPOUNDS_DESCRIPTION_PROVIDERS = (
     "CAMEO Chemicals",
 )
 
+
+# Structure game cog
+
+FETCH_SCHEMATICS = True  # Fetch schematics from PNWiki on each bot start
+
+
 # Entries to be excluded from the DSSTox results.
 # This is matched against the `model_name` field DSSTox provides.
 DSSTOX_EXCLUDED_MODELS = (
