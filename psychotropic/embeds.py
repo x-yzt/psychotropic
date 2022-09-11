@@ -1,6 +1,6 @@
 import functools
 import httpx
-from discord import Embed, Colour, Interaction
+from discord import Embed, Colour
 
 from psychotropic import settings
 
