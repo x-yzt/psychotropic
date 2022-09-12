@@ -45,12 +45,12 @@ def send_embed_on_exception(func):
         try:
             return await func(self, interaction, *args, **kwargs)
         except httpx.RequestError:
-            await interaction.response.send_message(embed=ErrorEmbed(
+            await interaction.followup.send(embed=ErrorEmbed(
                 "Can't connect to external server",
                 "Maybe you should retry later?")
             )
             raise
         except Exception:
-            await interaction.response.send_message(embed=ErrorEmbed())
+            await interaction.followup.send(embed=ErrorEmbed())
             raise
     return inner
