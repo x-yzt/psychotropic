@@ -19,7 +19,8 @@ from psychotropic import settings
 from psychotropic.embeds import DefaultEmbed, ErrorEmbed
 from psychotropic.providers import pnwiki
 from psychotropic.ui import Paginator
-from psychotropic.utils import pretty_list, setup_cog, unaccent, shuffled
+from psychotropic.utils import (pretty_list, setup_cog, unaccent, shuffled,
+    format_user)
 
 
 log = logging.getLogger(__name__)
@@ -220,10 +221,10 @@ class Scoreboard:
         bounds = self.PAGE_LEN * (page-1), self.PAGE_LEN * page
 
         scores = [
-            "**{emoji} - {user}:** {score} 🪙".format(
+            "**{emoji}** - {user} - `{score} 🪙`".format(
                 emoji = emoji,
-                user = await client.fetch_user(uid),
-                score = score
+                user = format_user(await client.fetch_user(uid)),
+                score = int(score)
             )
             for emoji, (uid, score) in islice(zip(
                 chain("🥇🥈🥉", count(4)),

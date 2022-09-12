@@ -1,8 +1,23 @@
 import asyncio as aio
+import re
 import unicodedata
 from random import sample
 
 import httpx
+
+
+def is_deleted(user):
+    """Workaround to check if a user account was deleted, as Discord API does
+    not provide a proper way to do this."""
+    return re.match(r"^Deleted User [a-z0-9]{8}#\d{4}$", str(user))
+
+
+def format_user(user):
+    """Pretty string representation of an user using Discord-flavored
+    markdown."""
+    if is_deleted(user):
+        return "**~~Deleted user~~**"
+    return f"**{user.name}**#{user.discriminator}"
 
 
 def pretty_list(items, capitalize=True):
@@ -35,6 +50,7 @@ def unaccent(string):
         .encode('ASCII', 'ignore')
         .decode('utf-8')
     )
+
 
 def shuffled(collection):
     """Not inplace equivalent to usual random.shuffle."""
