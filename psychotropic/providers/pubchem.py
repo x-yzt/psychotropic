@@ -9,7 +9,11 @@ PUG_URL = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/"
 class AsyncPUGClient(ThrottledAsyncClient):
     def __init__(self, *args, **kwargs):
         super().__init__(
-            *args, cooldown=settings.HTTP_COOLDOWN, base_url=PUG_URL, **kwargs
+            *args,
+            cooldown=settings.HTTP_COOLDOWN,
+            timeout=20,  # The API is sometimes *very* slow to handshake
+            base_url=PUG_URL,
+            **kwargs
         )
     
     async def get_synonyms(self, substance):
