@@ -73,6 +73,8 @@ class ScienceCog(Cog, name="Scientific module"):
         """Display general information about a given chemical substance or
         compound. Aliases names are supported.
         """
+        await interaction.response.defer(thinking=True)
+
         async with pubchem.AsyncPUGClient() as client:
             synonyms = await client.get_synonyms(substance)
             descriptions = await client.get_descriptions(substance)
@@ -81,7 +83,7 @@ class ScienceCog(Cog, name="Scientific module"):
             )
 
         if not synonyms:
-            await interaction.response.send_message(embed=ErrorEmbed(
+            await interaction.followup.send(embed=ErrorEmbed(
                 f"Can't find substance {substance}"
             ))
             return
@@ -108,7 +110,7 @@ class ScienceCog(Cog, name="Scientific module"):
 
         schem_url = pubchem.get_schematic_url(substance)
         
-        await interaction.response.send_message(
+        await interaction.followup.send(
             embed = PubChemEmbed(
                 title = "Substance information: " + synonyms[0].capitalize(),
                 description = description
@@ -146,7 +148,9 @@ class ScienceCog(Cog, name="Scientific module"):
     async def schematic(self, interaction, substance: str, mode: Mode = '2D'):
         """Display the shematic of a given chemical substance or compound. 2D
         and 3D modes are supported.
-        """        
+        """
+        await interaction.response.defer(thinking=True)
+
         async with pubchem.AsyncPUGClient() as client:
             synonyms = await client.get_synonyms(substance)
             properties = await client.get_properties(
@@ -154,7 +158,7 @@ class ScienceCog(Cog, name="Scientific module"):
             )
         
         if not synonyms:
-            await interaction.response.send_message(embed=ErrorEmbed(
+            await interaction.followup.send(embed=ErrorEmbed(
                 f"Can't find substance {substance}"
             ))
             return
@@ -164,7 +168,7 @@ class ScienceCog(Cog, name="Scientific module"):
 
         schem_url = pubchem.get_schematic_url(substance, mode)
         
-        await interaction.response.send_message(
+        await interaction.followup.send(
             embed = (
                 PubChemEmbed(
                     title = "Substance schematic: " + synonyms[0].capitalize(),
