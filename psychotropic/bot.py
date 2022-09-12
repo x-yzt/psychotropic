@@ -103,15 +103,23 @@ async def info(interaction):
             )
             .set_image(url=settings.AVATAR_URL)
             .add_field(
-                name = "📄 Data providers",
-                value = '\n'.join([
-                    "{name} ({url})".format(**provider)
-                    for provider in PROVIDERS.values()
-                ])
-            )
-            .add_field(
                 name = "💡 Help",
                 value = "Use `/help` to display help page."
+            )
+            .add_field(
+                name = "🛠️ Source code & issues",
+                value = "[See them on GitHub](https://github.com/x-yzt/psychotropic)"
+            )
+            .add_field(
+                name = "📈 Stats",
+                value = f"Currently in **{len(bot.guilds)}** guilds."
+            )
+            .add_field(
+                name = "📄 Data providers",
+                value = '\n'.join([
+                    "[{name}]({url})".format(**provider)
+                    for provider in PROVIDERS.values()
+                ])
             )
             .set_footer(
                 text = "Psychotropic was carefully trained by xyzt_",
