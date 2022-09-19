@@ -150,7 +150,7 @@ async def help(interaction):
             params += "**Parameters:**\n"
             
             for param in cmd.parameters:
-                params += f"- `{param.name}`"
+                params += f"- `{param.display_name}`"
 
                 if param.choices:
                     params += f" [{'|'.join(c.name for c in param.choices)}]"
