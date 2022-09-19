@@ -1,10 +1,12 @@
 from enum import Enum
 
 import httpx
+from mdanchors import AnchorConverter
 
 
-def format_linebreaks(text):
-    return text.replace('\\r\\n', '\n')
+def format_markdown(text):
+    text = text.replace('\\r\\n', '\n')
+    return AnchorConverter(text).to_inline_links()
 
 
 class MixturesEnum(Enum):

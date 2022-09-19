@@ -7,8 +7,8 @@ from discord.ext.commands import Cog
 from psychotropic.embeds import ErrorEmbed, send_embed_on_exception
 from psychotropic.providers import MixturesEmbed
 from psychotropic.providers.mixtures import (MixturesAPI, Risk, Synergy,
-    Reliability, format_linebreaks)
-from psychotropic.utils import setup_cog
+    Reliability, format_markdown)
+from psychotropic.utils import setup_cog, trim_text
 
 
 class CombosCog(Cog, name="Combos module"):
@@ -57,13 +57,16 @@ class CombosCog(Cog, name="Combos module"):
         )
 
         risk_text, effects_text = (
-            '\n'.join((
-                format_linebreaks(text)
-                for text in chain(
-                    (drug[drug_key] for drug in data['interactants'].values()),
-                    (data[key],)
-                )
-            ))
+            trim_text(
+                '\n'.join((
+                    format_markdown(text)
+                    for text in chain(
+                        (drug[drug_key] for drug in data['interactants'].values()),
+                        (data[key],)
+                    )
+                )),
+                url=data['site_url']
+            )
             for key, drug_key in (
                 ('risk_description',   'risks'),
                 ('effect_description', 'effects'),
@@ -110,7 +113,7 @@ class CombosCog(Cog, name="Combos module"):
             ("About risks", risk_text),
             ("About effects", effects_text)
         ):
-            embed.add_field(name=name, value=text[:1024])
+            embed.add_field(name=name, value=text)
 
         return embed
 

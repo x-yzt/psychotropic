@@ -20,6 +20,17 @@ def format_user(user):
     return f"**{user.name}**#{user.discriminator}"
 
 
+def trim_text(text, limit=1024, url=None):
+    if url:
+        link = f"\n[**Read more**]({url})"
+        limit -= len(link)
+
+    if len(text) > 1024:
+        text = text[:limit-3] + '...' + (link if url else '')
+
+    return text
+
+
 def pretty_list(items, capitalize=True):
     lst, chars = [], 0
     for item in items:
