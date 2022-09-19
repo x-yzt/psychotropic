@@ -31,6 +31,11 @@ PROVIDERS = {
         'name': "PsychonautWiki",
         'url': "https://psychonautwiki.org/",
         'icon_url': "https://psychonautwiki.org/eye.png"
+    },
+    'mixtures': {
+        'name': "Mixtures",
+        'url': "https://mixtures.info/",
+        'icon_url': "https://mixtures.info/static/mixtures/img/og-icon.jpg"
     }
 }
 
