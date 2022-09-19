@@ -40,7 +40,7 @@ class CombosCog(Cog, name="Combos module"):
             reverse=True
         )[:25]
 
-    def make_interaction_embed(self, data):
+    def make_interaction_embed(self, data, show_description=True):
         title = ' + '.join(
             drug['name'] for drug in data['interactants'].values()
         )
@@ -53,23 +53,6 @@ class CombosCog(Cog, name="Combos module"):
                (Synergy,     'synergy'),
                (Reliability, 'risk_reliability'),
                (Reliability, 'effects_reliability'),
-            )
-        )
-
-        risk_text, effects_text = (
-            trim_text(
-                '\n'.join((
-                    format_markdown(text)
-                    for text in chain(
-                        (drug[drug_key] for drug in data['interactants'].values()),
-                        (data[key],)
-                    )
-                )),
-                url=data['site_url']
-            )
-            for key, drug_key in (
-                ('risk_description',   'risks'),
-                ('effect_description', 'effects'),
             )
         )
 
@@ -90,7 +73,7 @@ class CombosCog(Cog, name="Combos module"):
             )
         
         embed.add_field(
-            name="Substances:",
+            name="Substances",
             value='\n'.join((
                 f"- [{drug['name']}]({drug['site_url']})"
                 for drug in data['interactants'].values()
@@ -108,12 +91,32 @@ class CombosCog(Cog, name="Combos module"):
                     f"*Reliability: {str(reliab).lower()}.*\n{reliab.emoji}"
                 )
             )
-
-        for name, text in (
-            ("About risks", risk_text),
-            ("About effects", effects_text)
-        ):
-            embed.add_field(name=name, value=text)
+        
+        if show_description:
+            for name, key, drug_key in (
+                ("About risks",   'risk_description',   'risks'),
+                ("About effects", 'effect_description', 'effects'),
+            ):
+                text = trim_text(
+                    '\n'.join((
+                        format_markdown(text)
+                        for text in chain(
+                            (
+                                drug[drug_key]
+                                for drug in data['interactants'].values()
+                            ),
+                            (data[key],)
+                        )
+                    )),
+                    url=data['site_url']
+                )
+                embed.add_field(name=name, value=text)
+        else:
+            embed.add_field(
+                name="💡 More info",
+                value=f"[**Read more at Mixtures.info**]({data['site_url']})",
+                inline=False
+            )
 
         return embed
 
@@ -142,7 +145,7 @@ class CombosCog(Cog, name="Combos module"):
         """Show risks and effects of a substance combination."""
         await interaction.response.defer()
 
-        drugs = filter(None, (a, b, c, d))
+        drugs = tuple(filter(None, (a, b, c, d)))
         
         try:
             slugs = await self.mixtures.get_slugs_from_aliases(drugs)
@@ -166,7 +169,10 @@ class CombosCog(Cog, name="Combos module"):
 
         for inter in result['interactions'].values():
             await interaction.followup.send(
-                embed=self.make_interaction_embed(inter)
+                embed=self.make_interaction_embed(
+                    inter,
+                    show_description=len(drugs) == 2
+                )
             )
 
 
