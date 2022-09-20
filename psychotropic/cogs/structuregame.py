@@ -1,3 +1,5 @@
+# An original concept by arli
+
 import asyncio as aio
 from functools import partial
 import json
