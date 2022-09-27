@@ -368,6 +368,8 @@ class StructureGameCog(Cog, name='Structure Game module'):
 
         A certain number of coins (🪙), corresponding to the number of letters
         guessed will be awarded to the winner.
+
+        Original idea from arli.
         """
         if RunningGame.get_from_context(interaction):
             await interaction.response.send_message(embed=ErrorEmbed(
