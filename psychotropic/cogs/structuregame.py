@@ -261,7 +261,7 @@ class RunningGame:
         self.channel = interaction.channel
         self.start_time = datetime.now()
         self.tasks = set()
-        self.registry[self.channel] = self
+        self.registry[self.channel.id] = self
 
         log.info(f"Started {self}")
     
@@ -281,7 +281,7 @@ class RunningGame:
         """End a running game. This will cancel all pending tasks."""
         for task in self.tasks:
             task.cancel()
-        self.registry.pop(self.channel, None)
+        self.registry.pop(self.channel.id, None)
 
         log.info(f"Ended {self}")
     
@@ -303,7 +303,7 @@ class RunningGame:
     def get_from_context(cls, interaction):
         """Get a running game from an interaction context. Return `None` if
         no game can be found."""
-        return cls.registry.get(interaction.channel)
+        return cls.registry.get(interaction.channel.id)
 
 
 class StructureGameCog(Cog, name='Structure Game module'):
@@ -320,10 +320,10 @@ class StructureGameCog(Cog, name='Structure Game module'):
     @Cog.listener()
     async def on_message(self, msg):
         ctx = await self.bot.get_context(msg)
-        if msg.is_system() or msg.author.bot or ctx.valid:
+        if msg.is_system() or msg.author.bot:
             return
-        
-        running_game = RunningGame.registry.get(msg.channel)
+
+        running_game = RunningGame.registry.get(msg.channel.id)
         if not running_game:
             return
         
