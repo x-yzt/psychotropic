@@ -12,7 +12,10 @@ def format_markdown(text):
 class MixturesEnum(Enum):
     def __str__(self):
         return self.name
-    
+
+    def __bool__(self):
+        return bool(self.value)
+
     @property
     def emoji(self):
         return self._emojis[self.value]

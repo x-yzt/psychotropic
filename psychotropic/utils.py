@@ -21,11 +21,13 @@ def format_user(user):
 
 
 def trim_text(text, limit=1024, url=None):
+    text = text.strip()
+
     if url:
         link = f"\n[**Read more**]({url})"
         limit -= len(link)
 
-    if len(text) > 1024:
+    if len(text) > limit:
         text = text[:limit-3] + '...' + (link if url else '')
 
     return text

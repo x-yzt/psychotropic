@@ -84,13 +84,14 @@ class CombosCog(Cog, name="Combos module"):
             ("Risks",   risk,    risk_reliability),
             ("Synergy", synergy, effects_reliability)
         ):
-            embed.add_field(
-                name=name,
-                value=(
-                    f"**{param.emoji} {str(param).capitalize()}**\n"
-                    f"*Reliability: {str(reliab).lower()}.*\n{reliab.emoji}"
+            value = f"**{param.emoji} {str(param).capitalize()}**"
+
+            if param:
+                value += (
+                    f"\n*Reliability: {str(reliab).lower()}.*\n{reliab.emoji}"
                 )
-            )
+            
+            embed.add_field(name=name, value=value)
         
         if show_description:
             for name, key, drug_key in (
@@ -109,7 +110,7 @@ class CombosCog(Cog, name="Combos module"):
                         )
                     )),
                     url=data['site_url']
-                )
+                ) or "No data :c"
                 embed.add_field(name=name, value=text)
         else:
             embed.add_field(
