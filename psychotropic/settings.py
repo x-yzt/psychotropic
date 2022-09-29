@@ -14,7 +14,7 @@ EXTENSIONS = [
     'psychotropic.cogs.admin',
     'psychotropic.cogs.factsheets',
     'psychotropic.cogs.science',
-    'psychotropic.cogs.structuregame',
+    'psychotropic.cogs.games.structure',
     'psychotropic.cogs.combos',
 ]
 
