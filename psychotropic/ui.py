@@ -1,6 +1,6 @@
 from functools import partial
 
-from discord.ui import View, Button
+from discord.ui import Button, View
 
 from psychotropic.embeds import DefaultEmbed
 

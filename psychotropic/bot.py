@@ -4,8 +4,8 @@ import sys
 from discord import Activity, ActivityType, Intents, Permissions
 from discord.app_commands import Command
 from discord.ext.commands import Bot
+from discord.ui import Button, View
 from discord.utils import oauth_url
-from discord.ui import View, Button
 
 from psychotropic import settings
 from psychotropic.embeds import DefaultEmbed

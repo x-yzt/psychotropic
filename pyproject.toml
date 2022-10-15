@@ -31,3 +31,7 @@ dependencies = [
 Documentation = "https://github.com/x-yzt/psychotropic#readme"
 Issues = "https://github.com/x-yzt/psychotropic/issues"
 Source = "https://github.com/x-yzt/psychotropic"
+
+[tool.isort]
+multi_line_output=4
+lines_after_imports=2

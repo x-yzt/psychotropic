@@ -6,12 +6,12 @@ from math import ceil
 from operator import itemgetter
 
 from discord import ButtonStyle
-from discord.ui import View, button
 from discord.ext.tasks import loop
+from discord.ui import View, button
 
 from psychotropic import settings
-from psychotropic.utils import pretty_list, format_user
 from psychotropic.embeds import DefaultEmbed, ErrorEmbed
+from psychotropic.utils import format_user, pretty_list
 
 
 log = logging.getLogger(__name__)

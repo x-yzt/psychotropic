@@ -1,0 +1,5 @@
+{
+    "isort.args": [
+        "--settings-path=${workspaceFolder}/project.toml"
+    ]
+}

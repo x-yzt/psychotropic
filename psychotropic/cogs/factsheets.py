@@ -1,8 +1,8 @@
-from discord.ext.commands import Cog
 from discord.app_commands import command
+from discord.ext.commands import Cog
 
 from psychotropic.embeds import ErrorEmbed
-from psychotropic.providers import tripsit, TripSitEmbed
+from psychotropic.providers import TripSitEmbed, tripsit
 from psychotropic.utils import pretty_list, setup_cog
 
 

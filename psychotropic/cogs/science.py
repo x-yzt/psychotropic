@@ -1,14 +1,13 @@
 from functools import partial
 from typing import Literal, get_args
-from discord import Interaction
 
-from discord.ext.commands import Cog
 from discord.app_commands import command
+from discord.ext.commands import Cog
 from discord.ui import Button, View
 
 from psychotropic import settings
 from psychotropic.embeds import ErrorEmbed, send_embed_on_exception
-from psychotropic.providers import dsstox, pubchem, PubChemEmbed, EPAEmbed
+from psychotropic.providers import EPAEmbed, PubChemEmbed, dsstox, pubchem
 from psychotropic.utils import pretty_list, setup_cog
 
 

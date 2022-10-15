@@ -9,11 +9,11 @@ from discord.app_commands import Group, Range
 from discord.ext.commands import Cog
 
 from psychotropic import settings
-from psychotropic.cogs.games import Scoreboard, ReplayView
+from psychotropic.cogs.games import ReplayView, Scoreboard
 from psychotropic.embeds import DefaultEmbed, ErrorEmbed
 from psychotropic.providers import pnwiki
 from psychotropic.ui import Paginator
-from psychotropic.utils import setup_cog, unaccent, shuffled
+from psychotropic.utils import setup_cog, shuffled, unaccent
 
 
 log = logging.getLogger(__name__)

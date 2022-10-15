@@ -1,13 +1,13 @@
 from itertools import chain
 from typing import Optional
 
-from discord.app_commands import Choice, command, autocomplete, rename
+from discord.app_commands import Choice, autocomplete, command, rename
 from discord.ext.commands import Cog
 
 from psychotropic.embeds import ErrorEmbed, send_embed_on_exception
 from psychotropic.providers import MixturesEmbed
-from psychotropic.providers.mixtures import (MixturesAPI, Risk, Synergy,
-    Reliability, format_markdown)
+from psychotropic.providers.mixtures import (
+    MixturesAPI, Reliability, Risk, Synergy, format_markdown)
 from psychotropic.utils import setup_cog, trim_text
 
 
