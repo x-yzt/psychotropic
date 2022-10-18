@@ -1,6 +1,5 @@
 import asyncio as aio
 import logging
-from datetime import datetime
 from functools import partial
 from random import choice
 
@@ -9,7 +8,7 @@ from discord.app_commands import Group, Range
 from discord.ext.commands import Cog
 
 from psychotropic import settings
-from psychotropic.cogs.games import ReplayView, Scoreboard
+from psychotropic.cogs.games import ReplayView, BaseRunningGame, Scoreboard
 from psychotropic.embeds import DefaultEmbed, ErrorEmbed
 from psychotropic.providers import pnwiki
 from psychotropic.ui import Paginator
@@ -159,62 +158,8 @@ class StructureGame:
         )
     
 
-class RunningGame:
-    """This class encapsulates game related, Discord-aware logic."""
-
-    # A registry of all running games. Keys are Discord channels, values are
-    # class instances. 
-    registry = {}
-
-    def __init__(self, game, interaction):
-        self.game = game
-        self.owner = interaction.user
-        self.channel = interaction.channel
-        self.start_time = datetime.now()
-        self.tasks = set()
-        self.registry[self.channel.id] = self
-
-        log.info(f"Started {self}")
-    
-    @property
-    def time_since_start(self):
-        return datetime.now() - self.start_time
-
-    def can_be_ended(self, interaction):
-        """Check if this running game can be ended in a given interaction
-        context."""
-        return (
-            interaction.user == self.owner
-            or interaction.user.permissions_in(interaction.channel).manage_messages
-        )
-    
-    def end(self):
-        """End a running game. This will cancel all pending tasks."""
-        for task in self.tasks:
-            task.cancel()
-        self.registry.pop(self.channel.id, None)
-
-        log.info(f"Ended {self}")
-    
-    def create_task(self, function):
-        """Create a new asyncio task tied to this instance. The task must be a
-        coroutine, and will be cancelled if the game is ended."""
-        task = aio.get_event_loop().create_task(function())
-        task.add_done_callback(lambda task: self.tasks.remove(task))
-        
-        self.tasks.add(task)
-    
-    def __del__(self):
-        self.end()
-    
-    def __str__(self):
-        return f"{self.game} in {self.channel}"
-    
-    @classmethod
-    def get_from_context(cls, interaction):
-        """Get a running game from an interaction context. Return `None` if
-        no game can be found."""
-        return cls.registry.get(interaction.channel.id)
+class RunningStructureGame(BaseRunningGame):
+    pass
 
 
 class StructureGameCog(Cog, name='Structure Game module'):
@@ -230,11 +175,10 @@ class StructureGameCog(Cog, name='Structure Game module'):
     
     @Cog.listener()
     async def on_message(self, msg):
-        ctx = await self.bot.get_context(msg)
         if msg.is_system() or msg.author.bot:
             return
 
-        running_game = RunningGame.registry.get(msg.channel.id)
+        running_game = RunningStructureGame.registry.get(msg.channel.id)
         if not running_game:
             return
         
@@ -282,7 +226,7 @@ class StructureGameCog(Cog, name='Structure Game module'):
 
         Original idea from arli.
         """
-        if RunningGame.get_from_context(interaction):
+        if RunningStructureGame.get_from_context(interaction):
             await interaction.response.send_message(embed=ErrorEmbed(
                 "Another game is running in this channel!",
                 "Please end the current game before starting another one."
@@ -298,7 +242,7 @@ class StructureGameCog(Cog, name='Structure Game module'):
             ))
             return
 
-        running_game = RunningGame(game, interaction)
+        running_game = RunningStructureGame(game, interaction)
 
         file = File(game.schematic, filename='schematic.png')  
         embed = (
@@ -337,7 +281,7 @@ class StructureGameCog(Cog, name='Structure Game module'):
         """End a running Structure Game. To end a game, you must either own it
         or have permission to manage messages in the current channel.
         """
-        running_game = RunningGame.get_from_context(interaction)
+        running_game = RunningStructureGame.get_from_context(interaction)
 
         if not running_game:
             await interaction.response.send_message(embed=ErrorEmbed(

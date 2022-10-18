@@ -1,6 +1,8 @@
+import asyncio as aio
 import json
 import logging
 from collections import defaultdict
+from datetime import datetime
 from itertools import chain, count, islice
 from math import ceil
 from operator import itemgetter
@@ -25,6 +27,66 @@ class ReplayView(View):
     @button(label="Play again", style=ButtonStyle.primary, emoji="🏓")
     async def replay(self, interaction, button):
         await self.callback(interaction)
+
+
+class BaseRunningGame:
+    """This base class encapsulates game related, Discord-aware logic."""
+
+    def __init_subclass__(cls):
+        # A registry of all running games is added to each child class. Keys
+        # are intented to be Discord channels IDs, values are RunningGame child
+        # class instances.
+        cls.registry = {}
+
+    def __init__(self, game, interaction):
+        self.game = game
+        self.owner = interaction.user
+        self.channel = interaction.channel
+        self.start_time = datetime.now()
+        self.tasks = set()
+        self.registry[self.channel.id] = self
+
+        log.info(f"Started {self}")
+
+    @property
+    def time_since_start(self):
+        return datetime.now() - self.start_time
+
+    def can_be_ended(self, interaction):
+        """Check if this running game can be ended in a given interaction
+        context."""
+        return (
+            interaction.user == self.owner
+            or interaction.user.permissions_in(interaction.channel).manage_messages
+        )
+
+    def end(self):
+        """End a running game. This will cancel all pending tasks."""
+        for task in self.tasks:
+            task.cancel()
+        self.registry.pop(self.channel.id, None)
+
+        log.info(f"Ended {self}")
+
+    def create_task(self, function):
+        """Create a new asyncio task tied to this instance. The task must be a
+        coroutine, and will be cancelled if the game is ended."""
+        task = aio.get_event_loop().create_task(function())
+        task.add_done_callback(lambda task: self.tasks.remove(task))
+
+        self.tasks.add(task)
+
+    def __del__(self):
+        self.end()
+
+    def __str__(self):
+        return f"{self.game} in {self.channel}"
+
+    @classmethod
+    def get_from_context(cls, interaction):
+        """Get a running game from an interaction context. Return `None` if
+        no game can be found."""
+        return cls.registry.get(interaction.channel.id)
 
 
 class Scoreboard:
