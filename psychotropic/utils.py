@@ -4,6 +4,23 @@ import unicodedata
 from random import sample
 
 import httpx
+from mistune.renderers.markdown import MarkdownRenderer
+
+
+class DiscordMarkdownRenderer(MarkdownRenderer):
+    """Convert the Markdown of the Mixtures API, which uses all sort of
+    CommonMark features, to the restricted subset Discord uses.
+    """
+    
+    def link(self, token, state):
+        """Inline reference-style links."""
+        token.pop('label', None)
+
+        return super().link(token, state)
+
+    def render_referrences(self, state):
+        """Hide inlined link referrences."""
+        return []
 
 
 def is_deleted(user):
