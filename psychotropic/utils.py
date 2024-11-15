@@ -24,17 +24,17 @@ class DiscordMarkdownRenderer(MarkdownRenderer):
 
 
 def is_deleted(user):
-    """Workaround to check if a user account was deleted, as Discord API does
-    not provide a proper way to do this."""
-    return re.match(r"^Deleted User [a-z0-9]{8}#\d{4}$", str(user))
+    """Workaround to check if a user account was deleted, as Discord API
+    does not provide a proper way to do this."""
+    return re.match(r"^deleted_user_[a-z0-9]{12}$", str(user))
 
 
 def format_user(user):
     """Pretty string representation of an user using Discord-flavored
     markdown."""
     if is_deleted(user):
-        return "**~~Deleted user~~**"
-    return f"**{user.name}**#{user.discriminator}"
+        return "~~Deleted user~~"
+    return f"**{user.display_name}**"
 
 
 def trim_text(text, limit=1024, url=None):

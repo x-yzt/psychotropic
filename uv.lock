@@ -468,7 +468,7 @@ wheels = [
 [[package]]
 name = "psychotropic"
 version = "0.0.1"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "discord-py" },
     { name = "httpx" },
@@ -480,7 +480,7 @@ dependencies = [
 requires-dist = [
     { name = "discord-py", specifier = "~=2.0" },
     { name = "httpx", specifier = "~=0.23" },
-    { name = "mistune", specifier = "~=3.0.2" },
+    { name = "mistune", specifier = "~=3.0" },
     { name = "pillow", specifier = "~=9.2" },
 ]
 
