@@ -49,7 +49,7 @@ async def list_substances():
 async def get_substance(query):
     query = """
         {
-            substances(query: %s, limit: 1) {
+            substances(query: "%s", limit: 1) {
                 name
                 url
                 class {
@@ -59,10 +59,13 @@ async def get_substance(query):
             }
         }
     """ % query
+
     async with PNWikiAPIClient() as client:
         r = await client.post_graphql(query)
 
-    return r.json()
+    substances = r.json()["data"]["substances"]
+
+    return substances[0] if len(substances) else None
 
 
 def get_schematic_url(substance, width=500):
