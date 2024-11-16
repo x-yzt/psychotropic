@@ -20,6 +20,11 @@ Psychotropic has a comprehensive help system.
 
     Display help page. All commands will be listed there ✨
 
+## Credits
+
+The *Structure game* is a complete rewrite of a proof of concept from arli,
+thanks to them for sharing it!
+
 ## Running your own instance
 
 ### Installing

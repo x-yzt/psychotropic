@@ -7,7 +7,7 @@ name = "psychotropic"
 description = "A Discord bot built for harm reduction and chemistry."
 readme = "README.md"
 requires-python = ">=3.10"
-license = "GPL-3.0-or-later"
+license = {file = "LICENSE"}
 version = "0.0.1"
 keywords = []
 authors = [
@@ -23,6 +23,7 @@ classifiers = [
 dependencies = [
   "discord.py~=2.0",
   "httpx~=0.23",
+  "mistune~=3.0",
   "Pillow~=9.2",
 ]
 

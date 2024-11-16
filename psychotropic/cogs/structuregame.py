@@ -15,7 +15,7 @@ from discord import ButtonStyle, File
 from discord.app_commands import Group, Range
 from discord.ext.commands import Cog
 from discord.ext.tasks import loop
-from discord.ui import View, button
+from discord.ui import Button, View, button
 
 from psychotropic import settings
 from psychotropic.embeds import DefaultEmbed, ErrorEmbed
@@ -263,7 +263,7 @@ class RunningGame:
         self.channel = interaction.channel
         self.start_time = datetime.now()
         self.tasks = set()
-        self.registry[self.channel] = self
+        self.registry[self.channel.id] = self
 
         log.info(f"Started {self}")
     
@@ -283,7 +283,7 @@ class RunningGame:
         """End a running game. This will cancel all pending tasks."""
         for task in self.tasks:
             task.cancel()
-        self.registry.pop(self.channel, None)
+        self.registry.pop(self.channel.id, None)
 
         log.info(f"Ended {self}")
     
@@ -295,6 +295,20 @@ class RunningGame:
         
         self.tasks.add(task)
     
+    async def make_end_view(self, callback):
+        """Return a Discord view used to decorate end game embeds."""
+        substance = await pnwiki.get_substance(self.game.substance)
+
+        view = ReplayView(callback)
+        view.add_item(Button(
+            label="What's that?",
+            style=ButtonStyle.url,
+            emoji="🌐",
+            url=substance['url']
+        ))
+
+        return view
+
     def __del__(self):
         self.end()
     
@@ -305,7 +319,7 @@ class RunningGame:
     def get_from_context(cls, interaction):
         """Get a running game from an interaction context. Return `None` if
         no game can be found."""
-        return cls.registry.get(interaction.channel)
+        return cls.registry.get(interaction.channel.id)
 
 
 class StructureGameCog(Cog, name='Structure Game module'):
@@ -322,10 +336,10 @@ class StructureGameCog(Cog, name='Structure Game module'):
     @Cog.listener()
     async def on_message(self, msg):
         ctx = await self.bot.get_context(msg)
-        if msg.is_system() or msg.author.bot or ctx.valid:
+        if msg.is_system() or msg.author.bot:
             return
-        
-        running_game = RunningGame.registry.get(msg.channel)
+
+        running_game = RunningGame.registry.get(msg.channel.id)
         if not running_game:
             return
         
@@ -357,7 +371,9 @@ class StructureGameCog(Cog, name='Structure Game module'):
                     name="🥇 First try bonus!",
                     value="Yay!"
                 )
-            view = ReplayView(partial(self.start.callback, self))
+            view = await running_game.make_end_view(
+                partial(self.start.callback, self)
+            )
             
             await msg.channel.send(embed=embed, file=file, view=view)
 
@@ -370,6 +386,8 @@ class StructureGameCog(Cog, name='Structure Game module'):
 
         A certain number of coins (🪙), corresponding to the number of letters
         guessed will be awarded to the winner.
+
+        Original idea from arli.
         """
         if RunningGame.get_from_context(interaction):
             await interaction.response.send_message(embed=ErrorEmbed(
@@ -415,7 +433,9 @@ class StructureGameCog(Cog, name='Structure Game module'):
                         title = "😔 No one found the solution.",
                         description = f"The answer was **{game.substance}**."
                     ),
-                    view = ReplayView(partial(self.start.callback, self))
+                    view = await running_game.make_end_view(
+                        partial(self.start.callback, self)
+                    )  
                 )
                 running_game.end()
 
@@ -449,7 +469,9 @@ class StructureGameCog(Cog, name='Structure Game module'):
                 title = f"🛑 {interaction.user} ended the game.",
                 description = f"The answer was **{running_game.game.substance}**."
             ),
-            view = ReplayView(partial(self.start.callback, self))
+            view = await running_game.make_end_view(
+                partial(self.start.callback, self)
+            )  
         )
     
     @game.command(name='scores')
