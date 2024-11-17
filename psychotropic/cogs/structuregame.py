@@ -7,6 +7,7 @@ from datetime import datetime
 from itertools import chain, count, islice
 from math import ceil
 from operator import itemgetter
+from pprint import pformat
 from random import choice
 
 from discord import ButtonStyle, File
@@ -333,17 +334,21 @@ class StructureGameCog(Cog, name='Structure Game module'):
     
     @Cog.listener()
     async def on_message(self, msg):
-        ctx = await self.bot.get_context(msg)
+        log.debug(f"on_message event fired in channel {msg.channel.id}")
         if msg.is_system() or msg.author.bot:
             return
 
+        log.debug(f"Registry status:\n{pformat(RunningGame.registry)}")
         running_game = RunningGame.registry.get(msg.channel.id)
         if not running_game:
             return
         
+        log.debug(f"Hit from registry: {running_game}")
         game = running_game.game
         
+        log.debug(f"Message content:\n{msg.content}")
         if game.is_correct(msg.content):
+            log.debug("Game was considered solved")
             time = running_game.time_since_start.total_seconds()
             running_game.end()
             self.scoreboard[str(msg.author.id)] += game.reward
@@ -374,6 +379,9 @@ class StructureGameCog(Cog, name='Structure Game module'):
             )
             
             await msg.channel.send(embed=embed, file=file, view=view)
+        
+        else:
+            log.debug("Game was not considered solved")
 
     game = Group(name='game', description="Manage structure games.")
 
