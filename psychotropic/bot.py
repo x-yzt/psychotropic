@@ -64,6 +64,7 @@ class PsychotropicBot(Bot):
         """Sync the app commands tree."""
         self.tree.copy_global_to(guild=settings.TEST_GUILD)
 
+        self.tree.clear_commands(guild=settings.TEST_GUILD)
         await self.tree.sync(guild=settings.TEST_GUILD)
         await self.tree.sync()
 
