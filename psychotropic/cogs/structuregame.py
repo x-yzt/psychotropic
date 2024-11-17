@@ -263,7 +263,10 @@ class RunningGame:
         self.channel = interaction.channel
         self.start_time = datetime.now()
         self.tasks = set()
-        self.registry[self.channel.id] = self
+        if self.channel.id in self.registry.keys():
+            self.registry[self.channel.id] += [self,]
+        else:
+            self.registry[self.channel.id] = [self,]
 
         log.info(f"Started {self}")
     
@@ -281,7 +284,7 @@ class RunningGame:
     
     def end(self):
         """End a running game. This will cancel all pending tasks."""
-        for task in self.tasks:
+        for task in list(self.tasks):
             task.cancel()
         self.registry.pop(self.channel.id, None)
 
@@ -319,7 +322,8 @@ class RunningGame:
     def get_from_context(cls, interaction):
         """Get a running game from an interaction context. Return `None` if
         no game can be found."""
-        return cls.registry.get(interaction.channel.id)
+        running_games_list = cls.registry.get(interaction.channel.id)
+        return None if running_games_list is None else running_games_list[-1]
 
 
 class StructureGameCog(Cog, name='Structure Game module'):
@@ -339,7 +343,8 @@ class StructureGameCog(Cog, name='Structure Game module'):
         if msg.is_system() or msg.author.bot:
             return
 
-        running_game = RunningGame.registry.get(msg.channel.id)
+        running_games_list = RunningGame.registry.get(msg.channel.id)
+        running_game = None if running_games_list is None else running_games_list[-1]
         if not running_game:
             return
         
@@ -418,26 +423,30 @@ class StructureGameCog(Cog, name='Structure Game module'):
         await interaction.response.send_message(embed=embed, file=file)
 
         async def send_clue():
-            await aio.sleep(10)
-            clue = game.get_clue()
-            
-            if game.secret_chars:
-                await interaction.followup.send(embed=DefaultEmbed(
-                    title=f"💡 Here's a bit of help:",
-                    description=f"```{clue}```"
-                ))
-                await send_clue()
-            else:
-                await interaction.followup.send(
-                    embed = DefaultEmbed(
-                        title = "😔 No one found the solution.",
-                        description = f"The answer was **{game.substance}**."
-                    ),
-                    view = await running_game.make_end_view(
-                        partial(self.start.callback, self)
-                    )  
-                )
-                running_game.end()
+            nonlocal running_game
+            try:
+                await aio.sleep(10)
+                clue = game.get_clue()
+                
+                if game.secret_chars:
+                    await interaction.followup.send(embed=DefaultEmbed(
+                        title=f"💡 Here's a bit of help:",
+                        description=f"```{clue}```"
+                    ))
+                    await send_clue()
+                else:
+                    await interaction.followup.send(
+                        embed = DefaultEmbed(
+                            title = "😔 No one found the solution.",
+                            description = f"The answer was **{game.substance}**."
+                        ),
+                        view = await running_game.make_end_view(
+                            partial(self.start.callback, self)
+                        )  
+                    )
+                    running_game.end()
+            except aio.CancelledError:
+                log.debug("task cancelled")
 
         running_game.create_task(send_clue)
 
