@@ -281,7 +281,12 @@ class RunningGame:
         """End a running game. This will cancel all pending tasks."""
         for task in self.tasks:
             task.cancel()
-        self.registry.pop(self.channel.id, None)
+        
+        # Only pop the registry value if it actually holds a reference to this
+        # instance, as we don't want to remove another instance currently
+        # running in the same channel
+        if self.registry.get(self.channel.id) == self:
+            self.registry.pop(self.channel.id)
 
         log.info(f"Ended {self}")
     
