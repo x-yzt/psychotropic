@@ -3,9 +3,10 @@ import logging
 from functools import partial
 from random import choice
 
-from discord import File
+from discord import ButtonStyle, File
 from discord.app_commands import Group, Range
 from discord.ext.commands import Cog
+from discord.ui import Button
 
 from psychotropic import settings
 from psychotropic.cogs.games import ReplayView, BaseRunningGame, Scoreboard
@@ -159,7 +160,19 @@ class StructureGame:
     
 
 class RunningStructureGame(BaseRunningGame):
-    pass
+    async def make_end_view(self, callback):
+        """Return a Discord view used to decorate end game embeds."""
+        substance = await pnwiki.get_substance(self.game.substance)
+
+        view = ReplayView(callback)
+        view.add_item(Button(
+            label="What's that?",
+            style=ButtonStyle.url,
+            emoji="🌐",
+            url=substance['url']
+        ))
+
+        return view
 
 
 class StructureGameCog(Cog, name='Structure Game module'):
@@ -210,7 +223,9 @@ class StructureGameCog(Cog, name='Structure Game module'):
                     name="🥇 First try bonus!",
                     value="Yay!"
                 )
-            view = ReplayView(partial(self.start.callback, self))
+            view = await running_game.make_end_view(
+                partial(self.start.callback, self)
+            )
             
             await msg.channel.send(embed=embed, file=file, view=view)
 
@@ -270,7 +285,9 @@ class StructureGameCog(Cog, name='Structure Game module'):
                         title = "😔 No one found the solution.",
                         description = f"The answer was **{game.substance}**."
                     ),
-                    view = ReplayView(partial(self.start.callback, self))
+                    view = await running_game.make_end_view(
+                        partial(self.start.callback, self)
+                    )  
                 )
                 running_game.end()
 
@@ -304,7 +321,9 @@ class StructureGameCog(Cog, name='Structure Game module'):
                 title = f"🛑 {interaction.user} ended the game.",
                 description = f"The answer was **{running_game.game.substance}**."
             ),
-            view = ReplayView(partial(self.start.callback, self))
+            view = await running_game.make_end_view(
+                partial(self.start.callback, self)
+            )  
         )
     
     @game.command(name='scores')

@@ -1,5 +1,3 @@
 {
-    "isort.args": [
-        "--settings-path=${workspaceFolder}/project.toml"
-    ]
+    "editor.rulers": [72, 79]
 }

@@ -32,11 +32,9 @@ class ReplayView(View):
 class BaseRunningGame:
     """This base class encapsulates game related, Discord-aware logic."""
 
-    def __init_subclass__(cls):
-        # A registry of all running games is added to each child class. Keys
-        # are intented to be Discord channels IDs, values are RunningGame child
-        # class instances.
-        cls.registry = {}
+    # A registry of all running games. Keys are Discord channels, values are
+    # class instances. 
+    registry = {}
 
     def __init__(self, game, interaction):
         self.game = game
@@ -64,10 +62,15 @@ class BaseRunningGame:
         """End a running game. This will cancel all pending tasks."""
         for task in self.tasks:
             task.cancel()
-        self.registry.pop(self.channel.id, None)
+        
+        # Only pop the registry value if it actually holds a reference to this
+        # instance, as we don't want to remove another instance currently
+        # running in the same channel
+        if self.registry.get(self.channel.id) is self:
+            self.registry.pop(self.channel.id)
 
         log.info(f"Ended {self}")
-
+    
     def create_task(self, function):
         """Create a new asyncio task tied to this instance. The task must be a
         coroutine, and will be cancelled if the game is ended."""
@@ -75,9 +78,6 @@ class BaseRunningGame:
         task.add_done_callback(lambda task: self.tasks.remove(task))
 
         self.tasks.add(task)
-
-    def __del__(self):
-        self.end()
 
     def __str__(self):
         return f"{self.game} in {self.channel}"

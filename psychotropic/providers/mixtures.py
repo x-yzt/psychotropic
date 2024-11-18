@@ -1,12 +1,16 @@
 from enum import Enum
 
+from mistune import create_markdown
 import httpx
-from mdanchors import AnchorConverter
+
+from psychotropic.utils import DiscordMarkdownRenderer
 
 
 def format_markdown(text):
     text = text.replace('\\r\\n', '\n')
-    return AnchorConverter(text).to_inline_links()
+    render = create_markdown(renderer=DiscordMarkdownRenderer())
+    
+    return render(text)
 
 
 class MixturesEnum(Enum):
