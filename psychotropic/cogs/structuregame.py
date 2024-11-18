@@ -1,9 +1,9 @@
 import asyncio as aio
-from functools import partial
 import json
 import logging
 from collections import defaultdict
 from datetime import datetime
+from functools import partial
 from itertools import chain, count, islice
 from math import ceil
 from operator import itemgetter
@@ -285,7 +285,7 @@ class RunningGame:
         # Only pop the registry value if it actually holds a reference to this
         # instance, as we don't want to remove another instance currently
         # running in the same channel
-        if self.registry.get(self.channel.id) == self:
+        if self.registry.get(self.channel.id) is self:
             self.registry.pop(self.channel.id)
 
         log.info(f"Ended {self}")
@@ -311,9 +311,6 @@ class RunningGame:
         ))
 
         return view
-
-    def __del__(self):
-        self.end()
     
     def __str__(self):
         return f"{self.game} in {self.channel}"
@@ -338,7 +335,6 @@ class StructureGameCog(Cog, name='Structure Game module'):
     
     @Cog.listener()
     async def on_message(self, msg):
-        ctx = await self.bot.get_context(msg)
         if msg.is_system() or msg.author.bot:
             return
 
