@@ -274,7 +274,7 @@ class RunningGame:
         context."""
         return (
             interaction.user == self.owner
-            or interaction.user.permissions_in(interaction.channel).manage_messages
+            or interaction.permissions.manage_messages
         )
     
     def end(self):
@@ -319,6 +319,10 @@ class RunningGame:
     def get_from_context(cls, interaction):
         """Get a running game from an interaction context. Return `None` if
         no game can be found."""
+        log.debug(
+            f"Querying chan {interaction.channel.id} in reg {cls.registry}"
+        )
+        log.debug(f"Result: {cls.registry.get(interaction.channel.id)}")
         return cls.registry.get(interaction.channel.id)
 
 
