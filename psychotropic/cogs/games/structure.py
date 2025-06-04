@@ -162,15 +162,17 @@ class StructureGame:
 class RunningStructureGame(BaseRunningGame):
     async def make_end_view(self, callback):
         """Return a Discord view used to decorate end game embeds."""
-        substance = await pnwiki.get_substance(self.game.substance)
-
         view = ReplayView(callback)
-        view.add_item(Button(
-            label="What's that?",
-            style=ButtonStyle.url,
-            emoji="🌐",
-            url=substance['url']
-        ))
+
+        substance = await pnwiki.get_substance(self.game.substance)
+        # The PNW API might not return data if the substance is a draft
+        if substance:
+            view.add_item(Button(
+                label="What's that?",
+                style=ButtonStyle.url,
+                emoji="🌐",
+                url=substance['url']
+            ))
 
         return view
 
