@@ -1,18 +1,16 @@
 import asyncio as aio
 import logging
-from functools import partial
 from random import choice
 
 from discord import ButtonStyle, File
-from discord.app_commands import Group, Range
+from discord.app_commands import command
 from discord.ext.commands import Cog
 from discord.ui import Button
 
 from psychotropic import settings
-from psychotropic.cogs.games import ReplayView, BaseRunningGame, Scoreboard
+from psychotropic.cogs.games import BaseRunningGame, ReplayView, games_group
 from psychotropic.embeds import DefaultEmbed, ErrorEmbed
 from psychotropic.providers import pnwiki
-from psychotropic.ui import Paginator
 from psychotropic.utils import setup_cog, shuffled, unaccent
 
 
@@ -160,55 +158,24 @@ class StructureGame:
     
 
 class RunningStructureGame(BaseRunningGame):
-    async def make_end_view(self, callback):
-        """Return a Discord view used to decorate end game embeds."""
-        view = ReplayView(callback)
+    """This class encapsulates structure game related, Discord-aware logic."""    
+    async def check_answer(self, msg):
+        """Check if a message contains the answer and react accordingly."""
+        game = self.game
 
-        substance = await pnwiki.get_substance(self.game.substance)
-        # The PNW API might not return data if the substance is a draft
-        if substance:
-            view.add_item(Button(
-                label="What's that?",
-                style=ButtonStyle.url,
-                emoji="🌐",
-                url=substance['url']
-            ))
-
-        return view
-
-
-class StructureGameCog(Cog, name='Structure Game module'):
-    def __init__(self, bot):
-        self.bot = bot
-        self.scoreboard = Scoreboard()
-        self.scoreboard.load()
-        self.scoreboard.save.start()
-    
-    @Cog.listener()
-    async def on_ready(self):
-        await StructureGame.prepare_registry()
-    
-    @Cog.listener()
-    async def on_message(self, msg):
-        if msg.is_system() or msg.author.bot:
-            return
-
-        running_game = RunningStructureGame.registry.get(msg.channel.id)
-        if not running_game:
-            return
-        
-        game = running_game.game
-        
         if game.is_correct(msg.content):
-            time = running_game.time_since_start.total_seconds()
-            running_game.end()
+            time = self.time_since_start.total_seconds()
+
+            await self.end()
             self.scoreboard[str(msg.author.id)] += game.reward
 
             file = File(game.schematic, filename='schematic.png')
             embed = (
                 DefaultEmbed(
                     title=f"✅ Correct answer, {msg.author}!",
-                    description=f"Well played! The answer was **{game.substance}**."
+                    description=(
+                        f"Well played! The answer was **{game.substance}**."
+                    )
                 )
                 .set_thumbnail(url='attachment://schematic.png')
                 .add_field(
@@ -225,41 +192,39 @@ class StructureGameCog(Cog, name='Structure Game module'):
                     name="🥇 First try bonus!",
                     value="Yay!"
                 )
-            view = await running_game.make_end_view(
-                partial(self.start.callback, self)
-            )
+            view = await self.make_end_view()
             
             await msg.channel.send(embed=embed, file=file, view=view)
-
-    game = Group(name='game', description="Manage structure games.")
-
-    @game.command(name='start')
-    async def start(self, interaction):
-        """Start a new Structure Game. The bot will pick a random molecule
-        schematic, and the first player to write its name in the chat will win.
-
-        A certain number of coins (🪙), corresponding to the number of letters
-        guessed will be awarded to the winner.
-
-        Original idea from arli.
-        """
-        if RunningStructureGame.get_from_context(interaction):
-            await interaction.response.send_message(embed=ErrorEmbed(
-                "Another game is running in this channel!",
-                "Please end the current game before starting another one."
-            ))
-            return
     
-        try:
-            game = StructureGame()
-        except SchematicRegistry.UnfetchedRegistryError:
-            await interaction.response.send_message(embed=ErrorEmbed(
-                "The Structure Game is warming up",
-                "Please retry in a few moments!"
+    async def send_clue(self):
+        """Periodically send clues by showing some more letters."""
+        await aio.sleep(10)
+        
+        game = self.game
+        clue = game.get_clue()
+        
+        if game.secret_chars:
+            await self.channel.send(embed=DefaultEmbed(
+                title=f"💡 Here's a bit of help:",
+                description=f"```{clue}```"
             ))
-            return
+            await self.send_clue()
+        else:
+            await self.channel.send(
+                embed = DefaultEmbed(
+                    title = "😔 No one found the solution.",
+                    description = f"The answer was **{game.substance}**."
+                ),
+                view = await self.make_end_view()  
+            )
+            await self.end()
 
-        running_game = RunningStructureGame(game, interaction)
+    @classmethod
+    async def start(cls, interaction, game, scoreboard):
+        self = await super().start(interaction, game, scoreboard)
+
+        if not self:
+            return
 
         file = File(game.schematic, filename='schematic.png')  
         embed = (
@@ -271,76 +236,88 @@ class StructureGameCog(Cog, name='Structure Game module'):
         )
         await interaction.response.send_message(embed=embed, file=file)
 
-        async def send_clue():
-            await aio.sleep(10)
-            clue = game.get_clue()
-            
-            if game.secret_chars:
-                await interaction.followup.send(embed=DefaultEmbed(
-                    title=f"💡 Here's a bit of help:",
-                    description=f"```{clue}```"
-                ))
-                await send_clue()
-            else:
-                await interaction.followup.send(
-                    embed = DefaultEmbed(
-                        title = "😔 No one found the solution.",
-                        description = f"The answer was **{game.substance}**."
-                    ),
-                    view = await running_game.make_end_view(
-                        partial(self.start.callback, self)
-                    )  
-                )
-                running_game.end()
+        self.create_task(self.send_clue)
 
-        running_game.create_task(send_clue)
+        return self
 
-    @game.command(name='end')
-    async def end(self, interaction):
-        """End a running Structure Game. To end a game, you must either own it
-        or have permission to manage messages in the current channel.
-        """
-        running_game = RunningStructureGame.get_from_context(interaction)
-
-        if not running_game:
-            await interaction.response.send_message(embed=ErrorEmbed(
-                "There is no game running in this channel!",
-            ))
-            return
-        
-        if not running_game.can_be_ended(interaction):
-            await interaction.response.send_message(embed=ErrorEmbed(
-                "You are not allowed to end this game!",
-                "You need to own this game or have permission to manage "
-                "messages in this channel."
-            ))
-            return
-        
-        running_game.end()
-        
+    async def send_end_message(self, interaction):
         await interaction.response.send_message(
             embed = DefaultEmbed(
                 title = f"🛑 {interaction.user} ended the game.",
-                description = f"The answer was **{running_game.game.substance}**."
+                description = f"The answer was **{self.game.substance}**."
             ),
-            view = await running_game.make_end_view(
-                partial(self.start.callback, self)
-            )  
+            view = await self.make_end_view()  
         )
     
-    @game.command(name='scores')
-    async def scores(self, interaction, page: Range[int, 1] = 1):
-        """Show a given page of the scoreboard."""
-        await interaction.response.defer(thinking=True)
+    async def make_end_view(self):
+        """Return a Discord view used to decorate end game embeds."""
+        view = ReplayView(callback=self.replay)
+        
+        substance = await pnwiki.get_substance(self.game.substance)
+        # The PNW API might not return data if the substance is a draft
+        if substance:
+            view.add_item(Button(
+                label="What's that?",
+                style=ButtonStyle.url,
+                emoji="🌐",
+                url=substance['url']
+            ))
 
-        await interaction.followup.send(
-            embed = await self.scoreboard.make_embed(self.bot, page),
-            view = Paginator(
-                make_embed = partial(self.scoreboard.make_embed, self.bot),
-                page = page,
-                last_page = self.scoreboard.page_count
-            )
-        )
+        return view
+
+
+class StructureGameCog(Cog, name="Structure game module"):
+    def __init__(self, bot):
+        self.bot = bot
+    
+    @property
+    def scoreboard(self):
+        return self.bot.get_cog("Games module").scoreboard
+
+    @Cog.listener()
+    async def on_ready(self):
+        await StructureGame.prepare_registry()
+    
+    @Cog.listener()
+    async def on_message(self, msg):
+        if msg.is_system() or msg.author.bot:
+            return
+
+        if not (running_game := RunningStructureGame.get_from_context(msg)):
+            return
+        
+        await running_game.check_answer(msg)
+
+    async def structure(self, interaction):
+        """Start a new Structure Game. The bot will pick a random
+        molecule schematic, and the first player to write its name in
+        the chat will win.
+
+        A certain number of coins (🪙), corresponding to the number of
+        letters guessed will be awarded to the winner.
+
+        Original idea from arli.
+        """
+        try:
+            game = StructureGame()
+        except SchematicRegistry.UnfetchedRegistryError:
+            await interaction.response.send_message(embed=ErrorEmbed(
+                "The Structure Game is warming up",
+                "Please retry in a few moments!"
+            ))
+            return
+
+        await RunningStructureGame.start(interaction, game, self.scoreboard)
+
+    async def cog_load(self):
+        # Register the method as a subcommand of the `games_group`
+        # shared command group. This workaround is needed to keep
+        # matching slash-command signatures.
+        cmd = command()(self.structure)
+        games_group.add_command(cmd)
+
+        # Update the shared command group in the command tree
+        self.bot.tree.add_command(games_group, override=True)
 
 
 setup = setup_cog(StructureGameCog)
