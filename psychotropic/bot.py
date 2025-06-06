@@ -62,10 +62,12 @@ class PsychotropicBot(Bot):
 
     async def sync_tree(self):
         """Sync the app commands tree."""
-        self.tree.copy_global_to(guild=settings.TEST_GUILD)
-
-        await self.tree.sync(guild=settings.TEST_GUILD)
-        await self.tree.sync()
+        if settings.SYNC_GLOBAL_TREE:
+            await self.tree.sync()
+        else:
+            self.tree.clear_commands(guild=settings.TEST_GUILD)
+            self.tree.copy_global_to(guild=settings.TEST_GUILD)
+            await self.tree.sync(guild=settings.TEST_GUILD)
 
     async def setup_hook(self):
         log.info(f"OAuth URL: {self.oauth_url}")

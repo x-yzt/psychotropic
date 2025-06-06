@@ -14,6 +14,7 @@ EXTENSIONS = [
     'psychotropic.cogs.admin',
     'psychotropic.cogs.factsheets',
     'psychotropic.cogs.science',
+    'psychotropic.cogs.games',
     'psychotropic.cogs.games.structure',
     'psychotropic.cogs.combos',
 ]
@@ -27,6 +28,8 @@ HTTP_COOLDOWN = .2  # Delay between HTTP requests in seconds
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
 
 TEST_GUILD = Object(id=353885439331008512)
+
+SYNC_GLOBAL_TREE = True  # Only sync to test guild otherwise
 
 
 # Cosmetics
