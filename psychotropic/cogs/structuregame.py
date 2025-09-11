@@ -180,17 +180,23 @@ class StructureGame:
 class Scoreboard:
     """This class encapsulated scoreboard related logic."""
     SCORES_PATH = settings.STORAGE_DIR / 'scores.json'
+    GAMES_PLAYED_PATH = settings.STORAGE_DIR / 'games_played.json'
 
     PAGE_LEN = 15
 
     def __init__(self):
         self.scores = defaultdict(lambda: 0)
+        self.games_played = defaultdict(lambda: 0)
     
     def __setitem__(self, player, score):
         self.scores[player] = score
        
     def __getitem__(self, player):
         return self.scores[player]
+    
+    def increment_games_played(self, player):
+        """Increment the games played counter for a player."""
+        self.games_played[player] += 1
 
     @property
     def page_count(self):
@@ -207,7 +213,15 @@ class Scoreboard:
         with open(self.SCORES_PATH) as f:
             self.scores.update(json.load(f))
         
+        if not self.GAMES_PLAYED_PATH.exists():
+            with open(self.GAMES_PLAYED_PATH, 'w') as f:
+                json.dump({}, f)
+        
+        with open(self.GAMES_PLAYED_PATH) as f:
+            self.games_played.update(json.load(f))
+        
         log.info(f"Loaded {len(self.scores)} scoreboard entries from FS")
+        log.info(f"Loaded {len(self.games_played)} games played entries from FS")
     
     @loop(seconds=60)
     async def save(self):
@@ -215,7 +229,11 @@ class Scoreboard:
         with open(self.SCORES_PATH, 'w') as f:
             json.dump(self.scores, f)
         
+        with open(self.GAMES_PLAYED_PATH, 'w') as f:
+            json.dump(self.games_played, f)
+        
         log.debug(f"Saved {len(self.scores)} scoreboard entries to FS")
+        log.debug(f"Saved {len(self.games_played)} games played entries to FS")
 
     async def make_embed(self, client, page):
         """Generate an embed showing the scoreboard at a given page."""
@@ -365,6 +383,7 @@ class StructureGameCog(Cog, name='Structure Game module'):
             time = running_game.time_since_start.total_seconds()
             running_game.end()
             self.scoreboard[str(msg.author.id)] += game.reward
+            self.scoreboard.increment_games_played(str(msg.author.id))
 
             file = File(game.schematic, filename='schematic.png')
             embed = (
@@ -503,6 +522,66 @@ class StructureGameCog(Cog, name='Structure Game module'):
                 last_page = self.scoreboard.page_count
             )
         )
+    
+    @game.command(name='profil')
+    async def profil(self, interaction):
+        """Affiche votre profil avec vos statistiques de jeu."""
+        user_id = str(interaction.user.id)
+        coins = self.scoreboard.scores[user_id]
+        games_played = self.scoreboard.games_played[user_id]
+        
+        # Calculer le ratio parties/pièces
+        ratio = coins / games_played if games_played > 0 else 0
+        
+        # Déterminer le niveau basé sur les pièces
+        if coins < 20:
+            level = "🧪 Débutant"
+            level_color = 0x808080  # Gris
+        elif coins < 100:
+            level = "⚗️ Apprenti"
+            level_color = 0x00FF00  # Vert
+        elif coins < 500:
+            level = "🔬 Chimiste"
+            level_color = 0x0080FF  # Bleu
+        elif coins < 1000:
+            level = "🧬 Expert"
+            level_color = 0xFF8000  # Orange
+        else:
+            level = "👑 Maître"
+            level_color = 0xFFD700  # Or
+        
+        embed = DefaultEmbed(
+            title=f"👤 Profil de {interaction.user.display_name}",
+            description=f"**{level}**",
+            color=level_color
+        )
+        
+        embed.set_thumbnail(url=interaction.user.display_avatar.url)
+        
+        embed.add_field(
+            name="🎮 Parties jouées",
+            value=f"**{games_played}**",
+            inline=True
+        )
+        
+        embed.add_field(
+            name="🪙 Pièces gagnées",
+            value=f"**{coins:.1f}**",
+            inline=True
+        )
+        
+        embed.add_field(
+            name="📊 Ratio",
+            value=f"**{ratio:.2f}** pièces/partie",
+            inline=True
+        )
+        
+        embed.set_footer(
+            text="Utilisez /game start pour jouer !",
+            icon_url=settings.AVATAR_URL
+        )
+        
+        await interaction.response.send_message(embed=embed)
 
 
 setup = setup_cog(StructureGameCog)
