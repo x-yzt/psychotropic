@@ -180,17 +180,23 @@ class StructureGame:
 class Scoreboard:
     """This class encapsulated scoreboard related logic."""
     SCORES_PATH = settings.STORAGE_DIR / 'scores.json'
+    GAMES_PLAYED_PATH = settings.STORAGE_DIR / 'games_played.json'
 
     PAGE_LEN = 15
 
     def __init__(self):
         self.scores = defaultdict(lambda: 0)
+        self.games_played = defaultdict(lambda: 0)
     
     def __setitem__(self, player, score):
         self.scores[player] = score
        
     def __getitem__(self, player):
         return self.scores[player]
+    
+    def increment_games_played(self, player):
+        """Increment the games played counter for a player."""
+        self.games_played[player] += 1
 
     @property
     def page_count(self):
@@ -207,7 +213,15 @@ class Scoreboard:
         with open(self.SCORES_PATH) as f:
             self.scores.update(json.load(f))
         
+        if not self.GAMES_PLAYED_PATH.exists():
+            with open(self.GAMES_PLAYED_PATH, 'w') as f:
+                json.dump({}, f)
+        
+        with open(self.GAMES_PLAYED_PATH) as f:
+            self.games_played.update(json.load(f))
+        
         log.info(f"Loaded {len(self.scores)} scoreboard entries from FS")
+        log.info(f"Loaded {len(self.games_played)} games played entries from FS")
     
     @loop(seconds=60)
     async def save(self):
@@ -215,7 +229,11 @@ class Scoreboard:
         with open(self.SCORES_PATH, 'w') as f:
             json.dump(self.scores, f)
         
+        with open(self.GAMES_PLAYED_PATH, 'w') as f:
+            json.dump(self.games_played, f)
+        
         log.debug(f"Saved {len(self.scores)} scoreboard entries to FS")
+        log.debug(f"Saved {len(self.games_played)} games played entries to FS")
 
     async def make_embed(self, client, page):
         """Generate an embed showing the scoreboard at a given page."""
@@ -365,6 +383,7 @@ class StructureGameCog(Cog, name='Structure Game module'):
             time = running_game.time_since_start.total_seconds()
             running_game.end()
             self.scoreboard[str(msg.author.id)] += game.reward
+            self.scoreboard.increment_games_played(str(msg.author.id))
 
             file = File(game.schematic, filename='schematic.png')
             embed = (
@@ -503,6 +522,101 @@ class StructureGameCog(Cog, name='Structure Game module'):
                 last_page = self.scoreboard.page_count
             )
         )
+    
+    @game.command(name='profil')
+    async def profil(self, interaction):
+        """Show your profile with your game statistics."""
+        user_id = str(interaction.user.id)
+        coins = self.scoreboard.scores[user_id]
+        games_played = self.scoreboard.games_played[user_id]
+        
+        ratio = coins / games_played if games_played > 0 else 0
+        
+        # Détermination du niveau et de la couleur + bornes de progression
+        next_threshold = None
+        floor_threshold = 0
+        if coins >= 20000:
+            level = "👑 Walter White"
+            level_color = 0xFF0000  # rouge
+            floor_threshold = 20000
+            next_threshold = None
+        elif coins >= 15000:
+            level = "🧑‍🔬 chimiste 15k"
+            level_color = 0x001F3F  # bleu nuit
+            floor_threshold = 15000
+            next_threshold = 20000
+        elif coins >= 10000:
+            level = "🧬 chimiste 10k"
+            level_color = 0xFFC107  # jaune orange (or un peu)
+            floor_threshold = 10000
+            next_threshold = 15000
+        elif coins >= 1000:
+            level = "🧪 chimiste 1k"
+            level_color = 0x7CFC00  # vert clair
+            floor_threshold = 1000
+            next_threshold = 10000
+        elif coins >= 420:
+            level = "🥽 chimiste 420"
+            level_color = 0x00FFFF  # bleu cyan
+            floor_threshold = 420
+            next_threshold = 1000
+        else:
+            level = "🧑‍🎓 debutant"
+            level_color = 0x808080  # gris
+            floor_threshold = 0
+            next_threshold = 420
+
+        if next_threshold is None:
+            progress_percent = None
+        else:
+            span = max(1, next_threshold - floor_threshold)
+            progress_percent = max(0.0, min(100.0, (coins - floor_threshold) / span * 100))
+        
+        embed = DefaultEmbed(
+            title=f"👤 Profile of {interaction.user.display_name}",
+            description=f"**{level}**",
+            color=level_color
+        )
+        
+        embed.set_thumbnail(url=interaction.user.display_avatar.url)
+        
+        embed.add_field(
+            name="🎮 Games played",
+            value=f"**{games_played}**",
+            inline=True
+        )
+        
+        embed.add_field(
+            name="🪙 Coins won",
+            value=f"**{coins:.1f}**",
+            inline=True
+        )
+
+        if progress_percent is None:
+            embed.add_field(
+                name="🔼 Next rank",
+                value="Max rank reached",
+                inline=True
+            )
+        else:
+            embed.add_field(
+                name="🔼 Next rank",
+                value=f"**{progress_percent:.1f}%**",
+                inline=True
+            )
+        
+        embed.add_field(
+            name="📊 Ratio",
+            value=f"**{ratio:.2f}** coins/game",
+            inline=True
+        )
+        
+        embed.set_footer(
+            text="Use /game start to play!",
+            icon_url=settings.AVATAR_URL
+        )
+        
+        await interaction.response.send_message(embed=embed)
 
 
 setup = setup_cog(StructureGameCog)
