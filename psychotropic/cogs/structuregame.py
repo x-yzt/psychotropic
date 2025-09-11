@@ -532,21 +532,45 @@ class StructureGameCog(Cog, name='Structure Game module'):
         
         ratio = coins / games_played if games_played > 0 else 0
         
-        if coins < 20:
-            level = "🧪 Beginner"
-            level_color = 0x808080
-        elif coins < 100:
-            level = "⚗️ Apprentice"
-            level_color = 0x00FF00
-        elif coins < 500:
-            level = "🔬 Chemist"
-            level_color = 0x0080FF
-        elif coins < 1000:
-            level = "🧬 Expert"
-            level_color = 0xFF8000
+        # Détermination du niveau et de la couleur + bornes de progression
+        next_threshold = None
+        floor_threshold = 0
+        if coins >= 20000:
+            level = "👑 Walter White"
+            level_color = 0xFF0000  # rouge
+            floor_threshold = 20000
+            next_threshold = None
+        elif coins >= 15000:
+            level = "🧑‍🔬 chimiste 15k"
+            level_color = 0x001F3F  # bleu nuit
+            floor_threshold = 15000
+            next_threshold = 20000
+        elif coins >= 10000:
+            level = "🧬 chimiste 10k"
+            level_color = 0xFFC107  # jaune orange (or un peu)
+            floor_threshold = 10000
+            next_threshold = 15000
+        elif coins >= 1000:
+            level = "🧪 chimiste 1k"
+            level_color = 0x7CFC00  # vert clair
+            floor_threshold = 1000
+            next_threshold = 10000
+        elif coins >= 420:
+            level = "🥽 chimiste 420"
+            level_color = 0x00FFFF  # bleu cyan
+            floor_threshold = 420
+            next_threshold = 1000
         else:
-            level = "👑 Master"
-            level_color = 0xFFD700
+            level = "🧑‍🎓 debutant"
+            level_color = 0x808080  # gris
+            floor_threshold = 0
+            next_threshold = 420
+
+        if next_threshold is None:
+            progress_percent = None
+        else:
+            span = max(1, next_threshold - floor_threshold)
+            progress_percent = max(0.0, min(100.0, (coins - floor_threshold) / span * 100))
         
         embed = DefaultEmbed(
             title=f"👤 Profile of {interaction.user.display_name}",
@@ -567,6 +591,19 @@ class StructureGameCog(Cog, name='Structure Game module'):
             value=f"**{coins:.1f}**",
             inline=True
         )
+
+        if progress_percent is None:
+            embed.add_field(
+                name="🔼 Next rank",
+                value="Max rank reached",
+                inline=True
+            )
+        else:
+            embed.add_field(
+                name="🔼 Next rank",
+                value=f"**{progress_percent:.1f}%**",
+                inline=True
+            )
         
         embed.add_field(
             name="📊 Ratio",
