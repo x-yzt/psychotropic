@@ -525,33 +525,31 @@ class StructureGameCog(Cog, name='Structure Game module'):
     
     @game.command(name='profil')
     async def profil(self, interaction):
-        """Affiche votre profil avec vos statistiques de jeu."""
+        """Show your profile with your game statistics."""
         user_id = str(interaction.user.id)
         coins = self.scoreboard.scores[user_id]
         games_played = self.scoreboard.games_played[user_id]
         
-        # Calculer le ratio parties/pièces
         ratio = coins / games_played if games_played > 0 else 0
         
-        # Déterminer le niveau basé sur les pièces
         if coins < 20:
-            level = "🧪 Débutant"
-            level_color = 0x808080  # Gris
+            level = "🧪 Beginner"
+            level_color = 0x808080
         elif coins < 100:
-            level = "⚗️ Apprenti"
-            level_color = 0x00FF00  # Vert
+            level = "⚗️ Apprentice"
+            level_color = 0x00FF00
         elif coins < 500:
-            level = "🔬 Chimiste"
-            level_color = 0x0080FF  # Bleu
+            level = "🔬 Chemist"
+            level_color = 0x0080FF
         elif coins < 1000:
             level = "🧬 Expert"
-            level_color = 0xFF8000  # Orange
+            level_color = 0xFF8000
         else:
-            level = "👑 Maître"
-            level_color = 0xFFD700  # Or
+            level = "👑 Master"
+            level_color = 0xFFD700
         
         embed = DefaultEmbed(
-            title=f"👤 Profil de {interaction.user.display_name}",
+            title=f"👤 Profile of {interaction.user.display_name}",
             description=f"**{level}**",
             color=level_color
         )
@@ -559,25 +557,25 @@ class StructureGameCog(Cog, name='Structure Game module'):
         embed.set_thumbnail(url=interaction.user.display_avatar.url)
         
         embed.add_field(
-            name="🎮 Parties jouées",
+            name="🎮 Games played",
             value=f"**{games_played}**",
             inline=True
         )
         
         embed.add_field(
-            name="🪙 Pièces gagnées",
+            name="🪙 Coins won",
             value=f"**{coins:.1f}**",
             inline=True
         )
         
         embed.add_field(
             name="📊 Ratio",
-            value=f"**{ratio:.2f}** pièces/partie",
+            value=f"**{ratio:.2f}** coins/game",
             inline=True
         )
         
         embed.set_footer(
-            text="Utilisez /game start pour jouer !",
+            text="Use /game start to play!",
             icon_url=settings.AVATAR_URL
         )
         
