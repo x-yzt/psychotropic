@@ -46,7 +46,7 @@ async def list_substances():
     ))
 
 
-async def get_substance(query):
+async def get_substance(query, **kwargs):
     query = """
         {
             substances(query: "%s", limit: 1) {
@@ -61,7 +61,7 @@ async def get_substance(query):
     """ % query
 
     async with PNWikiAPIClient() as client:
-        r = await client.post_graphql(query)
+        r = await client.post_graphql(query, **kwargs)
 
     substances = r.json()["data"]["substances"]
 

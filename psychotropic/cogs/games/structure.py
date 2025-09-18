@@ -6,6 +6,7 @@ from discord import ButtonStyle, File
 from discord.app_commands import command
 from discord.ext.commands import Cog
 from discord.ui import Button
+from httpx import TimeoutException
 
 from psychotropic import settings
 from psychotropic.cogs.games import BaseRunningGame, ReplayView, games_group
@@ -246,8 +247,19 @@ class RunningStructureGame(BaseRunningGame):
     async def make_end_view(self):
         """Return a Discord view used to decorate end game embeds."""
         view = ReplayView(callback=self.replay)
-        
-        substance = await pnwiki.get_substance(self.game.substance)
+
+        substance = None
+
+        try:
+            # Short timeout because the "what's that?" button is not mandatory,
+            # plus a response is needed in less than 3 seconds when triggered
+            # by the game end application command
+            substance = await pnwiki.get_substance(
+                self.game.substance, timeout=2
+            )
+        except TimeoutException:
+            log.warning("Unable to reach PsychonautWiki API")
+
         # The PNW API might not return data if the substance is a draft
         if substance:
             view.add_item(Button(
