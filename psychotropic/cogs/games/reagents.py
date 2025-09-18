@@ -20,26 +20,6 @@ from psychotropic.utils import make_gradient, setup_cog, unformat
 log = logging.getLogger(__name__)
 
 
-class ReagentSelect(Select):
-    def __init__(self):
-        super().__init__()
-
-        db = ReagentsDatabase()
-        
-
-    async def callback(self, interaction):
-        self.disabled = True
-        await interaction.message.edit(view=self.view)
-
-        await interaction.response.send_message(f"Tu as choisi l'option {self.values[0]}")
-
-
-class ReagentSelectView(View):
-    def __init__(self):
-        super().__init__()
-        self.add_item(ReagentSelect())
-
-
 class ReagentsGame:
     """This Discord-agnostic class encapsulates bare game-related logic."""
     def __init__(self):
@@ -56,11 +36,11 @@ class ReagentsGame:
         """Return a (colors, text) tuple of the results of a given reagent, 
         and add this reagent to the tried reagents list.
         
-        `IndexError` is raised if no result can be found.
+        `KeyError` is raised if no result can be found.
         """
-        result = self.db.get_result(self.substance, reagent)
-
         self.reagents_tried.add(reagent['id'])
+
+        result = self.db.get_result(self.substance, reagent)
 
         colors = list(map(
             ImageColor.getrgb,
@@ -182,12 +162,13 @@ class RunningReagentsGame(BaseRunningGame):
         try:
             colors, text = self.game.reagent_result(reagent)
         except KeyError:
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 embed=ErrorEmbed(
                     "Reaction error 💣",
                     f"Sadly I can't perform a {reagent['fullName']} test on "
                     "this mysterious substance."
-                )
+                ),
+                view=self.make_reagent_select_view()
             )
             return
         
@@ -207,30 +188,40 @@ class RunningReagentsGame(BaseRunningGame):
         )
 
         if colors:
-            buffer = BytesIO()
             image = make_gradient(colors, 600, 100)
-            image.save(buffer, format="PNG")
-            buffer.seek(0)
-            file = File(fp=buffer, filename="gradient.png")
-        
-            embed.set_image(url="attachment://gradient.png")
 
-            await interaction.response.send_message(
-                embed=embed,
-                file=file,
-                view=self.make_reagent_select_view()
-            )
+            with BytesIO() as buffer:
+                image.save(buffer, format="PNG")
+                buffer.seek(0)
+                file = File(fp=buffer, filename="gradient.png")
+            
+                embed.set_image(url="attachment://gradient.png")
+
+                await interaction.followup.send(
+                    embed=embed,
+                    file=file,
+                    view=self.make_reagent_select_view()
+                )
 
         else:
             # No color change, special patterns...
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 embed=embed,
                 view=self.make_reagent_select_view()
             )
         
     def make_reagent_select_view(self):
+        view = View()
         select = Select(placeholder="Buy and use a reagent...")
-        select.callback = self.test_reagent
+        
+        async def callback(interaction):
+            # Disable the select dropdown as soon as a choice have been made
+            select.disabled = True
+            await interaction.response.edit_message(view=view)
+
+            await self.test_reagent(interaction)
+
+        select.callback = callback
 
         for reagent in self.game.db.get_reagents():
             if reagent['id'] not in self.game.reagents_tried:
@@ -240,17 +231,20 @@ class RunningReagentsGame(BaseRunningGame):
                     value=reagent['id']
                 )
 
-        view = View()
         view.add_item(select)
         return view
     
     async def send_end_message(self, interaction):
         await interaction.response.send_message(
-            embed = DefaultEmbed(
-                title = f"🛑 {interaction.user} ended the game.",
-                description = f"The answer was **{self.game.substance['commonName']}**."
+            embed=(
+                DefaultEmbed(
+                    title=f"🛑 {interaction.user} ended the game.",
+                    description=f"The answer was **{self.game.substance['commonName']}**."
+                )
+                .set_thumbnail(url='attachment://icon.png')
             ),
-            view = await self.make_end_view()  
+            file=self.icon,
+            view=await self.make_end_view()  
         )
     
     async def make_end_view(self):
