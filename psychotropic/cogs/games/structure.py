@@ -11,7 +11,7 @@ from psychotropic import settings
 from psychotropic.cogs.games import BaseRunningGame, ReplayView, games_group
 from psychotropic.embeds import DefaultEmbed, ErrorEmbed
 from psychotropic.providers import pnwiki
-from psychotropic.utils import setup_cog, shuffled, unaccent
+from psychotropic.utils import setup_cog, shuffled, unformat
 
 
 log = logging.getLogger(__name__)
@@ -127,7 +127,10 @@ class StructureGame:
         """Check if a string contains an unformated substring of the right
         answer and increment the tries counter."""
         self.tries += 1
-        return self.unformat(self.substance) in self.unformat(guess)
+        return (
+            unformat(self.substance, self.NON_WORD) 
+            in unformat(guess, self.NON_WORD)
+        )
     
     def get_clue(self):
         """Generate a new, easier clue and return it."""
@@ -147,15 +150,6 @@ class StructureGame:
         """Prepare the registry of all substances to play the game with."""
         await cls.schematic_registry.fetch_schematics()
 
-    @staticmethod
-    def unformat(string):
-        """Return an unformatted version of a string, stripping some special 
-        chars. This is used for approximate answer comparsion."""
-        return ''.join(
-            c for c in unaccent(string.lower())
-            if c not in StructureGame.NON_WORD
-        )
-    
 
 class RunningStructureGame(BaseRunningGame):
     """This class encapsulates structure game related, Discord-aware logic."""    

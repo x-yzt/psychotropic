@@ -16,8 +16,11 @@ EXTENSIONS = [
     'psychotropic.cogs.science',
     'psychotropic.cogs.games',
     'psychotropic.cogs.games.structure',
+    'psychotropic.cogs.games.reagents',
     'psychotropic.cogs.combos',
 ]
+
+BASE_DIR = Path(__file__).parent
 
 STORAGE_DIR = Path('storage')
 

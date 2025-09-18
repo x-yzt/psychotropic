@@ -14,6 +14,9 @@ class ReagentsDatabase:
             self.db[type_].values()
         ))
     
+    def get_by_id(self, type_, id_):
+        return self.db[type_][str(id_)]
+
     def get_substance(self, name=None):
         if results := self.get_items('substances', 'commonName', name):
             return results[0]
@@ -24,13 +27,19 @@ class ReagentsDatabase:
     def get_reagent(self, name):
         if results := self.get_items('reagents', 'fullName', name):
             return results[0]
+    
+    def get_reagents(self):
+        return list(self.db['reagents'].values())
 
     def get_result(self, substance, reagent):
         sid, rid = substance['id'], reagent['id']
-        return self.db['results'][sid][rid]
+        return self.db['results'][str(sid)][str(rid)][0]
 
-    def get_color_code(self, id_):
-        return self.db['colors'][id_]['hex']
+    def get_result_colors(self, result):
+        return (self.get_color_code(cid) for cid in result[0])
+
+    def get_color_code(self, cid):
+        return self.db['colors'][str(cid)]['hex']
 
     def get_well_known_substances(self, reagents_count=10):
         """"Return all substances with `reagents_count` or more reaction
