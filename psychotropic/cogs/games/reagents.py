@@ -231,7 +231,11 @@ class RunningReagentsGame(BaseRunningGame):
                     value=reagent['id']
                 )
 
-        view.add_item(select)
+        # Don't add the select to the view if no items are avalaible
+        # because selection without options are not allowed by Discord
+        if select.options:
+            view.add_item(select)
+
         return view
     
     async def send_end_message(self, interaction):
