@@ -1,12 +1,15 @@
 import asyncio as aio
 import re
 import unicodedata
+from functools import partial, wraps
 from itertools import pairwise
 from random import sample
 
 import httpx
 from mistune.renderers.markdown import MarkdownRenderer
-from PIL import Image
+from PIL import Image, ImageDraw
+
+from psychotropic import settings
 
 
 class DiscordMarkdownRenderer(MarkdownRenderer):
@@ -142,3 +145,44 @@ def make_gradient(colors, width=256, height=256):
                 image.putpixel((x, y), (r, g, b))
 
     return image
+
+
+def make_progress_bar(
+        progress,
+        color=settings.COLOUR.to_rgb(),
+        width=256,
+        height=64
+    ):
+    """Draw a progress bar of a given color, representing a float
+    `progress` between 0 and 1."""
+    assert 0 <= progress <= 1
+
+    image = Image.new("RGB", (width, height))
+    draw = ImageDraw.Draw(image)
+    draw.rectangle(((0, 0), (int(width * progress), height)), fill=color)
+
+    return image
+
+
+def memoize_method(attributes=()):
+    """Decorator to memoize a method.
+    
+    Unlike `cached_property`, it accepts a tuple of attributes names
+    which values will be used to construct the cache keys, making it
+    useful in mutable classes.
+    
+    Unlike `lru_cache`, this can be used in unhashable classes (eg. non-
+    frozen dataclasses where `unsafe_hash = False`)."""
+    def decorator(function):
+        cache = {}
+
+        @wraps(function)
+        def wrapper(instance, *args, **kwargs):
+            key = tuple(map(partial(getattr, instance), attributes))
+           
+            if key not in cache:
+                cache[key] = function(instance, *args, **kwargs)
+
+            return cache[key]
+        return wrapper
+    return decorator

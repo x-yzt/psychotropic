@@ -162,7 +162,8 @@ class RunningStructureGame(BaseRunningGame):
             time = self.time_since_start.total_seconds()
 
             await self.end()
-            self.scoreboard[str(msg.author.id)] += game.reward
+            self.scoreboard[msg.author].balance += game.reward
+            self.scoreboard[msg.author].won_structure_games += 1
 
             file = File(game.schematic, filename='schematic.png')
             embed = (

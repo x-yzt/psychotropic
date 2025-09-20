@@ -52,6 +52,42 @@ COMPOUNDS_DESCRIPTION_PROVIDERS = (
 )
 
 
+# Games cog
+
+LEVELS = (
+    {
+        'threshold': 0,
+        'name': "Beginner 🧑‍🎓",
+        'color': COLOUR,
+    },
+    {
+        'threshold': 420,
+        'name': "420 chemist 🥽",
+        'color': Colour(0x00FFFF),
+    },
+    {
+        'threshold': 1_000,
+        'name': "1k chemist 🧪",
+        'color': Colour(0x7CFC00),
+    },
+    {
+        'threshold': 5_000,
+        'name': "5k chemist 🧬",
+        'color': Colour(0xFFC107),
+    },
+    {
+        'threshold': 10_000,
+        'name': "10k chemist 🧑‍🔬",
+        'color': Colour(0x001F3F),
+    },
+    {
+        'threshold': 20_000,
+        'name': "Walter White 👑",
+        'color': Colour(0xFF0000),
+    },
+)
+
+
 # Structure game cog
 
 FETCH_SCHEMATICS = True  # Fetch schematics from PNWiki on each bot start

@@ -2,13 +2,16 @@ import asyncio as aio
 import json
 import logging
 from collections import defaultdict
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from functools import partial
+from io import BytesIO
 from itertools import chain, count, islice
+from json import JSONDecoder, JSONEncoder
 from math import ceil
-from operator import itemgetter
+from typing import Optional
 
-from discord import ButtonStyle
+from discord import ButtonStyle, Embed, File, Member, User
 from discord.app_commands import Group, Range, command
 from discord.ext.commands import Cog
 from discord.ext.tasks import loop
@@ -17,7 +20,8 @@ from discord.ui import View, button
 from psychotropic import settings
 from psychotropic.embeds import DefaultEmbed, ErrorEmbed
 from psychotropic.ui import Paginator
-from psychotropic.utils import format_user, pretty_list, setup_cog
+from psychotropic.utils import (
+    format_user, make_progress_bar, memoize_method, pretty_list, setup_cog)
 
 
 log = logging.getLogger(__name__)
@@ -120,45 +124,158 @@ class BaseRunningGame:
         return cls(interaction, *args, **kwargs)
 
 
+@dataclass
+class Profile:
+    """Represents a player profile data."""
+    balance: float = 0
+    won_structure_games: int = 0
+    won_reagents_games: int = 0
+
+    @property
+    def won_games(self):
+        return self.won_structure_games + self.won_reagents_games
+
+    @property
+    @memoize_method(('balance',))
+    def level(self):
+        """Current player level."""
+        return max(
+            filter(
+                lambda lvl: self.balance >= lvl['threshold'],
+                settings.LEVELS
+            ),
+            key=lambda lvl: lvl['threshold']
+        )
+
+    @property
+    @memoize_method(('balance',))
+    def next_level(self):
+        """Next player level. `None` if the player has outreached the
+        last level threshold."""
+        try:
+            return min(
+                filter(
+                    lambda lvl: lvl['threshold'] > self.level['threshold'],
+                    settings.LEVELS
+                ),
+                key=lambda lvl: lvl['threshold']
+            )
+        except ValueError:
+            return
+    
+    @property
+    @memoize_method(('balance',))
+    def next_level_in(self):
+        return (
+            self.next_level['threshold'] - self.balance
+            if self.next_level
+            else float('inf')
+        )
+
+    @property
+    @memoize_method(('balance',))
+    def level_progress(self):
+        """Progress beween current and next level as a [0, 1] value."""
+        if not self.next_level:
+            return 1
+    
+        return (
+            (self.balance - self.level['threshold'])
+            / (self.next_level['threshold'] - self.level['threshold'])
+        )
+
+
+class ScoreboardJSONEncoder(JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Profile):
+            return asdict(obj) | {'__type__': 'Profile'}
+
+        return super().default(obj)
+
+
+class ScoreboardJSONDecoder(JSONDecoder):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, object_hook=self.object_hook, **kwargs)
+
+    def object_hook(self, obj):
+        if obj.pop('__type__', None) == 'Profile':
+            return Profile(**obj)
+        
+        return obj
+
+
 class Scoreboard:
-    """This class encapsulated scoreboard related logic."""
-    SCORES_PATH = settings.STORAGE_DIR / 'scores.json'
+    """This class encapsulates scoreboard related logic."""
+    SCOREBOARD_PATH = settings.STORAGE_DIR / 'players.json'
 
     PAGE_LEN = 15
 
     def __init__(self):
-        self.scores = defaultdict(lambda: 0)
-    
-    def __setitem__(self, player, score):
-        self.scores[player] = score
+        self.players = defaultdict(lambda: Profile())
+
+    def __len__(self):
+        return len(self.players)
+
+    def __setitem__(self, player, profile):
+        assert isinstance(profile, Profile)
+
+        if isinstance(player, Member | User):
+            player = player.id
+        
+        self.players[str(player)] = profile
        
     def __getitem__(self, player):
-        return self.scores[player]
+        if isinstance(player, Member | User):
+            player = player.id
+        
+        return self.players[str(player)]
 
     @property
     def page_count(self):
-        return ceil(len(self.scores) / self.PAGE_LEN)
+        return ceil(len(self.players) / self.PAGE_LEN)
 
     def load(self):
         """Synchronously load scoreboard from filesystem."""
-        self.SCORES_PATH.parent.mkdir(parents=True, exist_ok=True)
+        self.SCOREBOARD_PATH.parent.mkdir(parents=True, exist_ok=True)
         
-        if not self.SCORES_PATH.exists():
-            with open(self.SCORES_PATH, 'w') as f:
-                json.dump({}, f)
+        if not self.SCOREBOARD_PATH.exists():
+            with open(self.SCOREBOARD_PATH, 'w') as file:
+                json.dump({}, file, cls=ScoreboardJSONEncoder)
         
-        with open(self.SCORES_PATH) as f:
-            self.scores.update(json.load(f))
+        with open(self.SCOREBOARD_PATH) as file:
+            self.players.update(json.load(file, cls=ScoreboardJSONDecoder))
         
-        log.info(f"Loaded {len(self.scores)} scoreboard entries from FS")
+        log.info(f"Loaded {len(self.players)} scoreboard entries from FS")
     
     @loop(seconds=60)
     async def save(self):
         """Asynchronously save current scoreboard to filesystem."""
-        with open(self.SCORES_PATH, 'w') as f:
-            json.dump(self.scores, f)
-        
-        log.debug(f"Saved {len(self.scores)} scoreboard entries to FS")
+        with open(self.SCOREBOARD_PATH, 'w') as file:
+            json.dump(self.players, file, cls=ScoreboardJSONEncoder)
+
+        log.debug(f"Saved {len(self.players)} scoreboard entries to FS")
+
+    def top_players(self):
+        """Returns the players by descending balance."""
+        return sorted(
+            self.players.items(),
+            key=lambda player: player[1].balance,
+            reverse=True
+        )
+
+    def rank(self, player):
+        """Get the rank of a player. Return 0 if the player is not
+        ranked in the scoreboard."""
+        if isinstance(player, Member | User):
+            player = player.id
+
+        try:
+            return next(
+                i for i, (uid, profile) in enumerate(self.top_players())
+                if uid == str(player)
+            ) + 1
+        except StopIteration:
+            return 0
 
     async def make_embed(self, client, page):
         """Generate an embed showing the scoreboard at a given page."""
@@ -168,28 +285,24 @@ class Scoreboard:
             "**{emoji}** - {user} - `{score} 🪙`".format(
                 emoji = emoji,
                 user = format_user(await client.fetch_user(uid)),
-                score = int(score)
+                score = int(profile.balance)
             )
-            for emoji, (uid, score) in islice(zip(
-                chain("🥇🥈🥉", count(4)),
-                sorted(
-                    self.scores.items(),
-                    key = itemgetter(1),
-                    reverse = True
-                )
-            ), *bounds)
+            for emoji, (uid, profile) in islice(
+                zip(chain("🥇🥈🥉", count(4)), self.top_players()),
+                *bounds
+            )
         ]
 
         embed = ErrorEmbed("Empty page")
         if scores:
             embed = DefaultEmbed(
-                title = "🏆 Scoreboard",
-                description = pretty_list(scores, capitalize=False)
+                title="🏆 Scoreboard",
+                description=pretty_list(scores, capitalize=False)
             )
 
         return embed.add_field(
-            name = "📄 Page number",
-            value = f"**{page}** / **{self.page_count}**"
+            name="📄 Page number",
+            value=f"**{page}** / **{self.page_count}**"
         )
 
 
@@ -222,7 +335,82 @@ class GamesCog(Cog, name="Games module"):
                 last_page = self.scoreboard.page_count
             )
         )
-    
+
+    async def profile(self, interaction, member: Optional[Member] = None):
+        """Display profile information and game statistics for a player.
+        If no player is provided, your information will be displayed.
+        """
+        member = member or interaction.user
+
+        profile = self.scoreboard[member]
+        rank = self.scoreboard.rank(member)
+        ratio = (
+            profile.balance / profile.won_games
+            if profile.won_games else 0
+        )
+
+        progress_bar = make_progress_bar(
+            profile.level_progress,
+            color=profile.level['color'].to_rgb(),
+            width=600,
+            height=40
+        )
+
+        embed = (
+            Embed(
+                title=f"👤 {member}'s profile",
+                colour=profile.level['color']
+            )
+            .add_field(
+                name="⚖️ Balance",
+                value=f"You own **{profile.balance} 🪙**.",
+                inline=False
+            )
+            .add_field(
+                name="🎚️ Level",
+                value=(
+                    f"You're currently at the **{profile.level['name']}** "
+                    "level."
+                ),
+                inline=False
+            )
+            .add_field(
+                name="🏆 Rank",
+                value=(
+                    "You're ranked **{rank}** out of {total} players."
+                    .format(
+                        # Small magic trick here: 0 corresponds to an
+                        # unranked player
+                        rank='🚫🥇🥈🥉'[rank] if rank <= 3 else rank,
+                        total=len(self.scoreboard)
+                    )
+                ),
+                inline=False
+            )
+            .add_field(
+                name="🎮 Won games",
+                value=(
+                    f"- __Structure games:__ {profile.won_structure_games}\n"
+                    f"- __Reagents games:__ {profile.won_reagents_games}\n"
+                    f"*({ratio:.2f} 🪙 / game)*"
+                )
+            )
+            .set_image(url="attachment://progress.png")
+            .set_thumbnail(url=member.display_avatar.url)
+        )
+
+        if profile.next_level_in != float('inf'):
+            embed.set_footer(
+                text=f"⏫ Next level in {profile.next_level_in} 🪙"
+            )
+        
+        with BytesIO() as buffer:
+            progress_bar.save(buffer, format="PNG")
+            buffer.seek(0)
+            file = File(fp=buffer, filename="progress.png")
+
+            await interaction.response.send_message(embed=embed, file=file)
+
     async def end(self, interaction):
         """End a running game. To end a game, you must either own it
         or have permission to manage messages in the current channel.
@@ -250,7 +438,7 @@ class GamesCog(Cog, name="Games module"):
         # Register some methods as subcommands of the `games_group`
         # shared command group. This workaround is needed to keep
         # matching slash-command signatures.
-        for method in ('start', 'scores', 'end'):
+        for method in ('start', 'scores', 'profile', 'end'):
             cmd = command()(getattr(self, method))
             games_group.add_command(cmd)
 

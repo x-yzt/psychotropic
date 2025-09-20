@@ -82,7 +82,8 @@ class RunningReagentsGame(BaseRunningGame):
             time = self.time_since_start.total_seconds()
 
             await self.end()
-            self.scoreboard[str(msg.author.id)] += game.reward
+            self.scoreboard[msg.author].balance += game.reward
+            self.scoreboard[msg.author].won_structure_games += 1
 
             embed = (
                 DefaultEmbed(
@@ -172,7 +173,7 @@ class RunningReagentsGame(BaseRunningGame):
             )
             return
         
-        self.scoreboard[str(interaction.user.id)] -= 10
+        self.scoreboard[interaction.user].balance -= 10
 
         embed = (
             DefaultEmbed(title=f"⚗️ {reagent['fullName']} test results")
