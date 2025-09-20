@@ -64,6 +64,8 @@ class RunningReagentsGame(BaseRunningGame):
 
     TIMEOUT = 10 * 60  # Seconds
 
+    COST = 10  # Coins per reagent
+
     ICON_DIR = settings.BASE_DIR / 'data' / 'img' / 'substances'
  
     def __init__(self, *args, **kwargs):
@@ -172,8 +174,6 @@ class RunningReagentsGame(BaseRunningGame):
                 view=self.make_reagent_select_view()
             )
             return
-        
-        self.scoreboard[interaction.user].balance -= 10
 
         embed = (
             DefaultEmbed(title=f"⚗️ {reagent['fullName']} test results")
@@ -181,12 +181,25 @@ class RunningReagentsGame(BaseRunningGame):
                 name="🔎 Observed results",
                 value=f"**{text.capitalize()}**"
             )
-            .add_field(
-                name="💸 Thank you!",
-                value=f"{interaction.user} paid 10 🪙 for the reagent."
-            )
             .set_footer(text="Mhh...")
         )
+
+        if self.scoreboard[interaction.user].balance < self.COST:
+            embed.add_field(
+                name="🎁 I'll treat you!",
+                value=(
+                    f"{interaction.user} was low on 🪙, I gave them a "
+                    "reagent."
+                )
+            )
+        else:
+            self.scoreboard[interaction.user].balance -= self.COST
+            embed.add_field(
+                name="💸 Thank you!",
+                value=(
+                    f"{interaction.user} paid {self.COST} 🪙 for the reagent."
+                )
+            )
 
         if colors:
             image = make_gradient(colors, 600, 100)
@@ -212,7 +225,7 @@ class RunningReagentsGame(BaseRunningGame):
             )
         
     def make_reagent_select_view(self):
-        view = View()
+        view = View(timeout=self.TIMEOUT)
         select = Select(placeholder="Buy and use a reagent...")
         
         async def callback(interaction):
@@ -228,7 +241,7 @@ class RunningReagentsGame(BaseRunningGame):
             if reagent['id'] not in self.game.reagents_tried:
                 select.add_option(
                     label=f"{reagent['fullName']} test",
-                    description="Buy and use this test for 10 🪙",
+                    description=f"Buy and use this test for {self.COST} 🪙",
                     value=reagent['id']
                 )
 
@@ -244,7 +257,9 @@ class RunningReagentsGame(BaseRunningGame):
             embed=(
                 DefaultEmbed(
                     title=f"🛑 {interaction.user} ended the game.",
-                    description=f"The answer was **{self.game.substance['commonName']}**."
+                    description=(
+                        f"The answer was **{self.game.substance['commonName']}**."
+                    )
                 )
                 .set_thumbnail(url='attachment://icon.png')
             ),
