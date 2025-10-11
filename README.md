@@ -51,6 +51,30 @@ $> python -m psychotropic.bot
 you invokes the command in, so be sure to `cd` in the directory you actually
 want them.
 
+### Converting scores from V1
+
+The `scores.json` file was removed in favor of a more permissive `players.json`
+file. This little script can help converting between the old and new format.
+
+```py
+import json
+
+from psychotropic.cogs.games import Profile, ScoreboardJSONEncoder
+from psychotropic.settings import STORAGE_DIR
+
+
+with open(STORAGE_DIR / 'scores.json') as file:
+    data = {
+        uid: Profile(balance=max((0, balance)))
+        for uid, balance in json.load(file).items()
+    }
+
+with open(STORAGE_DIR / 'players.json', 'w') as file:
+    json.dump(data, file, cls=ScoreboardJSONEncoder)
+
+print(f"Converted {len(data)} scoreboard entries.")
+```
+
 [1]: https://raw.githubusercontent.com/x-yzt/psychotropic/master/res/psychotropic.png
 
 [2]: https://discord.com/oauth2/authorize?client_id=665177975053877259&scope=bot+applications.commands&permissions=277025442880

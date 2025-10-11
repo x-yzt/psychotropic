@@ -1,0 +1,178 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://example.com/product.schema.json",
+    "title": "Substance-reagent reaction database",
+    "description": "A product from Acme's catalog",
+    "type": "object",
+    "properties": {
+        "colors": {
+            "type": "object",
+            "patternProperties": {
+                "^\\d+$": {
+                    "type": "object",
+                    "properties": {
+                        "hex": {
+                            "type": "string",
+                            "pattern": "^#[a-f\\d]{6}$"
+                        },
+                        "id": {
+                            "type": "integer",
+                            "minimum": 1
+                        },
+                        "name": {
+                            "type": "string"
+                        },
+                        "simple": {
+                            "type": "boolean"
+                        },
+                        "simpleColorId": {
+                            "type": "integer",
+                            "minimum": 1
+                        }
+                    },
+                    "required": [
+                        "hex",
+                        "id",
+                        "name",
+                        "simple",
+                        "simpleColorId"
+                    ]
+                }
+            },
+            "additionalProperties": false
+        },
+        "reagents": {
+            "type": "object",
+            "patternProperties": {
+                "^\\d+$": {
+                    "type": "object",
+                    "properties": {
+                        "fullName": {
+                            "type": "string"
+                        },
+                        "id": {
+                            "type": "integer",
+                            "minmum": 1
+                        },
+                        "name": {
+                            "type": "string"
+                        },
+                        "shortName": {
+                            "type": "string",
+                            "minLength": 2,
+                            "maxLength": 2
+                        },
+                        "whiteFirstColor": {
+                            "type": [
+                                "boolean",
+                                "null"
+                            ]
+                        }
+                    },
+                    "required": [
+                        "fullName",
+                        "id",
+                        "name",
+                        "shortName",
+                        "whiteFirstColor"
+                    ]
+                }
+            }
+        },
+        "results": {
+            "type": "object",
+            "patternProperties": {
+                "^\\d+$": {
+                    "type": "object",
+                    "patternProperties": {
+                        "^\\d+$": {
+                            "type": "array",
+                            "items": {
+                                "type": "array",
+                                "prefixItems": [
+                                    {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer",
+                                            "minimum": 1
+                                        },
+                                        "maxItems": 6
+                                    },
+                                    {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer",
+                                            "minimum": 1
+                                        },
+                                        "maxItems": 6
+                                    },
+                                    {
+                                        "type": "boolean"
+                                    },
+                                    {
+                                        "type": "string"
+                                    }
+                                ],
+                                "items": false
+                            }
+                        }
+                    },
+                    "additionalProperties": false
+                }
+            },
+            "additionalProperties": false
+        },
+        "substances": {
+            "type": "object",
+            "patternProperties": {
+                "^\\d+$": {
+                    "type": "object",
+                    "properties": {
+                        "commonName": {
+                            "type": "string"
+                        },
+                        "id": {
+                            "type": "integer",
+                            "minimum": 1
+                        },
+                        "isPopular": {
+                            "type": "boolean"
+                        },
+                        "name": {
+                            "type": "string"
+                        },
+                        "token": {
+                            "type": "string"
+                        },
+                        "sid": {
+                            "type": "integer",
+                            "minimum": 0
+                        },
+                        "classes": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "required": [
+                        "commonName",
+                        "id",
+                        "isPopular",
+                        "name",
+                        "token",
+                        "sid",
+                        "classes"
+                    ]
+                },
+                "additionalProperties": false
+            }
+        }
+    },
+    "required": [
+        "colors",
+        "reagents",
+        "results",
+        "substances"
+    ]
+}

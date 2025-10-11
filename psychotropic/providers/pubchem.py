@@ -1,4 +1,5 @@
 from typing import Literal
+
 from psychotropic import settings
 from psychotropic.utils import ThrottledAsyncClient
 

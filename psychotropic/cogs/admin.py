@@ -1,7 +1,7 @@
 import logging
 import sys
 
-from discord.ext.commands import command, Cog, is_owner
+from discord.ext.commands import Cog, command, is_owner
 
 from psychotropic.utils import setup_cog
 
