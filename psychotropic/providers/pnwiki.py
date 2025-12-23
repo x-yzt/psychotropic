@@ -32,7 +32,7 @@ class PNWikiAPIClient(httpx.AsyncClient):
 async def list_substances():
     query = """
         {
-            substances(limit: 1000) {
+            substances(limit: 192) {
                 name
             }
         }
@@ -40,10 +40,28 @@ async def list_substances():
     async with PNWikiAPIClient() as client:
         r = await client.post_graphql(query)
     
-    return list(map(
+    liste = list(map(
         itemgetter('name'),
         r.json()['data']['substances']
     ))
+
+    query = """
+        {
+            substances(limit: 1000
+                        offset: 193) {
+                name
+            }
+        }
+    """
+    async with PNWikiAPIClient() as client:
+        r = await client.post_graphql(query)
+    
+    liste += list(map(
+        itemgetter('name'),
+        r.json()['data']['substances']
+    ))
+    
+    return liste
 
 
 async def get_substance(query, **kwargs):
