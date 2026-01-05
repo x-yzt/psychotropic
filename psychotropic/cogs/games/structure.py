@@ -31,22 +31,29 @@ class SchematicRegistry:
         if settings.FETCH_SCHEMATICS:
             log.info("Populating cache with schematics from PNWiki...")
 
-            for substance in await pnwiki.list_substances():
-                image_path = self.build_schematic_path(substance)
-                if image_path.exists():
-                    continue
+            try:
+                for substance in await pnwiki.list_substances():
+                    image_path = self.build_schematic_path(substance)
+                    if image_path.exists():
+                        continue
 
-                image = await pnwiki.get_schematic_image(
-                    substance,
-                    width=600,
-                    background_color='WHITE'
+                    image = await pnwiki.get_schematic_image(
+                        substance,
+                        width=600,
+                        background_color='WHITE'
+                    )
+                    if image:            
+                        image.save(image_path)
+
+            except TimeoutException:
+                log.error(
+                    "Unable to reach PsychonautWiki API. The schematic cache "
+                    "might be empty or incomplete."
                 )
-                if image:            
-                    image.save(image_path)
 
         self.schematics = list(self.path.glob('*.png'))
 
-        log.info(f"{len(self.schematics)} schematics avalaible in cache")
+        log.info(f"{len(self._schematics)} schematics avalaible in cache")
     
     @property
     def schematics(cls):
