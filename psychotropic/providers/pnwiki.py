@@ -30,9 +30,14 @@ class PNWikiAPIClient(httpx.AsyncClient):
 
 
 async def list_substances():
+    # Temporary workaround to exclude substance id 192 which makes the
+    # PNWiki API timeout
     query = """
         {
-            substances(limit: 1000) {
+            a: substances(limit:192) {
+                name
+            },
+            b: substances(offset:193 limit:1000) {
                 name
             }
         }
@@ -42,7 +47,7 @@ async def list_substances():
     
     return list(map(
         itemgetter('name'),
-        r.json()['data']['substances']
+        r.json()['data']['a'] + r.json()['data']['b']
     ))
 
 
