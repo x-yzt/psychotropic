@@ -75,6 +75,28 @@ with open(STORAGE_DIR / 'players.json', 'w') as file:
 print(f"Converted {len(data)} scoreboard entries.")
 ```
 
+## Translations
+
+Psychotropic uses `Babel` for localization, and leverages a common `GNU/gettext`
+infrastructure.
+
+- To add a translation catalog for a new language, eg. for Spanish (`es`):
+```shell
+uv run pybabel extract -k localize -o messages.pot .
+uv run pybabel init -i messages.pot -d ./psychotropic/locales/ -l es
+```
+
+- To update translations catalogs from source code:
+```shell
+pybabel extract -k localize -o messages.pot .
+pybabel update -i ./messages.pot -d ./psychotropic/locales/
+```
+
+- To compile `.po` files into `.mo` after changing them:
+```shell
+pybabel compile -d ./psychotropic/locales/
+```
+
 [1]: https://raw.githubusercontent.com/x-yzt/psychotropic/master/res/psychotropic.png
 
 [2]: https://discord.com/oauth2/authorize?client_id=665177975053877259&scope=bot+applications.commands&permissions=277025442880

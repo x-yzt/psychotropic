@@ -34,6 +34,8 @@ TEST_GUILD = Object(id=353885439331008512)
 
 SYNC_GLOBAL_TREE = True  # Only sync to test guild otherwise
 
+TRANSLATIONS = ['fr']
+
 
 # Cosmetics
 

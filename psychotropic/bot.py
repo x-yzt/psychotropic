@@ -9,6 +9,7 @@ from discord.utils import oauth_url
 
 from psychotropic import settings
 from psychotropic.embeds import DefaultEmbed
+from psychotropic.i18n import localize, set_locale, translator
 from psychotropic.providers import PROVIDERS
 
 
@@ -73,6 +74,7 @@ class PsychotropicBot(Bot):
         log.info(f"OAuth URL: {self.oauth_url}")
 
         await self.load_extensions()
+        await self.tree.set_translator(translator)
         await self.sync_tree()
 
     async def on_ready(self):

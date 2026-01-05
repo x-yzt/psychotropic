@@ -1,0 +1,39 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+        {
+      "label": "Extract translations",
+      "type": "shell",
+      "command": "uv",
+      "args": ["run", "pybabel", "extract", "-k", "localize", "-o", "messages.pot", "."],
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Update translations",
+      "type": "shell",
+      "command": "uv",
+      "args": ["run", "pybabel", "update", "-i", "./messages.pot", "-d", "./psychotropic/locales/"],
+      "group": "build",
+      "dependsOn": ["Extract translations"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Compile translations",
+      "type": "shell",
+      "command": "uv",
+      "args": ["run", "pybabel", "compile", "-d", "./psychotropic/locales/"],
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    }
+  ]
+}
