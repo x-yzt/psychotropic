@@ -26,6 +26,7 @@ dependencies = [
   "httpx~=0.23",
   "mistune~=3.0",
   "Pillow~=9.2",
+  "tomli~=2.3",  # Required for babel to read pyproject.toml on py < 3.11
 ]
 
 [project.urls]
@@ -36,3 +37,12 @@ Source = "https://github.com/x-yzt/psychotropic"
 [tool.isort]
 multi_line_output=4
 lines_after_imports=2
+
+[tool.babel]
+
+[[tool.babel.mappings]]
+method = "python"
+pattern = "**.py"
+encoding = "utf-8"
+# For now this is still worked out at Babel, so it needs to be explicitely listed in -k CLI args
+keywords = ["_", "localize", "localize_fmt"]

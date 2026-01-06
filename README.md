@@ -82,13 +82,13 @@ infrastructure.
 
 - To add a translation catalog for a new language, eg. for Spanish (`es`):
 ```shell
-uv run pybabel extract -k localize -o messages.pot .
+uv run pybabel extract -F pyproject.toml -k _ -k localize -k localize_fmt -o messages.pot .
 uv run pybabel init -i messages.pot -d ./psychotropic/locales/ -l es
 ```
 
 - To update translations catalogs from source code:
 ```shell
-pybabel extract -k localize -o messages.pot .
+uv run pybabel extract -F pyproject.toml -k _ -k localize -k localize_fmt -o messages.pot .
 pybabel update -i ./messages.pot -d ./psychotropic/locales/
 ```
 

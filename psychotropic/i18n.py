@@ -5,7 +5,6 @@ from typing import Optional
 from babel.support import Translations
 from discord import Interaction, Locale
 from discord.app_commands import TranslationContext, Translator, locale_str
-from discord.app_commands.translator import OtherTranslationContext
 
 from psychotropic import settings
 
@@ -39,6 +38,8 @@ class BabelTranslator(Translator):
         string: str,
         locale: str
     ) -> Optional[str]:
+        """"Synchronous method to get translations outside of
+        discord.py's async translation system."""
         catalog = self.translations.get(locale)
 
         if catalog is None:
@@ -66,3 +67,9 @@ def localize(string: str) -> str:
     """Helper function to translate bare strings according to current
     context locale."""
     return translator.get_translation(string, current_locale.get()) or string
+
+
+def localize_fmt(string: str, /, **kwargs) -> str:
+    """Helper function to translate and format bare strings according
+    to current context locale."""
+    return localize(string).format(**kwargs)

@@ -5,7 +5,7 @@
       "label": "Extract translations",
       "type": "shell",
       "command": "uv",
-      "args": ["run", "pybabel", "extract", "-k", "localize", "-o", "messages.pot", "."],
+      "args": ["run", "pybabel", "extract", "-F", "pyproject.toml", "-k", "_", "-k", "localize", "-k", "localize_fmt", "-o", "messages.pot", "."],
       "group": "build",
       "presentation": {
         "reveal": "always",
