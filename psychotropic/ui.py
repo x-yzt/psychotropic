@@ -3,6 +3,7 @@ from functools import partial
 from discord.ui import Button, View
 
 from psychotropic.embeds import DefaultEmbed
+from psychotropic.i18n import localize
 
 
 class Paginator(View):
@@ -22,8 +23,8 @@ class Paginator(View):
         self.last_page = last_page
 
         for offset, id_, label, emoji in (
-            (-1, 'prev', "Previous", "⏮️"),
-            (1,  'next', "Next",     "⏭️")
+            (-1, 'prev', localize("Previous"), "⏮️"),
+            (1,  'next', localize("Next"),     "⏭️")
         ):
             button = Button(custom_id=id_, label=label, emoji=emoji)
             button.callback = partial(self.change_page, offset)
@@ -48,11 +49,11 @@ class Paginator(View):
             raise ValueError(f"Out of bounds page number {page}.")
 
         await interaction.response.edit_message(
-            embed = DefaultEmbed(
-                title = "Computing...",
-                description = "Relax, it will just take a year or two."
+            embed=DefaultEmbed(
+                title=localize("Computing..."),
+                description=localize("Relax, it will just take a year or two.")
             ),
-            view = None
+            view=None
         )
 
         # Making the embed can be long when fetching external data
@@ -62,6 +63,6 @@ class Paginator(View):
 
         await interaction.followup.edit_message(
             interaction.message.id,
-            embed = embed,
-            view = self
+            embed=embed,
+            view=self
         )

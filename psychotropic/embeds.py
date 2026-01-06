@@ -4,6 +4,7 @@ import httpx
 from discord import Colour, Embed
 
 from psychotropic import settings
+from psychotropic.i18n import localize, localize_fmt
 
 
 class DefaultEmbed(Embed):
@@ -17,11 +18,11 @@ class DefaultEmbed(Embed):
 
 class ErrorEmbed(Embed):
     def __init__(self, msg=None, info=None, **kwargs):
-        msg = msg or "Something went wrong"
+        msg = msg or localize("Something went wrong")
         super().__init__(
             type = 'rich',
             colour = Colour.red(),
-            title = f"Error: {msg} :(",
+            title = localize_fmt("Error: {msg} :(", msg=msg),
             description = info,
             **kwargs
         )
@@ -47,8 +48,8 @@ def send_embed_on_exception(func):
             return await func(self, interaction, *args, **kwargs)
         except httpx.RequestError:
             await interaction.followup.send(embed=ErrorEmbed(
-                "Can't connect to external server",
-                "Maybe you should retry later?")
+                localize("Can't connect to external server"),
+                localize("Maybe you should retry later?"))
             )
             raise
         except Exception:

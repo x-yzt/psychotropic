@@ -10,6 +10,7 @@ from mistune.renderers.markdown import MarkdownRenderer
 from PIL import Image, ImageDraw
 
 from psychotropic import settings
+from psychotropic.i18n import localize
 
 
 class DiscordMarkdownRenderer(MarkdownRenderer):
@@ -38,7 +39,7 @@ def format_user(user):
     """Pretty string representation of an user using Discord-flavored
     markdown."""
     if is_deleted(user):
-        return "~~Deleted user~~"
+        return localize("~~Deleted user~~")
     return f"**{user.display_name}**"
 
 
@@ -46,7 +47,10 @@ def trim_text(text, limit=1024, url=None):
     text = text.strip()
 
     if url:
-        link = f"\n[**Read more**]({url})"
+        link = "\n[**{read_more}**]({url})".format(
+            read_more=localize("Read more"),
+            url=url
+        )
         limit -= len(link)
 
     if len(text) > limit:

@@ -1,0 +1,114 @@
+# French translations for Psychotropic.
+msgid ""
+msgstr ""
+"Project-Id-Version:  0.0.1\n"
+"Report-Msgid-Bugs-To: xyzt_\n"
+"POT-Creation-Date: 2026-01-06 19:13+0100\n"
+"PO-Revision-Date: 2026-01-05 16:43+0100\n"
+"Last-Translator: xyzt_\n"
+"Language: fr\n"
+"Language-Team: fr\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: psychotropic/bot.py:90
+msgid "Invite me to your guild!"
+msgstr "Invite-moi sur ton serveur !"
+
+#: psychotropic/bot.py:102
+msgid "Display various informations about the Psychotropic bot."
+msgstr "Affiche diverses informations sur le bot Psychotropic."
+
+#: psychotropic/bot.py:113 psychotropic/bot.py:163
+msgid "A Discord bot built for harm reduction and chemistry."
+msgstr "Un bot Discord conçu pour la réduction des risques et la chimie."
+
+#: psychotropic/bot.py:118
+msgid "💡 Help"
+msgstr "💡 Aide"
+
+#: psychotropic/bot.py:119
+msgid "Use `/help` to display help page."
+msgstr "Utilise `/help` pour afficher la page d'aide."
+
+#: psychotropic/bot.py:122
+msgid "🛠️ Source code & issues"
+msgstr "🛠️ Code source et tickets"
+
+#: psychotropic/bot.py:124
+#, python-brace-format
+msgid "[See them on GitHub]({url})"
+msgstr "[Voir sur GitHub]({url})"
+
+#: psychotropic/bot.py:129
+msgid "📈 Stats"
+msgstr "📈 Statistiques"
+
+#: psychotropic/bot.py:131
+#, python-brace-format
+msgid "Currently in **{len}** guilds."
+msgstr "Actuellement sur **{len}** serveurs."
+
+#: psychotropic/bot.py:136
+msgid "📄 Data providers"
+msgstr "📄 Fournisseurs de données"
+
+#: psychotropic/bot.py:143
+msgid "Psychotropic was carefully trained by xyzt_"
+msgstr "Psychotropic a été soigneusement entraîné par xyzt_"
+
+#: psychotropic/bot.py:153
+msgid "Display help about Psychotropic commands."
+msgstr "Affiche l'aide des commandes de Psychotropic."
+
+#: psychotropic/bot.py:161
+msgid "💡 Psychotropic help"
+msgstr "💡 Aide de Psychotropic"
+
+#: psychotropic/bot.py:175
+msgid "**Parameters:**"
+msgstr "**Paramètres :**"
+
+#: psychotropic/embeds.py:21
+msgid "Something went wrong"
+msgstr "Quelque chose a mal tourné"
+
+#: psychotropic/embeds.py:25
+#, python-brace-format
+msgid "Error: {msg} :("
+msgstr "Erreur : {msg} :("
+
+#: psychotropic/embeds.py:51
+msgid "Can't connect to external server"
+msgstr "Erreur de connexion au serveur externe"
+
+#: psychotropic/embeds.py:52
+msgid "Maybe you should retry later?"
+msgstr "Peut-être devrais-tu réessayer plus tard ?"
+
+#: psychotropic/ui.py:26
+msgid "Previous"
+msgstr "Précédent"
+
+#: psychotropic/ui.py:27
+msgid "Next"
+msgstr "Suivant"
+
+#: psychotropic/ui.py:53
+msgid "Computing..."
+msgstr "Calcul..."
+
+#: psychotropic/ui.py:54
+msgid "Relax, it will just take a year or two."
+msgstr "Tranquille, ça va juste prendre un an ou deux."
+
+#: psychotropic/utils.py:42
+msgid "~~Deleted user~~"
+msgstr "~~Compte supprimé~~"
+
+#: psychotropic/utils.py:51
+msgid "Read more"
+msgstr "Lire la suite"
