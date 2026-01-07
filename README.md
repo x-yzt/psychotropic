@@ -48,7 +48,7 @@ $> cd psychotropic
 
 $> uv sync
 
-$> uvx pybabel compile -d ./psychotropic/locales/
+$> uv run pybabel compile -d ./psychotropic/locales/
 
 $> export DISCORD_TOKEN="foobar"
 ```
@@ -59,7 +59,7 @@ manually and run `python -m pip install .` in the bot directory if you want to.
 ### Running
 
 ```bash
-$> uvx python -m psychotropic.bot
+$> uv run python -m psychotropic.bot
 ```
 
 *Note:* Persistant storage files will be created and searched in the directory
@@ -74,7 +74,7 @@ compiling translation catalogs again.
 ```bash
 $> git pull
 
-$> uvx pybabel compile -d ./psychotropic/locales/
+$> uv run pybabel compile -d ./psychotropic/locales/
 ```
 
 ### Converting scores from V1
@@ -108,19 +108,19 @@ infrastructure.
 
 - To add a translation catalog for a new language, eg. for Spanish (`es`):
 ```shell
-uvx pybabel extract -F pyproject.toml -k _ -k localize -k localize_fmt -o messages.pot .
-uvx pybabel init -i messages.pot -d ./psychotropic/locales/ -l es
+uv run pybabel extract -F pyproject.toml -k _ -k localize -k localize_fmt -o messages.pot .
+uv run pybabel init -i messages.pot -d ./psychotropic/locales/ -l es
 ```
 
 - To update translations catalogs from source code:
 ```shell
-uvx pybabel extract -F pyproject.toml -k _ -k localize -k localize_fmt -o messages.pot .
-uvx pybabel update -i ./messages.pot -d ./psychotropic/locales/
+uv run pybabel extract -F pyproject.toml -k _ -k localize -k localize_fmt -o messages.pot .
+uv run pybabel update -i ./messages.pot -d ./psychotropic/locales/
 ```
 
 - To compile `.po` files into `.mo` after changing them:
 ```shell
-uvx pybabel compile -d ./psychotropic/locales/
+uv run pybabel compile -d ./psychotropic/locales/
 ```
 
 [1]: https://raw.githubusercontent.com/x-yzt/psychotropic/master/res/psychotropic.png
