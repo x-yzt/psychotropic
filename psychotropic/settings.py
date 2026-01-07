@@ -4,37 +4,36 @@ from pathlib import Path
 
 from discord import Colour, Object
 
-
 log = logging.getLogger(__name__)
 
 
 # General
 
 EXTENSIONS = [
-    'psychotropic.cogs.admin',
-    'psychotropic.cogs.factsheets',
-    'psychotropic.cogs.science',
-    'psychotropic.cogs.games',
-    'psychotropic.cogs.games.structure',
-    'psychotropic.cogs.games.reagents',
-    'psychotropic.cogs.combos',
+    "psychotropic.cogs.admin",
+    "psychotropic.cogs.factsheets",
+    "psychotropic.cogs.science",
+    "psychotropic.cogs.games",
+    "psychotropic.cogs.games.structure",
+    "psychotropic.cogs.games.reagents",
+    "psychotropic.cogs.combos",
 ]
 
 BASE_DIR = Path(__file__).parent
 
-STORAGE_DIR = Path('storage')
+STORAGE_DIR = Path("storage")
 
-PREFIX = '>'
+PREFIX = ">"
 
-HTTP_COOLDOWN = .2  # Delay between HTTP requests in seconds
+HTTP_COOLDOWN = 0.2  # Delay between HTTP requests in seconds
 
-DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
+DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 
 TEST_GUILD = Object(id=353885439331008512)
 
 SYNC_GLOBAL_TREE = True  # Only sync to test guild otherwise
 
-TRANSLATIONS = ['fr']
+TRANSLATIONS = ["fr"]
 
 
 # Cosmetics
@@ -58,34 +57,34 @@ COMPOUNDS_DESCRIPTION_PROVIDERS = (
 
 LEVELS = (
     {
-        'threshold': 0,
-        'name': "Beginner 🧑‍🎓",
-        'color': COLOUR,
+        "threshold": 0,
+        "name": "Beginner 🧑‍🎓",
+        "color": COLOUR,
     },
     {
-        'threshold': 420,
-        'name': "420 chemist 🥽",
-        'color': Colour(0x00FFFF),
+        "threshold": 420,
+        "name": "420 chemist 🥽",
+        "color": Colour(0x00FFFF),
     },
     {
-        'threshold': 1_000,
-        'name': "1k chemist 🧪",
-        'color': Colour(0x7CFC00),
+        "threshold": 1_000,
+        "name": "1k chemist 🧪",
+        "color": Colour(0x7CFC00),
     },
     {
-        'threshold': 5_000,
-        'name': "5k chemist 🧬",
-        'color': Colour(0xFFC107),
+        "threshold": 5_000,
+        "name": "5k chemist 🧬",
+        "color": Colour(0xFFC107),
     },
     {
-        'threshold': 10_000,
-        'name': "10k chemist 🧑‍🔬",
-        'color': Colour(0x001F3F),
+        "threshold": 10_000,
+        "name": "10k chemist 🧑‍🔬",
+        "color": Colour(0x001F3F),
     },
     {
-        'threshold': 20_000,
-        'name': "Walter White 👑",
-        'color': Colour(0xFF0000),
+        "threshold": 20_000,
+        "name": "Walter White 👑",
+        "color": Colour(0xFF0000),
     },
 )
 
@@ -97,13 +96,12 @@ FETCH_SCHEMATICS = True  # Fetch schematics from PNWiki on each bot start
 
 # Entries to be excluded from the DSSTox results.
 # This is matched against the `model_name` field DSSTox provides.
-DSSTOX_EXCLUDED_MODELS = (
-    'ACD_Sol',
-)
+DSSTOX_EXCLUDED_MODELS = ("ACD_Sol",)
 
 
 try:
-    from psychotropic.localsettings import *
+    from psychotropic.localsettings import *  # noqa: F403
+
     log.info("Local settings module found, overriding production settings.")
 except ImportError:
     log.info("Using production settings.")

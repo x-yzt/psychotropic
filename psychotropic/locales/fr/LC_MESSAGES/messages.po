@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  0.0.1\n"
 "Report-Msgid-Bugs-To: xyzt_\n"
-"POT-Creation-Date: 2026-01-07 05:11+0100\n"
+"POT-Creation-Date: 2026-01-07 21:19+0100\n"
 "PO-Revision-Date: 2026-01-05 16:43+0100\n"
 "Last-Translator: xyzt_\n"
 "Language: fr\n"
@@ -72,20 +72,20 @@ msgstr "💡 Aide de Psychotropic"
 msgid "**Parameters:**"
 msgstr "**Paramètres :**"
 
-#: psychotropic/embeds.py:21
+#: psychotropic/embeds.py:17
 msgid "Something went wrong"
 msgstr "Quelque chose a mal tourné"
 
-#: psychotropic/embeds.py:25
+#: psychotropic/embeds.py:21
 #, python-brace-format
 msgid "Error: {msg} :("
 msgstr "Erreur : {msg} :("
 
-#: psychotropic/embeds.py:51
+#: psychotropic/embeds.py:49
 msgid "Can't connect to external server"
 msgstr "Erreur de connexion au serveur externe"
 
-#: psychotropic/embeds.py:52
+#: psychotropic/embeds.py:50
 msgid "Maybe you should retry later?"
 msgstr "Peut-être devrais-tu réessayer plus tard ?"
 
@@ -97,19 +97,19 @@ msgstr "Précédent"
 msgid "Next"
 msgstr "Suivant"
 
-#: psychotropic/ui.py:53
+#: psychotropic/ui.py:51
 msgid "Computing..."
 msgstr "Calcul..."
 
-#: psychotropic/ui.py:54
+#: psychotropic/ui.py:52
 msgid "Relax, it will just take a year or two."
 msgstr "Tranquille, ça va juste prendre un an ou deux."
 
-#: psychotropic/utils.py:42
+#: psychotropic/utils.py:40
 msgid "~~Deleted user~~"
 msgstr "~~Compte supprimé~~"
 
-#: psychotropic/utils.py:51
+#: psychotropic/utils.py:49
 msgid "Read more"
 msgstr "Lire la suite"
 
@@ -400,7 +400,8 @@ msgid ""
 "Display profile information and game statistics about yourself or another"
 " player."
 msgstr ""
-"Affiche ton profil et tes statistiques de jeu, ou celles d'une autre personne."
+"Affiche ton profil et tes statistiques de jeu, ou celles d'une autre "
+"personne."
 
 #: psychotropic/cogs/games/__init__.py:448
 msgid "There is no game running in this channel!"
