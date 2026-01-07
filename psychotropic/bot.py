@@ -13,7 +13,6 @@ from psychotropic.embeds import DefaultEmbed
 from psychotropic.i18n import localize, localize_fmt, set_locale, translator
 from psychotropic.providers import PROVIDERS
 
-
 log = logging.getLogger(__name__)
 
 
@@ -22,36 +21,36 @@ class PsychotropicBot(Bot):
         intents = Intents.default()
         intents.message_content = True
 
-        activity = Activity(
-            type=ActivityType.listening,
-            name="Sister Morphine"
-        )
+        activity = Activity(type=ActivityType.listening, name="Sister Morphine")
 
         super().__init__(
             command_prefix=settings.PREFIX,
             help_command=None,
             intents=intents,
-            activity=activity
+            activity=activity,
         )
-    
+
     @property
     def oauth_url(self):
         return oauth_url(
             self.user.id,
-            scopes=('bot', 'applications.commands'),
-            permissions=Permissions(**{
-                perm: True for perm in (
-                    'read_messages',
-                    'send_messages',
-                    'send_messages_in_threads',
-                    'embed_links',
-                    'attach_files',
-                    'add_reactions',
-                    'use_application_commands',
-                )
-            })
+            scopes=("bot", "applications.commands"),
+            permissions=Permissions(
+                **{
+                    perm: True
+                    for perm in (
+                        "read_messages",
+                        "send_messages",
+                        "send_messages_in_threads",
+                        "embed_links",
+                        "attach_files",
+                        "add_reactions",
+                        "use_application_commands",
+                    )
+                }
+            ),
         )
-    
+
     async def load_extensions(self):
         """Load all extensions configured in settings."""
         for extension in settings.EXTENSIONS:
@@ -80,7 +79,7 @@ class PsychotropicBot(Bot):
 
     async def on_ready(self):
         log.info(f"Logged in as {self.user.name} ({self.user.id}).")
-        
+
 
 class InviteView(View):
     def __init__(self):
@@ -89,7 +88,7 @@ class InviteView(View):
             Button(
                 label=localize("Invite me to your guild!"),
                 url=bot.oauth_url,
-                emoji="✨"
+                emoji="✨",
             )
         )
 
@@ -98,8 +97,8 @@ bot = PsychotropicBot()
 
 
 @bot.tree.command(
-    name='psycho',
-    description=_("Display various informations about the Psychotropic bot.")
+    name="psycho",
+    description=_("Display various informations about the Psychotropic bot."),
 )
 async def info(interaction):
     """`/pycho` command"""
@@ -111,94 +110,94 @@ async def info(interaction):
                 title="🧪 Psychotropic",
                 description=localize(
                     "A Discord bot built for harm reduction and chemistry."
-                )
+                ),
             )
             .set_image(url=settings.AVATAR_URL)
             .add_field(
                 name=localize("💡 Help"),
-                value=localize("Use `/help` to display help page.")
+                value=localize("Use `/help` to display help page."),
             )
             .add_field(
                 name=localize("🛠️ Source code & issues"),
                 value=localize_fmt(
                     "[See them on GitHub]({url})",
-                    url="https://github.com/x-yzt/psychotropic"
-                )
+                    url="https://github.com/x-yzt/psychotropic",
+                ),
             )
             .add_field(
                 name=localize("📈 Stats"),
                 value=localize_fmt(
-                    "Currently in **{len}** guilds.",
-                    len=len(bot.guilds)
-                )
+                    "Currently in **{len}** guilds.", len=len(bot.guilds)
+                ),
             )
             .add_field(
                 name=localize("📄 Data providers"),
-                value='\n'.join([
-                    "[{name}]({url})".format(**provider)
-                    for provider in PROVIDERS.values()
-                ])
+                value="\n".join(
+                    [
+                        "[{name}]({url})".format(**provider)
+                        for provider in PROVIDERS.values()
+                    ]
+                ),
             )
             .set_footer(
                 text=localize("Psychotropic was carefully trained by xyzt_"),
-                icon_url=settings.AUTHOR_AVATAR_URL
+                icon_url=settings.AUTHOR_AVATAR_URL,
             )
         ),
-        view=InviteView()
+        view=InviteView(),
     )
 
 
 @bot.tree.command(
-    name='help',
-    description=_("Display help about Psychotropic commands.")
+    name="help", description=_("Display help about Psychotropic commands.")
 )
 async def help(interaction):
     """`/help` command"""
     set_locale(interaction)
 
-    embed=(
-        DefaultEmbed(
-            title=localize("💡 Psychotropic help"),
-            description=localize(
-                "A Discord bot built for harm reduction and chemistry."
-            )
-        )
-        .set_thumbnail(url=settings.AVATAR_URL)
-    )
+    embed = DefaultEmbed(
+        title=localize("💡 Psychotropic help"),
+        description=localize("A Discord bot built for harm reduction and chemistry."),
+    ).set_thumbnail(url=settings.AVATAR_URL)
 
     for cmd in bot.tree.walk_commands():
         if not isinstance(cmd, Command):
             continue
-        
-        params = ''
+
+        params = ""
         if cmd.parameters:
             params += localize("**Parameters:**") + "\n"
-            
+
+            # TODO: I18n for parameters names and descriptions
             for param in cmd.parameters:
                 params += f"- `{param.display_name}`"
 
                 if param.choices:
                     params += f" [{'|'.join(c.name for c in param.choices)}]"
 
-                if param.description != '…':
+                if param.description != "…":
                     params += ": *{d}*".format(d=localize(param.description))
 
-                params += '\n'
-        
+                params += "\n"
+
         embed.add_field(
             name=f"⌨️  /{cmd.qualified_name}",
-            value='\n'.join((
-                # Description are extracted to translation catalogs from
-                # command decorators, so it's safe to use dynamic lookup here.
-                localize(cmd.description).strip().replace('\n', ' '),
-                params
-            )),
-            inline=False
+            value="\n".join(
+                (
+                    # Description are extracted to translation catalogs from command
+                    # decorators, so it's safe to use dynamic lookup here.
+                    localize(cmd.extras.get("long_description") or cmd.description)
+                    .strip()
+                    .replace("\n", " "),
+                    params,
+                )
+            ),
+            inline=False,
         )
 
     await interaction.response.send_message(embed=embed)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Log handler is configured in __init__.py
     bot.run(settings.DISCORD_TOKEN, log_handler=None)
