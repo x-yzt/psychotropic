@@ -168,9 +168,9 @@ async def help(interaction):
         if cmd.parameters:
             params += localize("**Parameters:**") + "\n"
 
-            # TODO: I18n for parameters names and descriptions
+            # TODO: I18n for parameters choices and descriptions
             for param in cmd.parameters:
-                params += f"- `{param.display_name}`"
+                params += "- `{p}`".format(p=localize(param.display_name))
 
                 if param.choices:
                     params += f" [{'|'.join(c.name for c in param.choices)}]"
