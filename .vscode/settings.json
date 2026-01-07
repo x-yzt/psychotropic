@@ -6,5 +6,8 @@
             "source.organizeImports": "explicit"
         },
         "editor.rulers": [88]
+    },
+    "[markdown]": {
+        "editor.rulers": [80]
     }
 }

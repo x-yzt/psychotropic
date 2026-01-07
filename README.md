@@ -29,27 +29,53 @@ thanks to them for sharing it!
 
 ### Installing
 
-Python 3.10+ is needed to run `psychotropic`.
+Python 3.10+ is needed to run `psychotropic`. The easiest and cleanest way to
+get started is to use `git` to clone this repository, and to use the `uv` python
+package to install and run the bot.
+
+To install `uv`:
+
+```bash
+$> python -m pip install uv
+```
+
+Then:
 
 ```bash
 $> git clone https://github.com/x-yzt/psychotropic/
 
 $> cd psychotropic
 
-$> pip install .
+$> uv sync
+
+$> uvx pybabel compile -d ./psychotropic/locales/
 
 $> export DISCORD_TOKEN="foobar"
 ```
 
+*Note:* Using `uv` is not mandatory, you can also configure the environment
+manually and run `python -m pip install .` in the bot directory if you want to.
+
 ### Running
 
 ```bash
-$> python -m psychotropic.bot
+$> uvx python -m psychotropic.bot
 ```
 
 *Note:* Persistant storage files will be created and searched in the directory
 you invokes the command in, so be sure to `cd` in the directory you actually
 want them.
+
+### Updating
+
+It simply consists in fething the lasts commits of theh main branch, then
+compiling translation catalogs again.
+
+```bash
+$> git pull
+
+$> uvx pybabel compile -d ./psychotropic/locales/
+```
 
 ### Converting scores from V1
 
@@ -82,19 +108,19 @@ infrastructure.
 
 - To add a translation catalog for a new language, eg. for Spanish (`es`):
 ```shell
-uv run pybabel extract -F pyproject.toml -k _ -k localize -k localize_fmt -o messages.pot .
-uv run pybabel init -i messages.pot -d ./psychotropic/locales/ -l es
+uvx pybabel extract -F pyproject.toml -k _ -k localize -k localize_fmt -o messages.pot .
+uvx pybabel init -i messages.pot -d ./psychotropic/locales/ -l es
 ```
 
 - To update translations catalogs from source code:
 ```shell
-uv run pybabel extract -F pyproject.toml -k _ -k localize -k localize_fmt -o messages.pot .
-pybabel update -i ./messages.pot -d ./psychotropic/locales/
+uvx pybabel extract -F pyproject.toml -k _ -k localize -k localize_fmt -o messages.pot .
+uvx pybabel update -i ./messages.pot -d ./psychotropic/locales/
 ```
 
 - To compile `.po` files into `.mo` after changing them:
 ```shell
-pybabel compile -d ./psychotropic/locales/
+uvx pybabel compile -d ./psychotropic/locales/
 ```
 
 [1]: https://raw.githubusercontent.com/x-yzt/psychotropic/master/res/psychotropic.png
