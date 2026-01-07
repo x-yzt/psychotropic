@@ -29,14 +29,20 @@ dependencies = [
   "tomli~=2.3",  # Required for babel to read pyproject.toml on py < 3.11
 ]
 
+[dependency-groups]
+dev = [
+  "ruff>=0.14.10",
+]
+
 [project.urls]
 Documentation = "https://github.com/x-yzt/psychotropic#readme"
 Issues = "https://github.com/x-yzt/psychotropic/issues"
 Source = "https://github.com/x-yzt/psychotropic"
 
-[tool.isort]
-multi_line_output=4
-lines_after_imports=2
+[tool.ruff.lint]
+select = ["E", "F", "UP", "B", "SIM"]
+# Ignore % and f-strings interpolations upgrade. And I know how itertool works, thanks.
+ignore = ["UP032", "UP031", "B905"]
 
 [tool.babel]
 
