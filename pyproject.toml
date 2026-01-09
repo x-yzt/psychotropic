@@ -21,10 +21,17 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: CPython",
 ]
 dependencies = [
+  "babel~=2.17",
   "discord.py~=2.0",
   "httpx~=0.23",
   "mistune~=3.0",
   "Pillow~=9.2",
+  "tomli~=2.3",  # Required for babel to read pyproject.toml on py < 3.11
+]
+
+[dependency-groups]
+dev = [
+  "ruff>=0.14.10",
 ]
 
 [project.urls]
@@ -32,6 +39,16 @@ Documentation = "https://github.com/x-yzt/psychotropic#readme"
 Issues = "https://github.com/x-yzt/psychotropic/issues"
 Source = "https://github.com/x-yzt/psychotropic"
 
-[tool.isort]
-multi_line_output=4
-lines_after_imports=2
+[tool.ruff.lint]
+select = ["E", "F", "UP", "B", "SIM"]
+# Ignore % and f-strings interpolations upgrade. And I know how itertool works, thanks.
+ignore = ["UP032", "UP031", "B905"]
+
+[tool.babel]
+
+[[tool.babel.mappings]]
+method = "python"
+pattern = "**.py"
+encoding = "utf-8"
+# For now this is still worked out at Babel, so it needs to be explicitely listed in -k CLI args
+keywords = ["_", "localize", "localize_fmt"]
