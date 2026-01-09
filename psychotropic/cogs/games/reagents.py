@@ -163,6 +163,8 @@ class RunningReagentsGame(BaseRunningGame):
         return self
 
     async def test_reagent(self, interaction):
+        set_locale(interaction)
+
         try:
             reagent_id = interaction.data["values"][0]
         except IndexError:
