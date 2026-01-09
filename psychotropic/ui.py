@@ -1,6 +1,7 @@
 from functools import partial
 
-from discord.ui import Button, View
+from discord import ButtonStyle, Interaction
+from discord.ui import Button, Modal, View, button
 
 from psychotropic.embeds import DefaultEmbed
 from psychotropic.i18n import localize
@@ -62,3 +63,15 @@ class Paginator(View):
         await interaction.followup.edit_message(
             interaction.message.id, embed=embed, view=self
         )
+
+
+class RetryModalView(View):
+    """View to display a "Retry" button opening a given modal."""
+
+    def __init__(self, modal: Modal):
+        super().__init__(timeout=60)
+        self.modal = modal
+
+    @button(label=localize("Retry"), emoji="🏓", style=ButtonStyle.primary)
+    async def retry(self, interaction: Interaction, button: Button):
+        await interaction.response.send_modal(self.modal)
