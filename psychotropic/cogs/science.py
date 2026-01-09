@@ -133,6 +133,8 @@ class DilutionModal(Modal):
         return val
 
     async def on_submit(self, interaction: Interaction):
+        set_locale(interaction)
+
         try:
             concentration = self.validate(self.concentration)
             mass = self.validate(self.mass)
