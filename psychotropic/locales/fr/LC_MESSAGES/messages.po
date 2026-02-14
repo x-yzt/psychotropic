@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  0.0.1\n"
 "Report-Msgid-Bugs-To: xyzt_\n"
-"POT-Creation-Date: 2026-01-07 21:19+0100\n"
+"POT-Creation-Date: 2026-01-09 05:50+0100\n"
 "PO-Revision-Date: 2026-01-05 16:43+0100\n"
 "Last-Translator: xyzt_\n"
 "Language: fr\n"
@@ -89,21 +89,25 @@ msgstr "Erreur de connexion au serveur externe"
 msgid "Maybe you should retry later?"
 msgstr "Peut-être devrais-tu réessayer plus tard ?"
 
-#: psychotropic/ui.py:26
+#: psychotropic/ui.py:27
 msgid "Previous"
 msgstr "Précédent"
 
-#: psychotropic/ui.py:27
+#: psychotropic/ui.py:28
 msgid "Next"
 msgstr "Suivant"
 
-#: psychotropic/ui.py:51
+#: psychotropic/ui.py:52
 msgid "Computing..."
 msgstr "Calcul..."
 
-#: psychotropic/ui.py:52
+#: psychotropic/ui.py:53
 msgid "Relax, it will just take a year or two."
 msgstr "Tranquille, ça va juste prendre un an ou deux."
+
+#: psychotropic/ui.py:75
+msgid "Retry"
+msgstr "Réessayer"
 
 #: psychotropic/utils.py:40
 msgid "~~Deleted user~~"
@@ -207,45 +211,159 @@ msgstr "{count} interactions n'ont pas été trouvées."
 msgid "An interaction was not found."
 msgstr "Une interaction n'a pas été trouvée."
 
+#: psychotropic/cogs/science.py:48 psychotropic/cogs/science.py:181
+msgid "🧪 Dilution Calculator"
+msgstr "🧪 Calculateur de dilution"
+
+#: psychotropic/cogs/science.py:51
+msgid ""
+"A calculator to help with volumetric dosing.\n"
+"Depending on the type of calculation you want to make, fill in two fields"
+" from the three below, and the bot will compute the third."
+msgstr ""
+"Un calculateur pour aider aux dilutions volumétriques.\n"
+"Suivant le type de calcul que vous voulez effectuer, remplissez deux paramètres"
+" sur les trois ci-dessus, et le bot calculera le troisième."
+
+#: psychotropic/cogs/science.py:57
+#, python-brace-format
+msgid "🛑 **__Error:__ {msg}**"
+msgstr "🛑 **__Erreur :__ {msg}**"
+
+#: psychotropic/cogs/science.py:61
+msgid ""
+"*Units are indicated in `mg` and `mL`, but the calculations will be the "
+"same for other units as long as you keep them coherent (eg. if you input "
+"`µg` and `µg/cm³`, the bot will answer in `cm³`).*"
+msgstr ""
+"*Les unités sont indiquées en `mg` et `mL`, mais les calculs seront les mêmes "
+"pour d'autres unités tant que vous les garderez cohérentes (si vous rentrez des "
+"`µg` et des `cm³`, le bot répondra en `cm³`).*"
+
+#: psychotropic/cogs/science.py:69
+msgid "Concentration"
+msgstr "Concentration"
+
 #: psychotropic/cogs/science.py:70
+msgid "(mg/mL)"
+msgstr ""
+
+#: psychotropic/cogs/science.py:78
+msgid "Substance mass"
+msgstr "Masse de substance"
+
+#: psychotropic/cogs/science.py:79
+msgid "(mg)"
+msgstr ""
+
+#: psychotropic/cogs/science.py:87
+msgid "Solution volume"
+msgstr "Volume de solution"
+
+#: psychotropic/cogs/science.py:88
+msgid "(mL)"
+msgstr ""
+
+#: psychotropic/cogs/science.py:125
+#, python-brace-format
+msgid "Enter a valid number for {field}."
+msgstr "Entrez un nombre valide pour {field}."
+
+#: psychotropic/cogs/science.py:130
+#, python-brace-format
+msgid "{field} must be a positive number."
+msgstr "{} doit être un nombre positif."
+
+#: psychotropic/cogs/science.py:142
+msgid "Please fill exactly two fields."
+msgstr "Merci de remplir exactement deux champs."
+
+#: psychotropic/cogs/science.py:156
+#, python-brace-format
+msgid ""
+"Dissolving **{m} mg** of substance in **{v} mL** results in a "
+"concentration of **{c:.3g} mg/mL**."
+msgstr ""
+"Dissoudre **{m} mg** de substance dans **{v} mL** entraîne une "
+"concentration de **{c:.3g} mg/mL**."
+
+#: psychotropic/cogs/science.py:165
+#, python-brace-format
+msgid ""
+"To prepare **{v} mL** of a solution with a concentration of **{c} "
+"mg/mL**, you need **{m:.3g} mg** of substance."
+msgstr ""
+"Pour préparer **{v} mL** d'une solution concentrée à **{c} "
+"mg/mL**, il vous faut **{m:.3g} mg** de substance."
+
+#: psychotropic/cogs/science.py:174
+#, python-brace-format
+msgid ""
+"To get **{m} mg** of substance from a solution of **{c} mg/mL** of "
+"concentration, you need a volume of **{v:.3g} mL**."
+msgstr ""
+"Pour obtenir **{m} mg** de substance depuis une solution concentrée à "
+"**{c} mg/mL**, vous devez prendre un volume de **{v:.3g} mL**."
+
+#: psychotropic/cogs/science.py:183
+msgid "🟰 Result"
+msgstr "🟰 Résultat"
+
+#: psychotropic/cogs/science.py:192
+msgid "📜 Formula"
+msgstr "📜 Formule"
+
+#: psychotropic/cogs/science.py:194
+msgid "concentration"
+msgstr "concentration"
+
+#: psychotropic/cogs/science.py:195
+msgid "mass"
+msgstr "masse"
+
+#: psychotropic/cogs/science.py:196
+msgid "volume"
+msgstr "volume"
+
+#: psychotropic/cogs/science.py:232
 msgid "Display information about a chemical substance or compound."
 msgstr "Affiche des informations sur une substance ou composé chimique."
 
-#: psychotropic/cogs/science.py:88 psychotropic/cogs/science.py:174
-#: psychotropic/cogs/science.py:230
+#: psychotropic/cogs/science.py:250 psychotropic/cogs/science.py:336
+#: psychotropic/cogs/science.py:392
 #, python-brace-format
 msgid "Can't find substance {substance}"
 msgstr "Impossible de trouver la substance {substance}"
 
-#: psychotropic/cogs/science.py:97
+#: psychotropic/cogs/science.py:259
 msgid "No description avalaible 🤔"
 msgstr "Aucune description disponible 🤔"
 
-#: psychotropic/cogs/science.py:118
+#: psychotropic/cogs/science.py:280
 msgid "Substance information: "
 msgstr "Informations sur la substance : "
 
-#: psychotropic/cogs/science.py:123 psychotropic/cogs/science.py:191
+#: psychotropic/cogs/science.py:285 psychotropic/cogs/science.py:353
 msgid "🔬 IUPAC Name"
 msgstr "🔬 Nom IUPAC"
 
-#: psychotropic/cogs/science.py:127
+#: psychotropic/cogs/science.py:289
 msgid "🏷 Synonyms"
 msgstr "🏷 Synonymes"
 
-#: psychotropic/cogs/science.py:129 psychotropic/cogs/science.py:196
+#: psychotropic/cogs/science.py:291 psychotropic/cogs/science.py:358
 msgid "🧪 Formula"
 msgstr "🧪 Formule"
 
-#: psychotropic/cogs/science.py:133
+#: psychotropic/cogs/science.py:295
 msgid "🏋 Molar mass"
 msgstr "🏋 Masse molaire"
 
-#: psychotropic/cogs/science.py:137
+#: psychotropic/cogs/science.py:299
 msgid "🔗 Hydrogen bonds"
 msgstr "🔗 Liaisons hydrogène"
 
-#: psychotropic/cogs/science.py:139
+#: psychotropic/cogs/science.py:301
 #, python-brace-format
 msgid ""
 "Donors: {donors}\n"
@@ -254,11 +372,11 @@ msgstr ""
 "Donneurs : {donors}\n"
 "Accepteurs : {acceptors}"
 
-#: psychotropic/cogs/science.py:145
+#: psychotropic/cogs/science.py:307
 msgid "🌀 Molecular complexity"
 msgstr "🌀 Complexité moléculaire"
 
-#: psychotropic/cogs/science.py:153
+#: psychotropic/cogs/science.py:315
 msgid ""
 "Display the shematic of a given chemical substance or compound. 2D and 3D"
 " modes are supported."
@@ -266,11 +384,11 @@ msgstr ""
 "Affiche le schéma d'une substance ou composé chimique. Les modes 2D et 3D"
 " sont supportés."
 
-#: psychotropic/cogs/science.py:188
+#: psychotropic/cogs/science.py:350
 msgid "Substance schematic: "
 msgstr "Schéma de la substance : "
 
-#: psychotropic/cogs/science.py:207
+#: psychotropic/cogs/science.py:369
 msgid ""
 "Display solubility information about a substance. Multiple sources of "
 "data are averaged."
@@ -278,7 +396,7 @@ msgstr ""
 "Affiche les informations de solubilité d'une substance. Plusieurs sources"
 " de données sont moyennées."
 
-#: psychotropic/cogs/science.py:212
+#: psychotropic/cogs/science.py:374
 msgid ""
 "Display solubility information about a substance. Multiple sources of "
 "experimental and predicted data are averaged to improve result accuracy. "
@@ -289,15 +407,19 @@ msgstr ""
 "la précision des résultats. Les plages de résultats sont fournies si "
 "possible."
 
-#: psychotropic/cogs/science.py:241
+#: psychotropic/cogs/science.py:403
 #, python-brace-format
 msgid "Solubility information: {name}"
 msgstr "Informations de solubilité : {name}"
 
-#: psychotropic/cogs/science.py:275
+#: psychotropic/cogs/science.py:437
 #, python-brace-format
 msgid "*({method}, {count} sources)*\n"
 msgstr "*({method}, {count} sources)*\n"
+
+#: psychotropic/cogs/science.py:447
+msgid "A small dilution calculator to help with volumetric dosing."
+msgstr "Une petite calculatrice pour aider aux dilutions volumétriques."
 
 #: psychotropic/cogs/games/__init__.py:40
 msgid "Play again"
@@ -477,7 +599,7 @@ msgid "😔 No one found the solution."
 msgstr "😔 Personne n'a trouvé la solution."
 
 #: psychotropic/cogs/games/reagents.py:129
-#: psychotropic/cogs/games/reagents.py:279
+#: psychotropic/cogs/games/reagents.py:281
 #: psychotropic/cogs/games/structure.py:224
 #: psychotropic/cogs/games/structure.py:256
 #, python-brace-format
@@ -497,74 +619,74 @@ msgstr "Pouvez-vous trouver ce que c'est ?"
 msgid "Wow, shady stuff..."
 msgstr "Wow, c'est louche..."
 
-#: psychotropic/cogs/games/reagents.py:177
+#: psychotropic/cogs/games/reagents.py:179
 msgid "Reaction error 💣"
 msgstr "Erreur de réaction 💣"
 
-#: psychotropic/cogs/games/reagents.py:179
+#: psychotropic/cogs/games/reagents.py:181
 #, python-brace-format
 msgid "Sadly I can't perform a {reagent} test on this mysterious substance."
 msgstr ""
 "Déso, je ne peux pas faire de test {reagent} sur cette mystérieuse "
 "substance."
 
-#: psychotropic/cogs/games/reagents.py:191
+#: psychotropic/cogs/games/reagents.py:193
 #, python-brace-format
 msgid "⚗️ {reagent} test results"
 msgstr "⚗️ Résultats du test {reagent}"
 
-#: psychotropic/cogs/games/reagents.py:195
+#: psychotropic/cogs/games/reagents.py:197
 msgid "🔎 Observed results"
 msgstr "🔎 Résultats observés"
 
-#: psychotropic/cogs/games/reagents.py:198
+#: psychotropic/cogs/games/reagents.py:200
 msgid "Mhh..."
 msgstr "Hum..."
 
-#: psychotropic/cogs/games/reagents.py:203
+#: psychotropic/cogs/games/reagents.py:205
 msgid "🎁 I'll treat you!"
 msgstr "🎁 Je t'invite !"
 
-#: psychotropic/cogs/games/reagents.py:205
+#: psychotropic/cogs/games/reagents.py:207
 #, python-brace-format
 msgid "{user} was low on 🪙, I gave them a reagent."
 msgstr "{user} est à court de 🪙, je lui offre un réactif."
 
-#: psychotropic/cogs/games/reagents.py:212
+#: psychotropic/cogs/games/reagents.py:214
 msgid "💸 Thank you!"
 msgstr "💸 Merci !"
 
-#: psychotropic/cogs/games/reagents.py:214
+#: psychotropic/cogs/games/reagents.py:216
 #, python-brace-format
 msgid "{user} paid {cost} 🪙 for the reagent."
 msgstr "{user} a payé {cost} 🪙 pour le réactif."
 
-#: psychotropic/cogs/games/reagents.py:242
+#: psychotropic/cogs/games/reagents.py:244
 msgid "Buy and use a reagent..."
 msgstr "Acheter et utiliser un réactif..."
 
-#: psychotropic/cogs/games/reagents.py:256
+#: psychotropic/cogs/games/reagents.py:258
 #, python-brace-format
 msgid "{reagent} test"
 msgstr "Réactif {reagent}"
 
-#: psychotropic/cogs/games/reagents.py:258
+#: psychotropic/cogs/games/reagents.py:260
 #, python-brace-format
 msgid "Buy and use this test for {cost} 🪙"
 msgstr "Acheter et utiliser ce test pour {cost} 🪙"
 
-#: psychotropic/cogs/games/reagents.py:275
+#: psychotropic/cogs/games/reagents.py:277
 #: psychotropic/cogs/games/structure.py:254
 #, python-brace-format
 msgid "🛑 {user} ended the game."
 msgstr "🛑 {user} a mis fin à la partie."
 
-#: psychotropic/cogs/games/reagents.py:297
+#: psychotropic/cogs/games/reagents.py:299
 #: psychotropic/cogs/games/structure.py:280
 msgid "What's that?"
 msgstr "Qu'est-ce que c'est ?"
 
-#: psychotropic/cogs/games/reagents.py:336
+#: psychotropic/cogs/games/reagents.py:338
 msgid ""
 "Start a new Reagents Game. The first player who guess the substance in "
 "the chat wins."
@@ -572,7 +694,7 @@ msgstr ""
 "Commence une partie de Reagents Game. La première personne à nommer la "
 "substance dans le chat gagne."
 
-#: psychotropic/cogs/games/reagents.py:341
+#: psychotropic/cogs/games/reagents.py:343
 msgid ""
 "Start a new Reagents Game. The bot will pick a random substance, and "
 "players can use reagents to identify it. The first player who guess the "

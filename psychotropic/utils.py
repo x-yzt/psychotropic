@@ -94,6 +94,12 @@ def unformat(string, non_word="();-_, "):
     return "".join(c for c in unaccent(string.lower()) if c not in non_word)
 
 
+def to_float(string: str):
+    """Parse to float by stripping spaces and handling both dot and comma as decimal
+    separator."""
+    return float(string.replace(" ", "").replace(",", "."))
+
+
 def shuffled(collection):
     """Not inplace equivalent to usual random.shuffle."""
     return sample(collection, len(collection))
