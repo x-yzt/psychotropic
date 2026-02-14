@@ -1,8 +1,9 @@
 from enum import Enum
 
-from mistune import create_markdown
 import httpx
+from mistune import create_markdown
 
+from psychotropic.i18n import localize
 from psychotropic.utils import DiscordMarkdownRenderer
 
 
@@ -32,6 +33,16 @@ class Risk(MixturesEnum):
     UNSAFE = 3
     DANGEROUS = 4
 
+    def __str__(self):
+        # Explicit strings are needed here for i18n extraction by gettext
+        return [
+            localize("unknown"),
+            localize("neutral"),
+            localize("caution"),
+            localize("unsafe"),
+            localize("dangerous")
+        ][self.value]
+
     @property
     def _emojis(self):
         return '❔', '⏺️', '⚠️', '🛑', '⛔'
@@ -45,6 +56,17 @@ class Synergy(MixturesEnum):
     MIXED = 4
     ADDITIVE = 5
     
+    def __str__(self):
+        # Explicit strings are needed here for i18n extraction by gettext
+        return [
+            localize("unknown"),
+            localize("neutral"),
+            localize("decrease"),
+            localize("increase"),
+            localize("mixed"),
+            localize("additive")
+        ][self.value]
+
     @property
     def _emojis(self):
         return '❔', '⏺️', '⏬', '⏫', '🔀', '➡️'
@@ -56,18 +78,28 @@ class Reliability(MixturesEnum):
     INFERRED = 2
     PROVEN = 3
     
+    def __str__(self):
+        # Explicit strings are needed here for i18n extraction by gettext
+        return [
+            localize("unknown"),
+            localize("hypothetical"),
+            localize("inferred"),
+            localize("proven")
+        ][self.value]
+
     @property
     def _emojis(self):
         return '', '◉⭘⭘', '◉◉⭘', '◉◉◉'
 
 
 class MixturesAPI:
-    API_URL = 'https://mixtures.info/en/api/v1/'
+    API_URL = 'https://mixtures.info/{locale}/api/v1/'
 
-    def __init__(self):
+    def __init__(self, locale='en'):
+        self.locale = locale
         self._aliases = {}
         self._catalogue = {}
-    
+
     async def get_aliases(self):
         if not self._aliases:
             await self._fetch_aliases()
@@ -95,7 +127,7 @@ class MixturesAPI:
 
     async def get(self, *args, **kwargs):
         async with httpx.AsyncClient(
-            base_url=self.API_URL,
+            base_url=self.API_URL.format(locale=self.locale),
             follow_redirects=True
         ) as client:
             return await client.get(*args, **kwargs)
