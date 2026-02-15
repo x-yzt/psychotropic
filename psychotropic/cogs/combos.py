@@ -1,23 +1,16 @@
-from itertools import chain
+from itertools import chain, groupby
+from operator import itemgetter
 
 from discord import Interaction
-from discord.app_commands import Choice, autocomplete, command
+from discord.app_commands import Choice, autocomplete, command, rename
 from discord.app_commands import locale_str as _
-from discord.app_commands import rename
 from discord.ext.commands import Cog
 
 from psychotropic.embeds import ErrorEmbed, send_embed_on_exception
 from psychotropic.i18n import current_locale, localize, localize_fmt, set_locale
 from psychotropic.providers import MixturesEmbed
 from psychotropic.providers.mixtures import MixturesAPI, format_markdown
-from psychotropic.providers.mixtures import (
-    MixturesAPI,
-    Reliability,
-    Risk,
-    Synergy,
-    format_markdown,
-)
-from psychotropic.utils import setup_cog, trim_text
+from psychotropic.utils import pretty_list, setup_cog, trim_text
 
 
 class CombosCog(Cog, name="Combos module"):
@@ -133,6 +126,53 @@ class CombosCog(Cog, name="Combos module"):
 
         return embed
 
+    def make_substance_embed(self, data):
+        embed = MixturesEmbed(
+            title=localize_fmt("{substance} interactions", substance=data["name"]),
+            url=data["site_url"],
+            description=format_markdown(data["description"]),
+        )
+
+        for key, name in (
+            ("risks", localize("☣️ About risks")),
+            ("effects", localize("⚡ About effects")),
+        ):
+            if value := data[key]:
+                embed.add_field(name=name, value=value)
+
+        groups = groupby(
+            sorted(data["interactions"].values(), key=itemgetter("risk"), reverse=True),
+            itemgetter("risk"),
+        )
+
+        for risk, interactions in groups:
+            embed.add_field(
+                name=f"{risk.emoji} {str(risk).capitalize()}",
+                value=pretty_list(
+                    (
+                        (
+                            "🚧 *[{name}]({url})* {emoji} *({draft})*"
+                            if inter["is_draft"]
+                            else "**[{name}]({url})** {emoji}"
+                        ).format(
+                            name=next(
+                                name
+                                for name in inter["interactants"]
+                                if name != data["name"]
+                            ),
+                            url=inter["site_url"],
+                            emoji=inter["synergy"].emoji,
+                            draft=localize("Draft!"),
+                        )
+                        for inter in sorted(interactions, key=itemgetter("is_draft"))
+                    ),
+                    capitalize=False,
+                ),
+                inline=False,
+            )
+
+        return embed
+
     # NoQA on those decorators and function signature, because discord.py does
     # not support *args in application commands. Whoever reading this right
     # now, I feel sorry for you.
@@ -202,6 +242,31 @@ class CombosCog(Cog, name="Combos module"):
                 for inter in result["interactions"].values()
             ]
         )
+
+    @command(
+        name="combos",
+        description=_("Show a summary of interactions involving this substance."),
+    )
+    @autocomplete(substance=substance_autocomplete)
+    async def combos(self, interaction: Interaction, substance: str):
+        """`/combos` command."""
+        set_locale(interaction)
+
+        await interaction.response.defer()
+
+        try:
+            data = await self.mixtures.get_substance_by_alias(substance)
+        except KeyError as e:
+            await interaction.followup.send(
+                embed=ErrorEmbed(
+                    localize_fmt(
+                        "Can't find substance {substance}.", substance=e.args[0]
+                    )
+                )
+            )
+            return
+
+        await interaction.followup.send(embed=self.make_substance_embed(data))
 
 
 setup = setup_cog(CombosCog)

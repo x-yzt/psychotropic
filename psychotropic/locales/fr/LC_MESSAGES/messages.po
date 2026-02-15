@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  0.0.1\n"
 "Report-Msgid-Bugs-To: xyzt_\n"
-"POT-Creation-Date: 2026-01-09 05:50+0100\n"
+"POT-Creation-Date: 2026-02-15 02:29+0100\n"
 "PO-Revision-Date: 2026-01-05 16:43+0100\n"
 "Last-Translator: xyzt_\n"
 "Language: fr\n"
@@ -117,16 +117,16 @@ msgstr "~~Compte supprimé~~"
 msgid "Read more"
 msgstr "Lire la suite"
 
-#: psychotropic/cogs/combos.py:79
+#: psychotropic/cogs/combos.py:65
 #, python-brace-format
 msgid "Interaction: {title}"
 msgstr "Interaction : {title}"
 
-#: psychotropic/cogs/combos.py:85
+#: psychotropic/cogs/combos.py:71
 msgid "🚧 Warning!"
 msgstr "🚧 Avertissement !"
 
-#: psychotropic/cogs/combos.py:87
+#: psychotropic/cogs/combos.py:73
 msgid ""
 "This card is a **draft** and has not been reviewed yet.\n"
 "It can contain **erroneous** or **misleading** information. Use at your "
@@ -136,82 +136,103 @@ msgstr ""
 "Elle peut contenir des informations **erronées** ou **trompeuses**. À vos"
 " risques et périls."
 
-#: psychotropic/cogs/combos.py:95
+#: psychotropic/cogs/combos.py:81
 msgid "Substances"
 msgstr "Substances"
 
-#: psychotropic/cogs/combos.py:103
+#: psychotropic/cogs/combos.py:89
 msgid "Risks"
 msgstr "Risques"
 
-#: psychotropic/cogs/combos.py:104
+#: psychotropic/cogs/combos.py:90
 msgid "Synergy"
 msgstr "Synergie"
 
-#: psychotropic/cogs/combos.py:110
+#: psychotropic/cogs/combos.py:96
 msgid "Reliability:"
 msgstr "Fiabilité :"
 
-#: psychotropic/cogs/combos.py:119
+#: psychotropic/cogs/combos.py:105
 msgid "About risks"
 msgstr "À propos des risques"
 
-#: psychotropic/cogs/combos.py:120
+#: psychotropic/cogs/combos.py:106
 msgid "About effects"
 msgstr "À propos des effets"
 
-#: psychotropic/cogs/combos.py:131
+#: psychotropic/cogs/combos.py:117
 msgid "No data :c"
 msgstr "Pas de données :c"
 
-#: psychotropic/cogs/combos.py:135
+#: psychotropic/cogs/combos.py:121
 msgid "💡 More info"
 msgstr "💡 Plus d'infos"
 
-#: psychotropic/cogs/combos.py:137
+#: psychotropic/cogs/combos.py:123
 #, python-brace-format
 msgid "[**Read more at Mixtures.info**]({url})"
 msgstr "[**Lire la suite sur Mixtures.info**]({url})"
 
-#: psychotropic/cogs/combos.py:149
+#: psychotropic/cogs/combos.py:132
+#, python-brace-format
+msgid "{substance} interactions"
+msgstr "Interactions de la substance {substance}"
+
+#: psychotropic/cogs/combos.py:138
+msgid "☣️ About risks"
+msgstr "☣️ À propos des risques"
+
+#: psychotropic/cogs/combos.py:139
+msgid "⚡ About effects"
+msgstr "⚡ À propos des effets"
+
+#: psychotropic/cogs/combos.py:166
+msgid "Draft!"
+msgstr "Brouillon !"
+
+#: psychotropic/cogs/combos.py:182
 msgid "Show risks and effects of a substance combination."
 msgstr "Affiche les risques et effets d'une combinaison de substances."
 
-#: psychotropic/cogs/combos.py:158
+#: psychotropic/cogs/combos.py:191
 msgid "first-substance"
 msgstr "première-substance"
 
-#: psychotropic/cogs/combos.py:159
+#: psychotropic/cogs/combos.py:192
 msgid "second-substance"
 msgstr "deuxième-substance"
 
-#: psychotropic/cogs/combos.py:160
+#: psychotropic/cogs/combos.py:193
 msgid "third-substance"
 msgstr "troisième-substance"
 
-#: psychotropic/cogs/combos.py:161
+#: psychotropic/cogs/combos.py:194
 msgid "fourth-substance"
 msgstr "quatrième-substance"
 
-#: psychotropic/cogs/combos.py:185
+#: psychotropic/cogs/combos.py:218 psychotropic/cogs/combos.py:264
 #, python-brace-format
 msgid "Can't find substance {substance}."
 msgstr "Impossible de trouver la substance {substance}."
 
-#: psychotropic/cogs/combos.py:196
+#: psychotropic/cogs/combos.py:229
 msgid "🚨 Warning!"
 msgstr "🚨 Attention !"
 
-#: psychotropic/cogs/combos.py:199
+#: psychotropic/cogs/combos.py:232
 #, python-brace-format
 msgid "{count} interactions were not found."
 msgstr "{count} interactions n'ont pas été trouvées."
 
-#: psychotropic/cogs/combos.py:202
+#: psychotropic/cogs/combos.py:235
 msgid "An interaction was not found."
 msgstr "Une interaction n'a pas été trouvée."
 
-#: psychotropic/cogs/science.py:48 psychotropic/cogs/science.py:181
+#: psychotropic/cogs/combos.py:249
+msgid "Show a summary of interactions involving this substance."
+msgstr "Affiche un récapitulatif des interactions de cette substance."
+
+#: psychotropic/cogs/science.py:48 psychotropic/cogs/science.py:183
 msgid "🧪 Dilution Calculator"
 msgstr "🧪 Calculateur de dilution"
 
@@ -222,8 +243,8 @@ msgid ""
 " from the three below, and the bot will compute the third."
 msgstr ""
 "Un calculateur pour aider aux dilutions volumétriques.\n"
-"Suivant le type de calcul que vous voulez effectuer, remplissez deux paramètres"
-" sur les trois ci-dessus, et le bot calculera le troisième."
+"Suivant le type de calcul que vous voulez effectuer, remplissez deux "
+"paramètres sur les trois ci-dessus, et le bot calculera le troisième."
 
 #: psychotropic/cogs/science.py:57
 #, python-brace-format
@@ -236,9 +257,9 @@ msgid ""
 "same for other units as long as you keep them coherent (eg. if you input "
 "`µg` and `µg/cm³`, the bot will answer in `cm³`).*"
 msgstr ""
-"*Les unités sont indiquées en `mg` et `mL`, mais les calculs seront les mêmes "
-"pour d'autres unités tant que vous les garderez cohérentes (si vous rentrez des "
-"`µg` et des `cm³`, le bot répondra en `cm³`).*"
+"*Les unités sont indiquées en `mg` et `mL`, mais les calculs seront les "
+"mêmes pour d'autres unités tant que vous les garderez cohérentes (si vous"
+" rentrez des `µg` et des `µg/cm³`, le bot répondra en `cm³`).*"
 
 #: psychotropic/cogs/science.py:69
 msgid "Concentration"
@@ -274,11 +295,11 @@ msgstr "Entrez un nombre valide pour {field}."
 msgid "{field} must be a positive number."
 msgstr "{} doit être un nombre positif."
 
-#: psychotropic/cogs/science.py:142
+#: psychotropic/cogs/science.py:144
 msgid "Please fill exactly two fields."
 msgstr "Merci de remplir exactement deux champs."
 
-#: psychotropic/cogs/science.py:156
+#: psychotropic/cogs/science.py:158
 #, python-brace-format
 msgid ""
 "Dissolving **{m} mg** of substance in **{v} mL** results in a "
@@ -287,16 +308,16 @@ msgstr ""
 "Dissoudre **{m} mg** de substance dans **{v} mL** entraîne une "
 "concentration de **{c:.3g} mg/mL**."
 
-#: psychotropic/cogs/science.py:165
+#: psychotropic/cogs/science.py:167
 #, python-brace-format
 msgid ""
 "To prepare **{v} mL** of a solution with a concentration of **{c} "
 "mg/mL**, you need **{m:.3g} mg** of substance."
 msgstr ""
-"Pour préparer **{v} mL** d'une solution concentrée à **{c} "
-"mg/mL**, il vous faut **{m:.3g} mg** de substance."
+"Pour préparer **{v} mL** d'une solution concentrée à **{c} mg/mL**, il "
+"vous faut **{m:.3g} mg** de substance."
 
-#: psychotropic/cogs/science.py:174
+#: psychotropic/cogs/science.py:176
 #, python-brace-format
 msgid ""
 "To get **{m} mg** of substance from a solution of **{c} mg/mL** of "
@@ -305,65 +326,65 @@ msgstr ""
 "Pour obtenir **{m} mg** de substance depuis une solution concentrée à "
 "**{c} mg/mL**, vous devez prendre un volume de **{v:.3g} mL**."
 
-#: psychotropic/cogs/science.py:183
+#: psychotropic/cogs/science.py:185
 msgid "🟰 Result"
 msgstr "🟰 Résultat"
 
-#: psychotropic/cogs/science.py:192
+#: psychotropic/cogs/science.py:194
 msgid "📜 Formula"
 msgstr "📜 Formule"
 
-#: psychotropic/cogs/science.py:194
+#: psychotropic/cogs/science.py:196
 msgid "concentration"
 msgstr "concentration"
 
-#: psychotropic/cogs/science.py:195
+#: psychotropic/cogs/science.py:197
 msgid "mass"
 msgstr "masse"
 
-#: psychotropic/cogs/science.py:196
+#: psychotropic/cogs/science.py:198
 msgid "volume"
 msgstr "volume"
 
-#: psychotropic/cogs/science.py:232
+#: psychotropic/cogs/science.py:234
 msgid "Display information about a chemical substance or compound."
 msgstr "Affiche des informations sur une substance ou composé chimique."
 
-#: psychotropic/cogs/science.py:250 psychotropic/cogs/science.py:336
-#: psychotropic/cogs/science.py:392
+#: psychotropic/cogs/science.py:252 psychotropic/cogs/science.py:338
+#: psychotropic/cogs/science.py:394
 #, python-brace-format
 msgid "Can't find substance {substance}"
 msgstr "Impossible de trouver la substance {substance}"
 
-#: psychotropic/cogs/science.py:259
+#: psychotropic/cogs/science.py:261
 msgid "No description avalaible 🤔"
 msgstr "Aucune description disponible 🤔"
 
-#: psychotropic/cogs/science.py:280
+#: psychotropic/cogs/science.py:282
 msgid "Substance information: "
 msgstr "Informations sur la substance : "
 
-#: psychotropic/cogs/science.py:285 psychotropic/cogs/science.py:353
+#: psychotropic/cogs/science.py:287 psychotropic/cogs/science.py:355
 msgid "🔬 IUPAC Name"
 msgstr "🔬 Nom IUPAC"
 
-#: psychotropic/cogs/science.py:289
+#: psychotropic/cogs/science.py:291
 msgid "🏷 Synonyms"
 msgstr "🏷 Synonymes"
 
-#: psychotropic/cogs/science.py:291 psychotropic/cogs/science.py:358
+#: psychotropic/cogs/science.py:293 psychotropic/cogs/science.py:360
 msgid "🧪 Formula"
 msgstr "🧪 Formule"
 
-#: psychotropic/cogs/science.py:295
+#: psychotropic/cogs/science.py:297
 msgid "🏋 Molar mass"
 msgstr "🏋 Masse molaire"
 
-#: psychotropic/cogs/science.py:299
+#: psychotropic/cogs/science.py:301
 msgid "🔗 Hydrogen bonds"
 msgstr "🔗 Liaisons hydrogène"
 
-#: psychotropic/cogs/science.py:301
+#: psychotropic/cogs/science.py:303
 #, python-brace-format
 msgid ""
 "Donors: {donors}\n"
@@ -372,11 +393,11 @@ msgstr ""
 "Donneurs : {donors}\n"
 "Accepteurs : {acceptors}"
 
-#: psychotropic/cogs/science.py:307
+#: psychotropic/cogs/science.py:309
 msgid "🌀 Molecular complexity"
 msgstr "🌀 Complexité moléculaire"
 
-#: psychotropic/cogs/science.py:315
+#: psychotropic/cogs/science.py:317
 msgid ""
 "Display the shematic of a given chemical substance or compound. 2D and 3D"
 " modes are supported."
@@ -384,11 +405,11 @@ msgstr ""
 "Affiche le schéma d'une substance ou composé chimique. Les modes 2D et 3D"
 " sont supportés."
 
-#: psychotropic/cogs/science.py:350
+#: psychotropic/cogs/science.py:352
 msgid "Substance schematic: "
 msgstr "Schéma de la substance : "
 
-#: psychotropic/cogs/science.py:369
+#: psychotropic/cogs/science.py:371
 msgid ""
 "Display solubility information about a substance. Multiple sources of "
 "data are averaged."
@@ -396,7 +417,7 @@ msgstr ""
 "Affiche les informations de solubilité d'une substance. Plusieurs sources"
 " de données sont moyennées."
 
-#: psychotropic/cogs/science.py:374
+#: psychotropic/cogs/science.py:376
 msgid ""
 "Display solubility information about a substance. Multiple sources of "
 "experimental and predicted data are averaged to improve result accuracy. "
@@ -407,17 +428,17 @@ msgstr ""
 "la précision des résultats. Les plages de résultats sont fournies si "
 "possible."
 
-#: psychotropic/cogs/science.py:403
+#: psychotropic/cogs/science.py:405
 #, python-brace-format
 msgid "Solubility information: {name}"
 msgstr "Informations de solubilité : {name}"
 
-#: psychotropic/cogs/science.py:437
+#: psychotropic/cogs/science.py:439
 #, python-brace-format
 msgid "*({method}, {count} sources)*\n"
 msgstr "*({method}, {count} sources)*\n"
 
-#: psychotropic/cogs/science.py:447
+#: psychotropic/cogs/science.py:449
 msgid "A small dilution calculator to help with volumetric dosing."
 msgstr "Une petite calculatrice pour aider aux dilutions volumétriques."
 
@@ -759,52 +780,52 @@ msgstr ""
 "\n"
 "Une idée originale d'arli."
 
-#: psychotropic/providers/mixtures.py:39 psychotropic/providers/mixtures.py:62
-#: psychotropic/providers/mixtures.py:84
+#: psychotropic/providers/mixtures.py:57 psychotropic/providers/mixtures.py:86
+#: psychotropic/providers/mixtures.py:108
 msgid "unknown"
 msgstr "inconnue"
 
-#: psychotropic/providers/mixtures.py:40 psychotropic/providers/mixtures.py:63
+#: psychotropic/providers/mixtures.py:58 psychotropic/providers/mixtures.py:87
 msgid "neutral"
 msgstr "neutre"
 
-#: psychotropic/providers/mixtures.py:41
+#: psychotropic/providers/mixtures.py:59
 msgid "caution"
 msgstr "vigilance"
 
-#: psychotropic/providers/mixtures.py:42
+#: psychotropic/providers/mixtures.py:60
 msgid "unsafe"
 msgstr "risqué"
 
-#: psychotropic/providers/mixtures.py:43
+#: psychotropic/providers/mixtures.py:61
 msgid "dangerous"
 msgstr "dangereux"
 
-#: psychotropic/providers/mixtures.py:64
+#: psychotropic/providers/mixtures.py:88
 msgid "decrease"
 msgstr "atténuation"
 
-#: psychotropic/providers/mixtures.py:65
+#: psychotropic/providers/mixtures.py:89
 msgid "increase"
 msgstr "potentiation"
 
-#: psychotropic/providers/mixtures.py:66
+#: psychotropic/providers/mixtures.py:90
 msgid "mixed"
 msgstr "mixte"
 
-#: psychotropic/providers/mixtures.py:67
+#: psychotropic/providers/mixtures.py:91
 msgid "additive"
 msgstr "addition"
 
-#: psychotropic/providers/mixtures.py:85
+#: psychotropic/providers/mixtures.py:109
 msgid "hypothetical"
 msgstr "hypothétique"
 
-#: psychotropic/providers/mixtures.py:86
+#: psychotropic/providers/mixtures.py:110
 msgid "inferred"
 msgstr "supposée"
 
-#: psychotropic/providers/mixtures.py:87
+#: psychotropic/providers/mixtures.py:111
 msgid "proven"
 msgstr "avérée"
 
