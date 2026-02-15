@@ -56,6 +56,11 @@ def set_locale(obj: Interaction | str):
         current_locale.set(obj)
 
 
+def get_locale():
+    """Returns the current locale. For consistency with `set_locale`."""
+    return current_locale.get()
+
+
 def localize(string: str | locale_str) -> str:
     """Helper function to translate bare strings according to current context locale."""
     if isinstance(string, locale_str):

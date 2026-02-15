@@ -8,7 +8,7 @@ from discord.app_commands import rename
 from discord.ext.commands import Cog
 
 from psychotropic.embeds import ErrorEmbed, send_embed_on_exception
-from psychotropic.i18n import current_locale, localize, localize_fmt
+from psychotropic.i18n import get_locale, localize, localize_fmt
 from psychotropic.providers import MixturesEmbed
 from psychotropic.providers.mixtures import MixturesAPI, format_markdown
 from psychotropic.utils import pretty_list, setup_cog, trim_text
@@ -26,7 +26,7 @@ class CombosCog(Cog, name="Combos module"):
     @property
     def mixtures(self):
         """Get a MixturesAPI instance according to current locale context."""
-        if (locale := current_locale.get()) not in self.mixtures_apis:
+        if (locale := get_locale()) not in self.mixtures_apis:
             locale = "en-US"
 
         return self.mixtures_apis[locale]

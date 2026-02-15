@@ -19,7 +19,7 @@ from discord.ui import View, button
 
 from psychotropic import settings
 from psychotropic.embeds import DefaultEmbed, ErrorEmbed
-from psychotropic.i18n import localize, localize_fmt, set_locale
+from psychotropic.i18n import get_locale, localize, localize_fmt, set_locale
 from psychotropic.ui import Paginator
 from psychotropic.utils import (
     format_user,
@@ -36,9 +36,14 @@ class ReplayView(View):
     def __init__(self, callback):
         super().__init__()
         self.callback = callback
+        self.locale = get_locale()
 
     @button(label=localize("Play again"), style=ButtonStyle.primary, emoji="🏓")
     async def replay(self, interaction, button):
+        # Callbacks are not executed in the same asyncio context as
+        # `bot.global_interaction_check`, hence the locale needs to be manually set
+        set_locale(self.locale)
+
         await self.callback(interaction)
 
 
