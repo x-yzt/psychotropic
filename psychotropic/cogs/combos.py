@@ -1,5 +1,6 @@
 from itertools import chain
 
+from discord import Interaction
 from discord.app_commands import Choice, autocomplete, command
 from discord.app_commands import locale_str as _
 from discord.app_commands import rename
@@ -8,6 +9,7 @@ from discord.ext.commands import Cog
 from psychotropic.embeds import ErrorEmbed, send_embed_on_exception
 from psychotropic.i18n import current_locale, localize, localize_fmt, set_locale
 from psychotropic.providers import MixturesEmbed
+from psychotropic.providers.mixtures import MixturesAPI, format_markdown
 from psychotropic.providers.mixtures import (
     MixturesAPI,
     Reliability,
@@ -23,8 +25,8 @@ class CombosCog(Cog, name="Combos module"):
         self.bot = bot
         # Maps discord locales strings to MixturesAPI instances
         self.mixtures_apis = {
-            "en-US": MixturesAPI(),
-            "fr": MixturesAPI(locale="fr"),
+            "en-US": MixturesAPI(session=bot.http_session),
+            "fr": MixturesAPI(session=bot.http_session, locale="fr"),
         }
 
     @property
@@ -65,16 +67,6 @@ class CombosCog(Cog, name="Combos module"):
         if data["names"]:
             title += f" ({', '.join(map(str.capitalize, data['names']))})"
 
-        risk, synergy, risk_reliability, effects_reliability = (
-            enum(data[key])
-            for enum, key in (
-                (Risk, "risk"),
-                (Synergy, "synergy"),
-                (Reliability, "risk_reliability"),
-                (Reliability, "effects_reliability"),
-            )
-        )
-
         embed = MixturesEmbed(
             title=localize_fmt("Interaction: {title}", title=title),
             url=data["site_url"],
@@ -100,12 +92,12 @@ class CombosCog(Cog, name="Combos module"):
         )
 
         for name, param, reliab in (
-            (localize("Risks"), risk, risk_reliability),
-            (localize("Synergy"), synergy, effects_reliability),
+            (localize("Risks"), data["risk"], data["risk_reliability"]),
+            (localize("Synergy"), data["synergy"], data["effects_reliability"]),
         ):
             value = f"**{param.emoji} {str(param).capitalize()}**"
 
-            if param:
+            if reliab:
                 value += "\n*{reliability} {reliab}.*\n{emoji}".format(
                     reliability=localize("Reliability:"),
                     reliab=str(reliab).lower(),
@@ -163,7 +155,7 @@ class CombosCog(Cog, name="Combos module"):
     @send_embed_on_exception
     async def combo(
         self,
-        interaction,
+        interaction: Interaction,
         a: str,
         b: str,
         c: str | None = None,
@@ -204,15 +196,12 @@ class CombosCog(Cog, name="Combos module"):
                 )
             )
 
-        for inter in result["interactions"].values():
-            await interaction.followup.send(
-                embed=self.make_interaction_embed(
-                    inter, show_description=len(drugs) == 2
-                )
-            )
-
-
-setup = setup_cog(CombosCog)
+        await interaction.followup.send(
+            embeds=[
+                self.make_interaction_embed(inter, show_description=len(drugs) == 2)
+                for inter in result["interactions"].values()
+            ]
+        )
 
 
 setup = setup_cog(CombosCog)
