@@ -9,7 +9,7 @@ from discord.ui import Button, Label, Modal, TextDisplay, TextInput, View
 
 from psychotropic import settings
 from psychotropic.embeds import ErrorEmbed, send_embed_on_exception
-from psychotropic.i18n import localize, localize_fmt
+from psychotropic.i18n import localize, localize_fmt, set_locale
 from psychotropic.providers import EPAEmbed, PubChemEmbed, dsstox, pubchem
 from psychotropic.ui import DefaultEmbed, RetryModalView
 from psychotropic.utils import pretty_list, setup_cog, to_float
@@ -133,6 +133,10 @@ class DilutionModal(Modal):
         return val
 
     async def on_submit(self, interaction: Interaction):
+        # Submit callback is not checked against `global_interaction_check`, hence the
+        # locale has to be set manually
+        set_locale(interaction)
+
         try:
             concentration = self.validate(self.concentration)
             mass = self.validate(self.mass)
