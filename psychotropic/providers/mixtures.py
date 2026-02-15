@@ -1,6 +1,7 @@
+import json
 from enum import Enum
 
-import httpx
+from aiohttp import ClientSession
 from mistune import create_markdown
 
 from psychotropic.i18n import localize
@@ -8,10 +9,27 @@ from psychotropic.utils import DiscordMarkdownRenderer
 
 
 def format_markdown(text):
-    text = text.replace('\\r\\n', '\n')
+    text = text.replace("\\r\\n", "\n")
     render = create_markdown(renderer=DiscordMarkdownRenderer())
-    
+
     return render(text)
+
+
+class MixturesDecoder(json.JSONDecoder):
+    def __init__(self):
+        super().__init__(object_hook=self.object_hook)
+
+    def object_hook(self, obj):
+        for key, enum in (
+            ("risk", Risk),
+            ("synergy", Synergy),
+            ("risk_reliability", Reliability),
+            ("effects_reliability", Reliability),
+        ):
+            if key in obj:
+                obj[key] = enum(obj[key])
+
+        return obj
 
 
 class MixturesEnum(Enum):
@@ -40,13 +58,19 @@ class Risk(MixturesEnum):
             localize("neutral"),
             localize("caution"),
             localize("unsafe"),
-            localize("dangerous")
+            localize("dangerous"),
         ][self.value]
+
+    def __lt__(self, other):
+        if isinstance(other, Risk):
+            return self.value < other.value
+
+        return NotImplemented
 
     @property
     def _emojis(self):
-        return '❔', '⏺️', '⚠️', '🛑', '⛔'
-    
+        return "❔", "⏺️", "⚠️", "🛑", "⛔"
+
 
 class Synergy(MixturesEnum):
     UNKNOWN = 0
@@ -55,7 +79,7 @@ class Synergy(MixturesEnum):
     INCREASE = 3
     MIXED = 4
     ADDITIVE = 5
-    
+
     def __str__(self):
         # Explicit strings are needed here for i18n extraction by gettext
         return [
@@ -64,12 +88,12 @@ class Synergy(MixturesEnum):
             localize("decrease"),
             localize("increase"),
             localize("mixed"),
-            localize("additive")
+            localize("additive"),
         ][self.value]
 
     @property
     def _emojis(self):
-        return '❔', '⏺️', '⏬', '⏫', '🔀', '➡️'
+        return "❔", "⏺️", "⏬", "⏫", "🔀", "➡️"
 
 
 class Reliability(MixturesEnum):
@@ -77,61 +101,73 @@ class Reliability(MixturesEnum):
     HYPOTHETICAL = 1
     INFERRED = 2
     PROVEN = 3
-    
+
     def __str__(self):
         # Explicit strings are needed here for i18n extraction by gettext
         return [
             localize("unknown"),
             localize("hypothetical"),
             localize("inferred"),
-            localize("proven")
+            localize("proven"),
         ][self.value]
 
     @property
     def _emojis(self):
-        return '', '◉⭘⭘', '◉◉⭘', '◉◉◉'
+        return "", "◉⭘⭘", "◉◉⭘", "◉◉◉"
 
 
 class MixturesAPI:
-    API_URL = 'https://mixtures.info/{locale}/api/v1/'
+    API_URL = "https://mixtures.info/{locale}/api/v1/"
 
-    def __init__(self, locale='en'):
+    def __init__(self, session: ClientSession, locale="en"):
         self.locale = locale
+        self.session = session
         self._aliases = {}
         self._catalogue = {}
 
-    async def get_aliases(self):
-        if not self._aliases:
-            await self._fetch_aliases()
-        return self._aliases
-    
-    async def get_substance(self, slug):
-        return (await self.get('substance/' + slug)).json()
-    
-    async def combine(self, slugs):
-        return (await self.get('combo/' + '+'.join(slugs))).json()
-    
-    async def get_slugs_from_aliases(self, aliases, raises=True):
-        # The catalogue is mapping lowercase aliases to slugs
+    @property
+    def api_url(self):
+        return self.API_URL.format(locale=self.locale)
+
+    @property
+    async def catalogue(self):
+        """The catalogue is mapping lowercase aliases to slugs."""
         if not self._catalogue:
             self._catalogue = {
-                alias.lower(): data['slug']
+                alias.lower(): data["slug"]
                 for alias, data in (await self.get_aliases()).items()
             }
-        
-        return set(filter(None, (
-            self._catalogue[alias.lower()] if raises
-            else self._catalogue.get(alias.lower())
-            for alias in aliases
-        )))
 
-    async def get(self, *args, **kwargs):
-        async with httpx.AsyncClient(
-            base_url=self.API_URL.format(locale=self.locale),
-            follow_redirects=True
-        ) as client:
-            return await client.get(*args, **kwargs)
+        return self._catalogue
 
-    async def _fetch_aliases(self):
-        self._aliases = (await self.get('aliases')).json()
-        self._catalogue = {}  # Invalidate catalogue
+    async def get_aliases(self):
+        if not self._aliases:
+            self._aliases = await self.get_json("aliases/")
+            self._catalogue = {}  # Invalidate catalogue
+
+        return self._aliases
+
+    async def get_substance(self, slug):
+        return await self.get_json("substance/" + slug)
+
+    async def get_substance_by_alias(self, alias):
+        slug = (await self.catalogue)[alias.lower()]
+
+        return await self.get_substance(slug)
+
+    async def combine(self, slugs):
+        return await self.get_json("combo/" + "+".join(slugs))
+
+    async def get_slugs_from_aliases(self, aliases, raises=True):
+        catalogue = await self.catalogue
+
+        if raises:
+            return {catalogue[alias.lower()] for alias in aliases}
+
+        return {slug for alias in aliases if (slug := catalogue.get(alias.lower()))}
+
+    async def get_json(self, path, **kwargs):
+        async with self.session.get(self.api_url + path, **kwargs) as resp:
+            resp.raise_for_status()
+
+            return await resp.json(loads=lambda s: json.loads(s, cls=MixturesDecoder))

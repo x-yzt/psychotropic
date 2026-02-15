@@ -1,6 +1,7 @@
 import logging
 import sys
 
+from aiohttp import ClientSession
 from discord import Activity, ActivityType, Intents, Permissions
 from discord.app_commands import Command
 from discord.app_commands import locale_str as _
@@ -72,6 +73,8 @@ class PsychotropicBot(Bot):
 
     async def setup_hook(self):
         log.info(f"OAuth URL: {self.oauth_url}")
+
+        self.http_session = ClientSession()
 
         await self.load_extensions()
         await self.tree.set_translator(translator)
