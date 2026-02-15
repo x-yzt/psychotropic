@@ -163,8 +163,6 @@ class RunningReagentsGame(BaseRunningGame):
         return self
 
     async def test_reagent(self, interaction):
-        set_locale(interaction)
-
         try:
             reagent_id = interaction.data["values"][0]
         except IndexError:
@@ -330,8 +328,6 @@ class ReagentsGameCog(Cog, name="Reagents game module"):
     # See comment in cog_load method below to get why command decorators are not used
     async def reagents(self, interaction):
         """`/game reagents` command"""
-        set_locale(interaction)
-
         await RunningReagentsGame.start(interaction, ReagentsGame(), self.scoreboard)
 
     reagents.description = _(

@@ -8,7 +8,7 @@ from discord.app_commands import rename
 from discord.ext.commands import Cog
 
 from psychotropic.embeds import ErrorEmbed, send_embed_on_exception
-from psychotropic.i18n import current_locale, localize, localize_fmt, set_locale
+from psychotropic.i18n import current_locale, localize, localize_fmt
 from psychotropic.providers import MixturesEmbed
 from psychotropic.providers.mixtures import MixturesAPI, format_markdown
 from psychotropic.utils import pretty_list, setup_cog, trim_text
@@ -32,8 +32,6 @@ class CombosCog(Cog, name="Combos module"):
         return self.mixtures_apis[locale]
 
     async def substance_autocomplete(self, interaction, current: str):
-        set_locale(interaction)
-
         aliases = await self.mixtures.get_aliases()
 
         # Slugs of substances already queried in other parameters
@@ -204,8 +202,6 @@ class CombosCog(Cog, name="Combos module"):
         d: str | None = None,
     ):
         """`/combo` command."""
-        set_locale(interaction)
-
         await interaction.response.defer()
 
         drugs = tuple(filter(None, (a, b, c, d)))
@@ -252,8 +248,6 @@ class CombosCog(Cog, name="Combos module"):
     @autocomplete(substance=substance_autocomplete)
     async def combos(self, interaction: Interaction, substance: str):
         """`/combos` command."""
-        set_locale(interaction)
-
         await interaction.response.defer()
 
         try:

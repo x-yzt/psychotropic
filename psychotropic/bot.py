@@ -2,7 +2,7 @@ import logging
 import sys
 
 from aiohttp import ClientSession
-from discord import Activity, ActivityType, Intents, Permissions
+from discord import Activity, ActivityType, Intents, Interaction, Permissions
 from discord.app_commands import Command
 from discord.app_commands import locale_str as _
 from discord.ext.commands import Bot
@@ -71,6 +71,11 @@ class PsychotropicBot(Bot):
             self.tree.copy_global_to(guild=settings.TEST_GUILD)
             await self.tree.sync(guild=settings.TEST_GUILD)
 
+    async def global_interaction_check(self, interaction: Interaction):
+        """Pre-checks triggered upon each interaction event."""
+        set_locale(interaction)
+        return True
+
     async def setup_hook(self):
         log.info(f"OAuth URL: {self.oauth_url}")
 
@@ -78,6 +83,7 @@ class PsychotropicBot(Bot):
 
         await self.load_extensions()
         await self.tree.set_translator(translator)
+        self.tree.interaction_check = self.global_interaction_check
         await self.sync_tree()
 
     async def on_ready(self):
@@ -103,9 +109,8 @@ bot = PsychotropicBot()
     name="psycho",
     description=_("Display various informations about the Psychotropic bot."),
 )
-async def info(interaction):
+async def info(interaction: Interaction):
     """`/pycho` command"""
-    set_locale(interaction)
 
     await interaction.response.send_message(
         embed=(
@@ -154,9 +159,8 @@ async def info(interaction):
 @bot.tree.command(
     name="help", description=_("Display help about Psychotropic commands.")
 )
-async def help(interaction):
+async def help(interaction: Interaction):
     """`/help` command"""
-    set_locale(interaction)
 
     embed = DefaultEmbed(
         title=localize("💡 Psychotropic help"),

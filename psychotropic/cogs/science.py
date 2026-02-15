@@ -9,7 +9,7 @@ from discord.ui import Button, Label, Modal, TextDisplay, TextInput, View
 
 from psychotropic import settings
 from psychotropic.embeds import ErrorEmbed, send_embed_on_exception
-from psychotropic.i18n import localize, localize_fmt, set_locale
+from psychotropic.i18n import localize, localize_fmt
 from psychotropic.providers import EPAEmbed, PubChemEmbed, dsstox, pubchem
 from psychotropic.ui import DefaultEmbed, RetryModalView
 from psychotropic.utils import pretty_list, setup_cog, to_float
@@ -133,8 +133,6 @@ class DilutionModal(Modal):
         return val
 
     async def on_submit(self, interaction: Interaction):
-        set_locale(interaction)
-
         try:
             concentration = self.validate(self.concentration)
             mass = self.validate(self.mass)
@@ -236,8 +234,6 @@ class ScienceCog(Cog, name="Scientific module"):
     @send_embed_on_exception
     async def substance(self, interaction, substance: str):
         """`/substance` command"""
-        set_locale(interaction)
-
         await interaction.response.defer(thinking=True)
 
         async with pubchem.AsyncPUGClient() as client:
@@ -321,8 +317,6 @@ class ScienceCog(Cog, name="Scientific module"):
     @send_embed_on_exception
     async def schematic(self, interaction, substance: str, mode: Mode = "2D"):
         """`/schematic` command"""
-        set_locale(interaction)
-
         await interaction.response.defer(thinking=True)
 
         async with pubchem.AsyncPUGClient() as client:
@@ -382,8 +376,6 @@ class ScienceCog(Cog, name="Scientific module"):
     @send_embed_on_exception
     async def solubility(self, interaction, substance: str):
         """`/solubility` command"""
-        set_locale(interaction)
-
         await interaction.response.defer(thinking=True)
 
         match = await dsstox.get_substance(substance)
@@ -451,8 +443,6 @@ class ScienceCog(Cog, name="Scientific module"):
     @send_embed_on_exception
     async def dilution(self, interaction: Interaction):
         """`/dilution` command"""
-        set_locale(interaction)
-
         await interaction.response.send_modal(DilutionModal())
 
 

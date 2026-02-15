@@ -324,8 +324,6 @@ class GamesCog(Cog, name="Games module"):
 
     async def start(self, interaction):
         """`/game start` command"""
-        set_locale(interaction)
-
         await interaction.response.send_message(
             embed=ErrorEmbed(
                 localize("The `/game start` command is obsolete!"),
@@ -337,8 +335,6 @@ class GamesCog(Cog, name="Games module"):
 
     async def scores(self, interaction, page: Range[int, 1] = 1):
         """`/game scores` command"""
-        set_locale(interaction)
-
         await interaction.response.defer(thinking=True)
 
         await interaction.followup.send(
@@ -354,8 +350,6 @@ class GamesCog(Cog, name="Games module"):
 
     async def profile(self, interaction, member: Member | None = None):
         """`/game profile` command"""
-        set_locale(interaction)
-
         member = member or interaction.user
 
         profile = self.scoreboard[member]
@@ -438,8 +432,6 @@ class GamesCog(Cog, name="Games module"):
 
     async def end(self, interaction):
         """`/game end` command"""
-        set_locale(interaction)
-
         running_game = BaseRunningGame.get_from_context(interaction)
 
         if not running_game:

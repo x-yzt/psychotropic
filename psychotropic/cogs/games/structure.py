@@ -315,8 +315,6 @@ class StructureGameCog(Cog, name="Structure game module"):
     # See comment in cog_load method below to get why command decorators are not used
     async def structure(self, interaction):
         """`/game structure` command"""
-        set_locale(interaction)
-
         try:
             game = StructureGame()
         except SchematicRegistry.UnfetchedRegistryError:
