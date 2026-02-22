@@ -32,6 +32,7 @@ dependencies = [
 [dependency-groups]
 dev = [
   "ruff>=0.14.10",
+  "ty>=0.0.17",
 ]
 
 [project.urls]
@@ -43,6 +44,18 @@ Source = "https://github.com/x-yzt/psychotropic"
 select = ["E", "F", "UP", "B", "SIM"]
 # Ignore % and f-strings interpolations upgrade. And I know how itertool works, thanks.
 ignore = ["UP032", "UP031", "B905"]
+
+[tool.ty.rules]
+invalid-method-override = "warn"
+
+[[tool.ty.overrides]]
+include = ["psychotropic/cogs/games/**"]
+
+[tool.ty.overrides.rules]
+unresolved-attribute = "warn"
+
+[tool.ty.analysis]
+allowed-unresolved-imports = ["psychotropic.providers.**"]
 
 [tool.babel]
 

@@ -165,6 +165,7 @@ class RunningStructureGame(BaseRunningGame):
             await self.end()
             self.scoreboard[msg.author].balance += game.reward
             self.scoreboard[msg.author].won_structure_games += 1
+            self.scoreboard[msg.author].found_structure_substances.add(game.substance)
 
             file = File(game.schematic, filename="schematic.png")
             embed = (
