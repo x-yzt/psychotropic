@@ -3,6 +3,7 @@ import logging
 import textwrap
 from importlib import resources
 from io import BytesIO
+from operator import itemgetter
 from random import choice, random
 
 from discord import (
@@ -26,7 +27,7 @@ from discord.ui import (
     TextDisplay,
     Thumbnail,
 )
-from PIL import Image, ImageColor, ImageDraw, ImageFont
+from PIL import ImageColor, ImageDraw, ImageFont
 
 from psychotropic import settings
 from psychotropic.cogs.games import BaseRunningGame, ReplayView, Scoreboard, games_group
@@ -53,7 +54,14 @@ class ReagentsGame:
 
     def __init__(self):
         self.db = ReagentsDatabase()
-        self.substance = choice(self.db.get_well_known_substances())
+        self.substance = choice(
+            list(
+                filter(
+                    itemgetter("isPopular"),
+                    self.db.get_well_known_substances(reactions=9, colored_reactions=6),
+                )
+            )
+        )
         self.tries = 0
 
     @property
@@ -258,7 +266,7 @@ class ReagentsGameStartView(LayoutView):
         changes."""
         results.sort(key=lambda r: (bool(len(r[2])), random()), reverse=True)
 
-        return results[:9]
+        return sorted(results[:9], key=itemgetter(0))
 
     def make_result_files(self) -> list[File]:
         files = []
@@ -317,7 +325,7 @@ class ReagentsGameStartView(LayoutView):
             align="center",
             font=description_font,
             fill=(0x0, 0x0, 0x0),
-            stroke_width=3,
+            stroke_width=6,
             stroke_fill=(0xFF, 0xFF, 0xFF, 0x80),
         )
 

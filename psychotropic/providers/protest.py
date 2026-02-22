@@ -40,11 +40,12 @@ class ReagentsDatabase:
     def get_color_code(self, cid):
         return self.db["colors"][str(cid)]["hex"]
 
-    def get_well_known_substances(self, reagents_count=10):
-        """ "Return all substances with `reagents_count` or more reaction
-        entries."""
+    def get_well_known_substances(self, reactions: int = 0, colored_reactions: int = 0):
+        """Return all substances with `reactions` or more reaction entries and
+        `colored_reactions` or more reactions whose result is not "no color change"."""
         return [
             self.db["substances"][sid]
             for sid, results in self.db["results"].items()
-            if len(results) >= reagents_count
+            if len(results) >= reactions
+            and sum(1 for r in results.values() if len(r[0][0])) >= colored_reactions
         ]
