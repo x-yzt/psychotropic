@@ -1,24 +1,51 @@
 import asyncio as aio
 import logging
+import textwrap
+from importlib import resources
 from io import BytesIO
-from random import choice
+from random import choice, random
 
-from discord import ButtonStyle, File
+from discord import (
+    ButtonStyle,
+    File,
+    Interaction,
+    MediaGalleryItem,
+    Member,
+    Message,
+    User,
+)
 from discord.app_commands import command
 from discord.app_commands import locale_str as _
 from discord.ext.commands import Cog
-from discord.ui import Button, Select, View
-from PIL import ImageColor
+from discord.ui import (
+    Button,
+    Container,
+    LayoutView,
+    MediaGallery,
+    Section,
+    TextDisplay,
+    Thumbnail,
+)
+from PIL import Image, ImageColor, ImageDraw, ImageFont
 
 from psychotropic import settings
-from psychotropic.cogs.games import BaseRunningGame, ReplayView, games_group
-from psychotropic.embeds import DefaultEmbed, ErrorEmbed
+from psychotropic.cogs.games import BaseRunningGame, ReplayView, Scoreboard, games_group
+from psychotropic.embeds import DefaultEmbed
 from psychotropic.i18n import localize, localize_fmt, set_locale
 from psychotropic.providers import pnwiki
 from psychotropic.providers.protest import ReagentsDatabase
-from psychotropic.utils import make_gradient, setup_cog, unformat
+from psychotropic.settings import COLOUR
+from psychotropic.utils import (
+    make_gradient,
+    make_transparent,
+    setup_cog,
+    unformat,
+)
 
 log = logging.getLogger(__name__)
+
+
+Result = tuple[str, str, list[list[int]]]
 
 
 class ReagentsGame:
@@ -28,27 +55,29 @@ class ReagentsGame:
         self.db = ReagentsDatabase()
         self.substance = choice(self.db.get_well_known_substances())
         self.tries = 0
-        self.reagents_tried = set()
 
     @property
     def reward(self):
-        return 200 if self.tries == 1 else 100
+        return 50 if self.tries == 1 else 25
 
-    def reagent_result(self, reagent):
-        """Return a (colors, text) tuple of the results of a given reagent, and add this
-        reagent to the tried reagents list.
+    def get_results(self) -> list[Result]:
+        """Return test results of the game substance as a list of `(reagent name,
+        color description, [first color, second color, ...])` tuples.
 
         `KeyError` is raised if no result can be found.
         """
-        self.reagents_tried.add(reagent["id"])
+        results = self.db.get_results(self.substance)
 
-        result = self.db.get_result(self.substance, reagent)
+        return [
+            (
+                self.db.get_by_id("reagents", reagent_id)["fullName"],
+                result[3],
+                list(map(ImageColor.getrgb, self.db.get_result_colors(result))),
+            )
+            for reagent_id, result in results.items()
+        ]
 
-        colors = list(map(ImageColor.getrgb, self.db.get_result_colors(result)))
-
-        return (colors, result[3])
-
-    def is_correct(self, guess):
+    def is_correct(self, guess: str):
         """Check if a string contains an unformated substring of the right answer and
         increment the tries counter."""
         self.tries += 1
@@ -63,8 +92,6 @@ class RunningReagentsGame(BaseRunningGame):
 
     TIMEOUT = 10 * 60  # Seconds
 
-    COST = 5  # Coins per reagent
-
     ICON_DIR = settings.BASE_DIR / "data" / "img" / "substances"
 
     def __init__(self, *args, **kwargs):
@@ -75,7 +102,7 @@ class RunningReagentsGame(BaseRunningGame):
     def substance_name(self):
         return self.game.substance["commonName"]
 
-    async def check_answer(self, msg):
+    async def check_answer(self, msg: Message):
         """Check if a message contains the answer and react accordingly."""
         game = self.game
 
@@ -135,137 +162,27 @@ class RunningReagentsGame(BaseRunningGame):
         await self.end()
 
     @classmethod
-    async def start(cls, interaction, game, scoreboard):
+    async def start(
+        cls, interaction: Interaction, game: ReagentsGame, scoreboard: Scoreboard
+    ):
         self = await super().start(interaction, game, scoreboard)
 
         if not self:
             return
 
-        embed = (
-            DefaultEmbed(
-                title=(
-                    localize_fmt(
-                        "🚀 {user} found a strange chemical in its pockets...",
-                        user=interaction.user,
-                    )
-                ),
-                description=localize("Can you find what this is?"),
-            )
-            .set_thumbnail(url="attachment://icon.png")
-            .set_footer(text=localize("Wow, shady stuff..."))
+        view = ReagentsGameStartView(
+            user=interaction.user,
+            results=game.get_results(),
         )
+
         await interaction.response.send_message(
-            embed=embed, file=self.icon, view=self.make_reagent_select_view()
+            files=[self.icon, *view.make_result_files()],
+            view=view,
         )
 
         self.create_task(self.timeout)
 
         return self
-
-    async def test_reagent(self, interaction):
-        try:
-            reagent_id = interaction.data["values"][0]
-        except IndexError:
-            return
-
-        reagent = self.game.db.get_by_id("reagents", reagent_id)
-        try:
-            colors, text = self.game.reagent_result(reagent)
-        except KeyError:
-            await interaction.followup.send(
-                embed=ErrorEmbed(
-                    localize("Reaction error 💣"),
-                    localize_fmt(
-                        "Sadly I can't perform a {reagent} test on this mysterious "
-                        "substance.",
-                        reagent=reagent["fullName"],
-                    ),
-                ),
-                view=self.make_reagent_select_view(),
-            )
-            return
-
-        embed = (
-            DefaultEmbed(
-                title=localize_fmt(
-                    "⚗️ {reagent} test results", reagent=reagent["fullName"]
-                )
-            )
-            .add_field(
-                name=localize("🔎 Observed results"),
-                value=f"**{text.capitalize()}**",
-            )
-            .set_footer(text=localize("Mhh..."))
-        )
-
-        if self.scoreboard[interaction.user].balance < self.COST:
-            embed.add_field(
-                name=localize("🎁 I'll treat you!"),
-                value=localize_fmt(
-                    "{user} was low on 🪙, I gave them a reagent.",
-                    user=interaction.user,
-                ),
-            )
-        else:
-            self.scoreboard[interaction.user].balance -= self.COST
-            embed.add_field(
-                name=localize("💸 Thank you!"),
-                value=localize_fmt(
-                    "{user} paid {cost} 🪙 for the reagent.",
-                    user=interaction.user,
-                    cost=self.COST,
-                ),
-            )
-
-        if colors:
-            image = make_gradient(colors, 600, 100)
-
-            with BytesIO() as buffer:
-                image.save(buffer, format="PNG")
-                buffer.seek(0)
-                file = File(fp=buffer, filename="gradient.png")
-
-                embed.set_image(url="attachment://gradient.png")
-
-                await interaction.followup.send(
-                    embed=embed, file=file, view=self.make_reagent_select_view()
-                )
-
-        else:
-            # No color change, special patterns...
-            await interaction.followup.send(
-                embed=embed, view=self.make_reagent_select_view()
-            )
-
-    def make_reagent_select_view(self):
-        view = View(timeout=self.TIMEOUT)
-        select = Select(placeholder=localize("Buy and use a reagent..."))
-
-        async def callback(interaction):
-            # Disable the select dropdown as soon as a choice have been made
-            select.disabled = True
-            await interaction.response.edit_message(view=view)
-
-            await self.test_reagent(interaction)
-
-        select.callback = callback
-
-        for reagent in self.game.db.get_reagents():
-            if reagent["id"] not in self.game.reagents_tried:
-                select.add_option(
-                    label=localize_fmt("{reagent} test", reagent=reagent["fullName"]),
-                    description=localize_fmt(
-                        "Buy and use this test for {cost} 🪙", cost=self.COST
-                    ),
-                    value=reagent["id"],
-                )
-
-        # Don't add the select to the view if no items are avalaible
-        # because selection without options are not allowed by Discord
-        if select.options:
-            view.add_item(select)
-
-        return view
 
     async def send_end_message(self, interaction):
         await interaction.response.send_message(
@@ -302,6 +219,109 @@ class RunningReagentsGame(BaseRunningGame):
             )
 
         return view
+
+
+class ReagentsGameStartView(LayoutView):
+    RESULT_SIZE = 512
+
+    def __init__(self, user: User | Member, results: list[Result]):
+        super().__init__()
+
+        self.results = self.pick_results(results)
+
+        self.add_item(
+            Container(
+                TextDisplay(
+                    localize_fmt(
+                        "# 🚀 {user} found a strange chemical in its pockets...",
+                        user=user,
+                    )
+                ),
+                Section(
+                    TextDisplay(
+                        localize(
+                            "Let's try a few reagents on it. Can you find what it is?"
+                        )
+                    ),
+                    accessory=Thumbnail(media="attachment://icon.png"),
+                ),
+                MediaGallery(*(self.get_gallery_items())),
+                TextDisplay(localize("*Wow, shady stuff...*")),
+                accent_color=COLOUR,
+            ),
+        )
+
+    @staticmethod
+    def pick_results(results: list[Result]):
+        """As Discord allows a maximum of 10 files per message, including one for the
+        thumbnail; this picks up to 9 results randomly, prioritysing ones with color
+        changes."""
+        results.sort(key=lambda r: (bool(len(r[2])), random()), reverse=True)
+
+        return results[:9]
+
+    def make_result_files(self) -> list[File]:
+        files = []
+
+        for reagent, description, colors in self.results:
+            image = self.draw_result(reagent, description, colors)
+
+            with BytesIO() as buffer:
+                image.save(buffer, format="PNG")
+                buffer.seek(0)
+                files.append(File(fp=buffer, filename=f"{reagent}.png"))
+
+        return files
+
+    def get_gallery_items(self):
+        return (
+            MediaGalleryItem(
+                media=f"attachment://{reagent}.png", description=description
+            )
+            for reagent, description, _ in self.results
+        )
+
+    def draw_result(self, reagent: str, description: str, colors: list[int]):
+        size = self.RESULT_SIZE
+        title_height = 120
+
+        image = (
+            make_gradient(colors, width=size, height=size)
+            if colors
+            else make_transparent(width=size, height=size)
+        )
+
+        with resources.path("psychotropic.data.font", "gg_sans_bold.ttf") as file:
+            title_font = ImageFont.truetype(str(file), size=title_height - 40)
+
+        with resources.path("psychotropic.data.font", "gg_sans_semibold.ttf") as file:
+            description_font = ImageFont.truetype(str(file), size=50)
+
+        draw = ImageDraw.Draw(image)
+        draw.rectangle(
+            ((0, 0), (size, title_height)),
+            fill=COLOUR.to_rgb(),
+        )
+        draw.text(
+            (size / 2, 25),
+            reagent,
+            anchor="mt",
+            align="center",
+            font=title_font,
+            fill=(0xFF, 0xFF, 0xFF),
+        )
+        draw.multiline_text(
+            (size / 2, size / 2 + title_height),
+            textwrap.fill(description.capitalize(), 20),
+            anchor="mm",
+            align="center",
+            font=description_font,
+            fill=(0x0, 0x0, 0x0),
+            stroke_width=3,
+            stroke_fill=(0xFF, 0xFF, 0xFF, 0x80),
+        )
+
+        return image
 
 
 class ReagentsGameCog(Cog, name="Reagents game module"):

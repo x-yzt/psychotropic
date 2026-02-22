@@ -123,6 +123,10 @@ uv run pybabel update -i ./messages.pot -d ./psychotropic/locales/
 uv run pybabel compile -d ./psychotropic/locales/
 ```
 
+## Third parties
+
+This repository vendors the `gg sans` font version 2.001, which is © June 2023 Discord Inc. 
+
 [1]: https://raw.githubusercontent.com/x-yzt/psychotropic/master/res/psychotropic.png
 
 [2]: https://discord.com/oauth2/authorize?client_id=665177975053877259&scope=bot+applications.commands&permissions=277025442880

@@ -153,6 +153,11 @@ def make_gradient(colors, width=256, height=256):
     return image
 
 
+def make_transparent(width=256, height=256):
+    """Make a transparent image of given size."""
+    return Image.new("RGBA", (width, height), (255, 0, 0, 0))
+
+
 def make_progress_bar(progress, color=settings.COLOUR.to_rgb(), width=256, height=64):
     """Draw a progress bar of a given color, representing a float `progress` between 0
     and 1."""
