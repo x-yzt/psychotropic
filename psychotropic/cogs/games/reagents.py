@@ -232,6 +232,14 @@ class RunningReagentsGame(BaseRunningGame):
 class ReagentsGameStartView(LayoutView):
     RESULT_SIZE = 512
 
+    TITLE_HEIGHT = 120
+
+    with resources.path("psychotropic.data.font", "gg_sans_bold.ttf") as file:
+        TITLE_FONT = ImageFont.truetype(str(file), size=TITLE_HEIGHT - 40)
+
+    with resources.path("psychotropic.data.font", "gg_sans_semibold.ttf") as file:
+        TEXT_FONT = ImageFont.truetype(str(file), size=50)
+
     def __init__(self, user: User | Member, results: list[Result]):
         super().__init__()
 
@@ -291,19 +299,13 @@ class ReagentsGameStartView(LayoutView):
 
     def draw_result(self, reagent: str, description: str, colors: list[int]):
         size = self.RESULT_SIZE
-        title_height = 120
+        title_height = self.TITLE_HEIGHT
 
         image = (
             make_gradient(colors, width=size, height=size)
             if colors
             else make_transparent(width=size, height=size)
         )
-
-        with resources.path("psychotropic.data.font", "gg_sans_bold.ttf") as file:
-            title_font = ImageFont.truetype(str(file), size=title_height - 40)
-
-        with resources.path("psychotropic.data.font", "gg_sans_semibold.ttf") as file:
-            description_font = ImageFont.truetype(str(file), size=50)
 
         draw = ImageDraw.Draw(image)
         draw.rectangle(
@@ -315,7 +317,7 @@ class ReagentsGameStartView(LayoutView):
             reagent,
             anchor="mt",
             align="center",
-            font=title_font,
+            font=self.TITLE_FONT,
             fill=(0xFF, 0xFF, 0xFF),
         )
         draw.multiline_text(
@@ -323,7 +325,7 @@ class ReagentsGameStartView(LayoutView):
             textwrap.fill(description.capitalize(), 20),
             anchor="mm",
             align="center",
-            font=description_font,
+            font=self.TEXT_FONT,
             fill=(0x0, 0x0, 0x0),
             stroke_width=6,
             stroke_fill=(0xFF, 0xFF, 0xFF, 0x80),
