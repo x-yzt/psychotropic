@@ -2,7 +2,7 @@ import asyncio as aio
 import json
 import logging
 from collections import defaultdict
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from functools import partial
 from io import BytesIO
@@ -138,6 +138,7 @@ class Profile:
     """Represents a player profile data."""
 
     balance: float = 0
+    found_structure_substances: set[str] = field(default_factory=set)
     won_structure_games: int = 0
     won_reagents_games: int = 0
 
@@ -192,11 +193,14 @@ class Profile:
 
 
 class ScoreboardJSONEncoder(JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, Profile):
-            return asdict(obj) | {"__type__": "Profile"}
+    def default(self, o):
+        if isinstance(o, Profile):
+            return asdict(o) | {"__type__": "Profile"}
 
-        return super().default(obj)
+        elif isinstance(o, set):
+            return list(o)
+
+        return super().default(o)
 
 
 class ScoreboardJSONDecoder(JSONDecoder):
