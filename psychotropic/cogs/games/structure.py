@@ -1,6 +1,7 @@
 import asyncio as aio
 import logging
-from random import choice
+import re
+from secrets import choice
 
 from discord import ButtonStyle, File
 from discord.app_commands import command
@@ -27,26 +28,64 @@ class SchematicRegistry:
         self.schematics = []
 
     async def fetch_schematics(self):
-        """Populate the list of all substances to play the game with from PNWiki."""
+        """Populate the list of all substances to play the game with from
+        PNWiki (remote SVGs)."""
         if settings.FETCH_SCHEMATICS:
-            log.info("Populating cache with schematics from PNWiki...")
+            log.info("Fetching schematics from PNWiki...")
 
             try:
-                for substance in await pnwiki.list_substances():
+                raw_names = await pnwiki.list_substances()
+                substances = {
+                    re.sub(r'\s*\(.*?\)', '', n): n
+                    for n in raw_names
+                }
+
+                # Batch-query MediaWiki for actual SVG filenames
+                page_images = await pnwiki.get_page_images(
+                    list(substances.values())
+                )
+                # Map cleaned name -> SVG filename
+                svg_map = {}
+                for clean, raw in substances.items():
+                    svg = page_images.get(raw)
+                    if svg and svg.lower().endswith(".svg"):
+                        svg_map[clean] = svg
+
+                # Filter out already-cached substances
+                to_fetch = {}
+                for substance, svg_file in svg_map.items():
                     image_path = self.build_schematic_path(substance)
                     if image_path.exists():
-                        continue
+                        log.info(
+                            f"[pnwiki] Skipped {substance} (cached)"
+                        )
+                    else:
+                        to_fetch[substance] = svg_file
 
-                    image = await pnwiki.get_schematic_image(
-                        substance, width=600, background_color="WHITE"
-                    )
+                # Batch-fetch all missing schematics concurrently
+                images = await pnwiki.fetch_schematic_images(
+                    to_fetch, width=600, background_color="WHITE",
+                )
+                for substance, image in images.items():
                     if image:
-                        image.save(image_path)
+                        image.save(
+                            self.build_schematic_path(substance)
+                        )
+                        log.info(
+                            f"[pnwiki] Fetched {substance} "
+                            f"({to_fetch[substance]})"
+                        )
+                    else:
+                        log.info(
+                            f"[pnwiki] Skipped {substance} "
+                            "(fetch failed)"
+                        )
 
             except TimeoutException:
                 log.error(
-                    "Unable to reach PsychonautWiki API. The schematic cache might be "
-                    "empty or incomplete."
+                    "Unable to reach PsychonautWiki API. "
+                    "The schematic cache might be empty or "
+                    "incomplete."
                 )
 
         self.schematics = list(self.path.glob("*.png"))
