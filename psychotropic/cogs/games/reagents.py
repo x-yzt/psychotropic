@@ -3,7 +3,7 @@ import logging
 import textwrap
 from importlib import resources
 from io import BytesIO
-from operator import itemgetter
+from operator import attrgetter
 from random import choice, random
 
 from discord import (
@@ -27,14 +27,14 @@ from discord.ui import (
     TextDisplay,
     Thumbnail,
 )
-from PIL import ImageColor, ImageDraw, ImageFont
+from PIL import ImageDraw, ImageFont
 
 from psychotropic import settings
 from psychotropic.cogs.games import BaseRunningGame, ReplayView, Scoreboard, games_group
 from psychotropic.embeds import DefaultEmbed
 from psychotropic.i18n import localize, localize_fmt, set_locale
-from psychotropic.providers import pnwiki
-from psychotropic.providers.protest import ReagentsDatabase
+from psychotropic.providers import pnwiki, protest
+from psychotropic.providers.protest import Result, Substance
 from psychotropic.settings import COLOUR
 from psychotropic.utils import (
     make_gradient,
@@ -46,53 +46,44 @@ from psychotropic.utils import (
 log = logging.getLogger(__name__)
 
 
-Result = tuple[str, str, list[list[int]]]
-
-
 class ReagentsGame:
     """This Discord-agnostic class encapsulates bare game-related logic."""
 
     def __init__(self):
-        self.db = ReagentsDatabase()
-        self.substance = choice(
+        self.db = protest.db
+        self.substance: Substance = choice(
             list(
                 filter(
-                    itemgetter("isPopular"),
-                    self.db.get_well_known_substances(reactions=9, colored_reactions=6),
+                    attrgetter("is_popular"),
+                    self.db.get_well_known_substances(reactions=9, colored_reactions=3),
                 )
             )
         )
+        self.clues: list[Result] = self.pick_clues()
         self.tries = 0
 
     @property
     def reward(self):
         return 50 if self.tries == 1 else 25
 
-    def get_results(self) -> list[Result]:
-        """Return test results of the game substance as a list of `(reagent name,
-        color description, [first color, second color, ...])` tuples.
-
-        `KeyError` is raised if no result can be found.
-        """
-        results = self.db.get_results(self.substance)
-
-        return [
-            (
-                self.db.get_by_id("reagents", reagent_id)["fullName"],
-                result[3],
-                list(map(ImageColor.getrgb, self.db.get_result_colors(result))),
-            )
-            for reagent_id, result in results.items()
-        ]
-
     def is_correct(self, guess: str):
         """Check if a string contains an unformated substring of the right answer and
         increment the tries counter."""
         self.tries += 1
-        return unformat(self.substance["commonName"]) in unformat(guess)
+        return unformat(str(self.substance)) in unformat(guess)
+
+    def pick_clues(self):
+        """As Discord allows a maximum of 10 files per message, including one for the
+        thumbnail; this picks up to 9 reagent results randomly, prioritysing ones with
+        color changes."""
+        results = list(self.substance.results.values())
+
+        results.sort(key=lambda r: (bool(len(r.colors)), random()), reverse=True)
+
+        return sorted(results[:9], key=str)
 
     def __str__(self):
-        return f"{type(self).__name__} ({self.substance['commonName']})"
+        return f"{type(self).__name__} ({self.substance})"
 
 
 class RunningReagentsGame(BaseRunningGame):
@@ -106,13 +97,9 @@ class RunningReagentsGame(BaseRunningGame):
         super().__init__(*args, **kwargs)
         self.icon = File(choice(list(self.ICON_DIR.iterdir())), "icon.png")
 
-    @property
-    def substance_name(self):
-        return self.game.substance["commonName"]
-
     async def check_answer(self, msg: Message):
         """Check if a message contains the answer and react accordingly."""
-        game = self.game
+        game: ReagentsGame = self.game
 
         if game.is_correct(msg.content):
             time = self.time_since_start.total_seconds()
@@ -126,7 +113,7 @@ class RunningReagentsGame(BaseRunningGame):
                     title=localize_fmt("✅ Correct answer, {user}!", user=msg.author),
                     description=localize_fmt(
                         "Well played! The answer was **{answer}**.",
-                        answer=self.substance_name,
+                        answer=self.game.substance,
                     ),
                 )
                 .set_thumbnail(url="attachment://icon.png")
@@ -161,7 +148,7 @@ class RunningReagentsGame(BaseRunningGame):
             embed=DefaultEmbed(
                 title=localize("😔 No one found the solution."),
                 description=localize_fmt(
-                    "The answer was **{answer}**.", answer=self.substance_name
+                    "The answer was **{answer}**.", answer=self.game.substance
                 ),
             ),
             view=await self.make_end_view(),
@@ -178,12 +165,11 @@ class RunningReagentsGame(BaseRunningGame):
         if not self:
             return
 
-        view = ReagentsGameStartView(
-            user=interaction.user,
-            results=game.get_results(),
-        )
+        await interaction.response.defer(thinking=True)
 
-        await interaction.response.send_message(
+        view = ReagentsGameStartView(user=interaction.user, results=game.clues)
+
+        await interaction.followup.send(
             files=[self.icon, *view.make_result_files()],
             view=view,
         )
@@ -202,7 +188,7 @@ class RunningReagentsGame(BaseRunningGame):
                     ),
                     description=localize_fmt(
                         "The answer was **{answer}**.",
-                        answer=self.game.substance["commonName"],
+                        answer=self.game.substance,
                     ),
                 ).set_thumbnail(url="attachment://icon.png")
             ),
@@ -214,7 +200,7 @@ class RunningReagentsGame(BaseRunningGame):
         """Return a Discord view used to decorate end game embeds."""
         view = ReplayView(callback=self.replay)
 
-        substance = await pnwiki.get_substance(self.game.substance["commonName"])
+        substance = await pnwiki.get_substance(str(self.game.substance))
         # The substance might not be found on PNW
         if substance:
             view.add_item(
@@ -243,7 +229,7 @@ class ReagentsGameStartView(LayoutView):
     def __init__(self, user: User | Member, results: list[Result]):
         super().__init__()
 
-        self.results = self.pick_results(results)
+        self.results = results
 
         self.add_item(
             Container(
@@ -267,43 +253,37 @@ class ReagentsGameStartView(LayoutView):
             ),
         )
 
-    @staticmethod
-    def pick_results(results: list[Result]):
-        """As Discord allows a maximum of 10 files per message, including one for the
-        thumbnail; this picks up to 9 results randomly, prioritysing ones with color
-        changes."""
-        results.sort(key=lambda r: (bool(len(r[2])), random()), reverse=True)
-
-        return sorted(results[:9], key=itemgetter(0))
-
     def make_result_files(self) -> list[File]:
         files = []
 
-        for reagent, description, colors in self.results:
-            image = self.draw_result(reagent, description, colors)
+        for result in self.results:
+            image = self.draw_result(result)
 
             with BytesIO() as buffer:
                 image.save(buffer, format="PNG")
                 buffer.seek(0)
-                files.append(File(fp=buffer, filename=f"{reagent}.png"))
+                files.append(File(fp=buffer, filename=f"{result.reagent}.png"))
 
         return files
 
     def get_gallery_items(self):
         return (
             MediaGalleryItem(
-                media=f"attachment://{reagent}.png", description=description
+                media=f"attachment://{result.reagent}.png",
+                description=result.description,
             )
-            for reagent, description, _ in self.results
+            for result in self.results
         )
 
-    def draw_result(self, reagent: str, description: str, colors: list[int]):
+    def draw_result(self, result: Result):
         size = self.RESULT_SIZE
         title_height = self.TITLE_HEIGHT
 
         image = (
-            make_gradient(colors, width=size, height=size)
-            if colors
+            make_gradient(
+                [color.to_rgb() for color in result.colors], width=size, height=size
+            )
+            if result.colors
             else make_transparent(width=size, height=size)
         )
 
@@ -314,7 +294,7 @@ class ReagentsGameStartView(LayoutView):
         )
         draw.text(
             (size / 2, 25),
-            reagent,
+            str(result.reagent),
             anchor="mt",
             align="center",
             font=self.TITLE_FONT,
@@ -322,7 +302,7 @@ class ReagentsGameStartView(LayoutView):
         )
         draw.multiline_text(
             (size / 2, size / 2 + title_height),
-            textwrap.fill(description.capitalize(), 20),
+            textwrap.fill(result.description.capitalize(), 20),
             anchor="mm",
             align="center",
             font=self.TEXT_FONT,

@@ -105,6 +105,11 @@ def shuffled(collection):
     return sample(collection, len(collection))
 
 
+def is_in(a, b):
+    """Why the operator module does not include this is ancient mystery."""
+    return a in b
+
+
 class ThrottledAsyncClient(httpx.AsyncClient):
     """An `httpx.AsyncClient` with a rate limit on the `get` method."""
 

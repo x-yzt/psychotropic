@@ -1,51 +1,162 @@
 import json
+from collections.abc import Callable
+from dataclasses import dataclass
 from importlib import resources
+from operator import contains, eq
+from typing import Any
+
+from PIL import ImageColor
+
+from psychotropic.utils import is_in, unformat
+
+
+@dataclass
+class Color:
+    id: int
+    name: str
+    hex: str
+    is_simple: bool
+    _simple_color_id: int
+
+    @property
+    def simple(self) -> "Color":
+        return db.colors[self._simple_color_id]
+
+    def to_rgb(self) -> tuple[int, ...]:
+        return ImageColor.getrgb(self.hex)
+
+    def __str__(self):
+        return self.name
+
+
+@dataclass
+class Substance:
+    id: int
+    name: str
+    full_name: str
+    is_popular: bool
+    classes: list[str]
+
+    @property
+    def results(self) -> dict[int, "Result"]:
+        return db.results[self.id]
+
+    def __str__(self):
+        return self.name
+
+
+@dataclass
+class Reagent:
+    id: int
+    name: str
+
+    def __str__(self):
+        return self.name
+
+
+@dataclass
+class Result:
+    substance: Substance
+    reagent: Reagent
+    description: str
+    colors: list[Color]
+    simple_colors: list[Color]
+
+    def __str__(self):
+        return self.description
 
 
 class ReagentsDatabase:
     def __init__(self):
-        self.db = json.loads(resources.read_text("psychotropic.data", "reagents.json"))
+        data = json.loads(resources.read_text("psychotropic.data", "reagents.json"))
 
-    def get_items(self, type_, key, value):
-        return list(filter(lambda item: item[key] == value, self.db[type_].values()))
+        self.colors: dict[int, Color] = {
+            int(cid): Color(
+                id=int(cid),
+                name=color["name"],
+                hex=color["hex"],
+                is_simple=color["simple"],
+                _simple_color_id=color["simpleColorId"],
+            )
+            for cid, color in data["colors"].items()
+        }
 
-    def get_by_id(self, type_, id_):
-        return self.db[type_][str(id_)]
+        self.substances: dict[int, Substance] = {
+            int(sid): Substance(
+                id=int(sid),
+                name=substance["commonName"],
+                full_name=substance["name"],
+                is_popular=substance["isPopular"],
+                classes=substance["classes"],
+            )
+            for sid, substance in data["substances"].items()
+        }
 
-    def get_substance(self, name=None):
-        if results := self.get_items("substances", "commonName", name):
+        self.reagents: dict[int, Reagent] = {
+            int(rid): Reagent(
+                id=int(rid),
+                name=reagent["fullName"],
+            )
+            for rid, reagent in data["reagents"].items()
+        }
+
+        self.results: dict[int, dict[int, Result]] = {
+            int(sid): {
+                int(rid): Result(
+                    substance=self.substances[int(sid)],
+                    reagent=self.reagents[int(rid)],
+                    description=result[0][3],
+                    colors=[self.colors[int(cid)] for cid in result[0][0]],
+                    simple_colors=[self.colors[int(cid)] for cid in result[0][1]],
+                )
+                for rid, result in results.items()
+            }
+            for sid, results in data["results"].items()
+        }
+
+    def lookup(
+        self,
+        type_: str,
+        attr: str,
+        value: Any,
+        *,
+        operator: Callable[[Any, Any], bool] = eq,
+        transform: Callable[[Any], Any] | None = None,
+    ) -> list:
+        transform = transform or (lambda x: x)
+
+        return list(
+            filter(
+                lambda item: operator(transform(getattr(item, attr)), transform(value)),
+                getattr(self, type_).values(),
+            )
+        )
+
+    def search_substance(self, name: str) -> Substance | None:
+        # Checks if a whole substance name is included in query string
+        if results := self.lookup(
+            "substances", "name", name, operator=is_in, transform=unformat
+        ):
             return results[0]
 
-        if results := self.get_items("substances", "name", name):
+        # Checks if query string is included in full substance name, containing aliases
+        if results := self.lookup(
+            "substances", "full_name", name, operator=contains, transform=unformat
+        ):
             return results[0]
 
-    def get_reagent(self, name):
-        if results := self.get_items("reagents", "fullName", name):
-            return results[0]
-
-    def get_reagents(self):
-        return list(self.db["reagents"].values())
-
-    def get_result(self, substance, reagent):
-        sid, rid = substance["id"], reagent["id"]
-        return self.db["results"][str(sid)][str(rid)][0]
-
-    def get_results(self, substance):
-        sid = substance["id"]
-        return {rid: result[0] for rid, result in self.db["results"][str(sid)].items()}
-
-    def get_result_colors(self, result):
-        return (self.get_color_code(cid) for cid in result[0])
-
-    def get_color_code(self, cid):
-        return self.db["colors"][str(cid)]["hex"]
-
-    def get_well_known_substances(self, reactions: int = 0, colored_reactions: int = 0):
+    def get_well_known_substances(
+        self, reactions: int = 0, colored_reactions: int = 0
+    ) -> list[Substance]:
         """Return all substances with `reactions` or more reaction entries and
         `colored_reactions` or more reactions whose result is not "no color change"."""
         return [
-            self.db["substances"][sid]
-            for sid, results in self.db["results"].items()
+            self.substances[sid]
+            for sid, results in self.results.items()
             if len(results) >= reactions
-            and sum(1 for r in results.values() if len(r[0][0])) >= colored_reactions
+            and sum(1 for result in results.values() if len(result.colors))
+            >= colored_reactions
         ]
+
+
+db = ReagentsDatabase()
