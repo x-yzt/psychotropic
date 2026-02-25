@@ -39,6 +39,7 @@ from psychotropic.settings import COLOUR
 from psychotropic.utils import (
     make_gradient,
     make_transparent,
+    pretty_list,
     setup_cog,
     unformat,
 )
@@ -139,6 +140,55 @@ class RunningReagentsGame(BaseRunningGame):
             view = await self.make_end_view()
 
             await msg.channel.send(embed=embed, file=self.icon, view=view)
+
+        elif guess := game.db.search_substance(msg.content):
+            embed = DefaultEmbed(
+                title=localize_fmt("🔎 Mhh, this is not {substance}", substance=guess),
+                description=localize_fmt(
+                    "{substance} has the following reagent results", substance=guess
+                ),
+            )
+
+            similar_results = []
+            unalike_results = []
+
+            for clue_result in game.clues:
+                try:
+                    guess_result = next(
+                        filter(
+                            lambda r: r.reagent is clue_result.reagent,
+                            guess.results.values(),
+                        )
+                    )
+                except StopIteration:
+                    continue
+
+                if clue_result.simple_colors == guess_result.simple_colors:
+                    similar_results.append(guess_result)
+                else:
+                    unalike_results.append(guess_result)
+
+            if similar_results:
+                embed.add_field(
+                    name=localize_fmt(
+                        "✅ You're right, {substance} is somewhat alike what we're "
+                        "looking at",
+                        substance=guess,
+                    ),
+                    value=pretty_list(
+                        f"{res.reagent}: {res.description}" for res in similar_results
+                    ),
+                )
+
+            if unalike_results:
+                embed.add_field(
+                    name=localize_fmt("❌ It can't be {substance}", substance=guess),
+                    value=pretty_list(
+                        f"{res.reagent}: {res.description}" for res in unalike_results
+                    ),
+                )
+
+            await msg.channel.send(embed=embed)
 
     async def timeout(self):
         """End the game after a certain time is elapsed."""
