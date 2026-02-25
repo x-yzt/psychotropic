@@ -11,6 +11,7 @@ from discord.ui import Button
 from aiohttp import ClientError
 
 from psychotropic import settings
+from psychotropic.bot import bot
 from psychotropic.cogs.games import BaseRunningGame, ReplayView, games_group
 from psychotropic.embeds import DefaultEmbed, ErrorEmbed
 from psychotropic.i18n import localize, localize_fmt, set_locale
@@ -275,8 +276,6 @@ class RunningStructureGame(BaseRunningGame):
         if not self:
             return
 
-        self.session = interaction.client.http_session
-
         file = File(game.schematic, filename="schematic.png")
 
         embed = DefaultEmbed(
@@ -312,7 +311,7 @@ class RunningStructureGame(BaseRunningGame):
             # response is needed in less than 3 seconds when triggered by the game end
             # application command
             substance = await pnwiki.get_substance(
-                self.session, self.game.substance, timeout=2,
+                bot.http_session, self.game.substance, timeout=2,
             )
         except ClientError:
             log.warning("Unable to reach PsychonautWiki API")

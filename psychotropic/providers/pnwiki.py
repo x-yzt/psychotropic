@@ -1,5 +1,6 @@
 import asyncio as aio
 from io import BytesIO
+from itertools import batched
 from operator import itemgetter
 from urllib.parse import quote
 
@@ -76,8 +77,7 @@ async def get_page_images(session: ClientSession, substance_names):
     result = {}
 
     # MediaWiki API supports up to 50 titles per request
-    for i in range(0, len(substance_names), 50):
-        batch = substance_names[i:i + 50]
+    for batch in batched(substance_names, 50):
         titles = "|".join(batch)
 
         async with session.get(PNWIKI_MW_API_URL, params={
