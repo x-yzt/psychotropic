@@ -71,8 +71,8 @@ async def get_page_images(session: ClientSession, substance_names):
     """Batch-query the MediaWiki API to get the primary image filename
     for each substance page.
 
-    Returns a dict mapping substance name to its SVG filename, or None
-    if no page image was found.
+    Returns a dict mapping substance name to its image filename on the wiki.
+    Falsy keys are not populated if no page image was found.
     """
     result = {}
 
@@ -121,7 +121,8 @@ async def get_schematic_image(
     session: ClientSession, filename, width=500, background_color=None,
 ):
     """Get a PIL `Image` of a substance by fetching its schematic on
-    PNWiki. `filename` is the actual SVG filename from the wiki.
+    PNWiki. `filename` is the wiki filename (e.g. an SVG), which is
+    rasterized by MediaWiki's thumb.php before being returned.
     Return `None` if no schematic is found."""
     async with session.get(get_schematic_url(filename, width)) as r:
         if r.status != 200:
@@ -136,7 +137,8 @@ async def fetch_schematic_images(
 ):
     """Batch-fetch schematic images for multiple substances concurrently.
 
-    `svg_map` is a dict mapping substance name to SVG filename.
+    `svg_map` is a dict mapping substance name to wiki filename. Wiki files
+    (e.g. SVGs) are rasterized by MediaWiki's thumb.php before being fetched.
     Returns a dict mapping substance name to PIL Image (or None on failure).
     """
     sem = aio.Semaphore(20)
