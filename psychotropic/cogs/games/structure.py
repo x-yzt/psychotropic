@@ -1,5 +1,6 @@
 import asyncio as aio
 import logging
+import re
 from random import choice
 
 from discord import ButtonStyle, File
@@ -7,9 +8,10 @@ from discord.app_commands import command
 from discord.app_commands import locale_str as _
 from discord.ext.commands import Cog
 from discord.ui import Button
-from httpx import TimeoutException
+from aiohttp import ClientError
 
 from psychotropic import settings
+from psychotropic.bot import bot
 from psychotropic.cogs.games import BaseRunningGame, ReplayView, games_group
 from psychotropic.embeds import DefaultEmbed, ErrorEmbed
 from psychotropic.i18n import localize, localize_fmt, set_locale
@@ -26,27 +28,65 @@ class SchematicRegistry:
         self.path = path
         self.schematics = []
 
-    async def fetch_schematics(self):
-        """Populate the list of all substances to play the game with from PNWiki."""
+    async def fetch_schematics(self, session):
+        """Populate the list of all substances to play the game with from
+        PNWiki (remote SVGs)."""
         if settings.FETCH_SCHEMATICS:
-            log.info("Populating cache with schematics from PNWiki...")
+            log.info("Fetching schematics from PNWiki...")
 
             try:
-                for substance in await pnwiki.list_substances():
+                raw_names = await pnwiki.list_substances(session)
+                substances = {
+                    re.sub(r'\s+\([^)]*\)$', '', n): n
+                    for n in raw_names
+                }
+
+                # Batch-query MediaWiki for actual SVG filenames
+                page_images = await pnwiki.get_page_images(
+                    session, list(substances.values())
+                )
+                # Map cleaned name -> SVG filename
+                svg_map = {}
+                for clean, raw in substances.items():
+                    svg = page_images.get(raw)
+                    if svg and svg.lower().endswith(".svg"):
+                        svg_map[clean] = svg
+
+                # Filter out already-cached substances
+                to_fetch = {}
+                for substance, svg_file in svg_map.items():
                     image_path = self.build_schematic_path(substance)
                     if image_path.exists():
-                        continue
+                        log.info(
+                            f"[pnwiki] Skipped {substance} (cached)"
+                        )
+                    else:
+                        to_fetch[substance] = svg_file
 
-                    image = await pnwiki.get_schematic_image(
-                        substance, width=600, background_color="WHITE"
-                    )
+                # Batch-fetch all missing schematics concurrently
+                images = await pnwiki.fetch_schematic_images(
+                    session, to_fetch, width=600, background_color="WHITE",
+                )
+                for substance, image in images.items():
                     if image:
-                        image.save(image_path)
+                        image.save(
+                            self.build_schematic_path(substance)
+                        )
+                        log.info(
+                            f"[pnwiki] Fetched {substance} "
+                            f"({to_fetch[substance]})"
+                        )
+                    else:
+                        log.info(
+                            f"[pnwiki] Skipped {substance} "
+                            "(fetch failed)"
+                        )
 
-            except TimeoutException:
+            except ClientError:
                 log.error(
-                    "Unable to reach PsychonautWiki API. The schematic cache might be "
-                    "empty or incomplete."
+                    "Unable to reach PsychonautWiki API. "
+                    "The schematic cache might be empty or "
+                    "incomplete."
                 )
 
         self.schematics = list(self.path.glob("*.png"))
@@ -147,9 +187,9 @@ class StructureGame:
         return f"{type(self).__name__} ({self.substance})"
 
     @classmethod
-    async def prepare_registry(cls):
+    async def prepare_registry(cls, session):
         """Prepare the registry of all substances to play the game with."""
-        await cls.schematic_registry.fetch_schematics()
+        await cls.schematic_registry.fetch_schematics(session)
 
 
 class RunningStructureGame(BaseRunningGame):
@@ -270,8 +310,10 @@ class RunningStructureGame(BaseRunningGame):
             # Short timeout because the "what's that?" button is not mandatory, plus a
             # response is needed in less than 3 seconds when triggered by the game end
             # application command
-            substance = await pnwiki.get_substance(self.game.substance, timeout=2)
-        except TimeoutException:
+            substance = await pnwiki.get_substance(
+                bot.http_session, self.game.substance, timeout=2,
+            )
+        except ClientError:
             log.warning("Unable to reach PsychonautWiki API")
 
         # The PNW API might not return data if the substance is a draft
@@ -298,7 +340,7 @@ class StructureGameCog(Cog, name="Structure game module"):
 
     @Cog.listener()
     async def on_ready(self):
-        await StructureGame.prepare_registry()
+        await StructureGame.prepare_registry(self.bot.http_session)
 
     @Cog.listener()
     async def on_message(self, msg):
