@@ -142,6 +142,14 @@ class Profile:
     won_structure_games: int = 0
     won_reagents_games: int = 0
 
+    def __post_init__(self):
+        # Dataclasses fields types are not checked or enforced upon initialization. This
+        # attempts to cast init parameters to the expected types.
+        # This is mainly useful for deserialization (eg. JSON Array -> Python list ->
+        # Python set).
+        if not isinstance(self.found_structure_substances, set):
+            self.found_structure_substances = set(self.found_structure_substances)
+
     @property
     def won_games(self):
         return self.won_structure_games + self.won_reagents_games
