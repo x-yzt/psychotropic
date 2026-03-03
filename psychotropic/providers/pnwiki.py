@@ -1,4 +1,5 @@
 import asyncio as aio
+from collections.abc import Iterable
 from io import BytesIO
 from operator import itemgetter
 from urllib.parse import quote
@@ -6,157 +7,156 @@ from urllib.parse import quote
 from aiohttp import ClientError, ClientSession, ClientTimeout
 from PIL import Image
 
+from psychotropic.utils import batched
 
-PNWIKI_URL = 'https://psychonautwiki.org/w/'
-
-PNWIKI_MW_API_URL = 'https://psychonautwiki.org/w/api.php'
-
-PNWIKI_API_URL = 'https://api.psychonautwiki.org/'
-
-GRAPHQL_HEADERS = {
-    "accept-type": "application/json",
-    "content-type": "application/json",
-}
+PILColor = float | tuple[float, ...] | str | None
 
 
-async def list_substances(session: ClientSession):
-    query = """
-        {
-            substances(limit: 1000) {
-                name
-            }
-        }
-    """
-    async with session.post(
-        PNWIKI_API_URL, json={'query': query}, headers=GRAPHQL_HEADERS,
-    ) as r:
-        data = await r.json()
+class PNWikiApi:
+    PNWIKI_URL = "https://psychonautwiki.org/w/"
 
-    return list(map(
-        itemgetter('name'),
-        data['data']['substances']
-    ))
+    PNWIKI_API_URL = "https://api.psychonautwiki.org/"
 
+    PNWIKI_MW_API_URL = "https://psychonautwiki.org/w/api.php"
 
-async def get_substance(session: ClientSession, query, **kwargs):
-    query = """
-        {
-            substances(query: "%s", limit: 1) {
-                name
-                url
-                class {
-                    chemical
-                    psychoactive
+    GRAPHQL_HEADERS = {
+        "accept-type": "application/json",
+        "content-type": "application/json",
+    }
+
+    def __init__(self, session: ClientSession):
+        self.session = session
+
+    async def _post_graphql(self, query: str, **kwargs):
+        """Post a GraphQL query to Bitfrost, the PNWiki API."""
+
+        if isinstance(timeout := kwargs.get("timeout"), float):
+            kwargs["timeout"] = ClientTimeout(total=timeout)
+
+        async with self.session.post(
+            self.PNWIKI_API_URL,
+            json={"query": query},
+            headers=self.GRAPHQL_HEADERS,
+            **kwargs,
+        ) as r:
+            return await r.json()
+
+    async def list_substances(self, **kwargs):
+        data = await self._post_graphql("""
+            {
+                substances(limit: 1000) {
+                    name
                 }
             }
-        }
-    """ % query
+        """)
 
-    if 'timeout' in kwargs:
-        kwargs['timeout'] = ClientTimeout(total=kwargs['timeout'])
+        return list(map(itemgetter("name"), data["data"]["substances"]))
 
-    async with session.post(
-        PNWIKI_API_URL, json={'query': query}, headers=GRAPHQL_HEADERS,
-        **kwargs,
-    ) as r:
-        data = await r.json()
+    async def get_substance(self, query: str, **kwargs):
+        query = (
+            """
+                {
+                    substances(query: "%s", limit: 1) {
+                        name
+                        url
+                        class {
+                            chemical
+                            psychoactive
+                        }
+                    }
+                }
+            """
+            % query
+        )
+        data = await self._post_graphql(query, **kwargs)
+        substances = data["data"]["substances"]
 
-    substances = data["data"]["substances"]
+        return substances[0] if len(substances) else None
 
-    return substances[0] if len(substances) else None
+    async def get_schematic_filenames(self, substances_names: Iterable[str]):
+        """Batch-query the MediaWiki API to get the primary image filename for each
+        substance page.
 
+        Returns a dict mapping substance name to its schematic filename. If no
+        schematic is found, entries will not be present in the output dict.
+        """
+        filenames = {}
 
-async def get_page_images(session: ClientSession, substance_names):
-    """Batch-query the MediaWiki API to get the primary image filename
-    for each substance page.
+        # MediaWiki API supports up to 50 titles per request
+        for batch in batched(substances_names, 50):
+            async with self.session.get(
+                self.PNWIKI_MW_API_URL,
+                params={
+                    "action": "query",
+                    "titles": "|".join(batch),
+                    "prop": "pageimages",
+                    "format": "json",
+                },
+            ) as r:
+                data = await r.json()
 
-    Returns a dict mapping substance name to its SVG filename, or None
-    if no page image was found.
-    """
-    result = {}
+            pages = data.get("query", {}).get("pages", {})
 
-    # MediaWiki API supports up to 50 titles per request
-    for i in range(0, len(substance_names), 50):
-        batch = substance_names[i:i + 50]
-        titles = "|".join(batch)
+            for page in pages.values():
+                title = page.get("title")
+                pageimage = page.get("pageimage")
 
-        async with session.get(PNWIKI_MW_API_URL, params={
-            "action": "query",
-            "titles": titles,
-            "prop": "pageimages",
-            "format": "json",
-        }) as r:
-            data = await r.json()
+                # Filter out non-svg filenames are we're only interested in schematics
+                if title and pageimage and pageimage.lower().endswith(".svg"):
+                    filenames[title] = pageimage
 
-        pages = data.get("query", {}).get("pages", {})
-        for page in pages.values():
-            title = page.get("title")
-            pageimage = page.get("pageimage")
-            if title and pageimage:
-                result[title] = pageimage
+        return filenames
 
-    return result
+    def get_image_url(self, filename: str, width: int = 500):
+        """Get an image absolute URL from its filename."""
+        return f"{self.PNWIKI_URL}thumb.php?f={quote(filename)}&width={width}"
 
+    async def get_image(
+        self,
+        filename: str,
+        width: int = 500,
+        background_color: PILColor = None,
+    ):
+        """Get a PIL `Image` from an image filename by fetching it from PNWiki. Return
+        `None` if no image is found."""
+        async with self.session.get(self.get_image_url(filename, width)) as r:
+            if r.status != 200:
+                return None
 
-def get_schematic_url(filename, width=500):
-    return (
-        f'{PNWIKI_URL}thumb.php'
-        f'?f={quote(filename)}&width={width}'
-    )
+            data = await r.read()
 
+        return self._parse_image(data, background_color)
 
-def _parse_schematic_image(data, background_color=None):
-    """Parse raw image bytes into a PIL Image with optional background."""
-    image = Image.open(BytesIO(data))
+    async def get_images(
+        self,
+        filenames: Iterable[str],
+        width: int = 500,
+        background_color: PILColor = None,
+    ):
+        """Batch-fetch images for multiple substances filenames concurrently.
 
-    if background_color:
-        background = Image.new("RGB", image.size, background_color)
-        background.paste(image, mask=image)
-        image = background
+        Returns a dict mapping filename to PIL `Image`, or `None` on failure.
+        """
 
-    return image
+        async def fetch_one(filename):
+            async with aio.Semaphore(20):
+                try:
+                    return await self.get_image(filename, width, background_color)
+                except ClientError:
+                    return None
 
+        images = await aio.gather(*map(fetch_one, filenames))
 
-async def get_schematic_image(
-    session: ClientSession, filename, width=500, background_color=None,
-):
-    """Get a PIL `Image` of a substance by fetching its schematic on
-    PNWiki. `filename` is the actual SVG filename from the wiki.
-    Return `None` if no schematic is found."""
-    async with session.get(get_schematic_url(filename, width)) as r:
-        if r.status != 200:
-            return None
-        data = await r.read()
+        return dict(zip(filenames, images))
 
-    return _parse_schematic_image(data, background_color)
+    @staticmethod
+    def _parse_image(data, background_color: PILColor = None):
+        """Parse raw image bytes into a PIL Image with optional background."""
+        image = Image.open(BytesIO(data))
 
+        if background_color:
+            background = Image.new("RGB", image.size, background_color)
+            background.paste(image, mask=image)
+            image = background
 
-async def fetch_schematic_images(
-    session: ClientSession, svg_map, width=500, background_color=None,
-):
-    """Batch-fetch schematic images for multiple substances concurrently.
-
-    `svg_map` is a dict mapping substance name to SVG filename.
-    Returns a dict mapping substance name to PIL Image (or None on failure).
-    """
-    sem = aio.Semaphore(20)
-
-    async def _fetch_one(name, filename):
-        async with sem:
-            try:
-                async with session.get(
-                    get_schematic_url(filename, width),
-                ) as r:
-                    if r.status != 200:
-                        return name, None
-                    data = await r.read()
-            except ClientError:
-                return name, None
-            return name, _parse_schematic_image(data, background_color)
-
-    pairs = await aio.gather(*(
-        _fetch_one(name, filename)
-        for name, filename in svg_map.items()
-    ))
-
-    return dict(pairs)
+        return image

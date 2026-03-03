@@ -1,8 +1,9 @@
 import asyncio as aio
 import re
 import unicodedata
+from collections.abc import Iterable
 from functools import partial, wraps
-from itertools import pairwise
+from itertools import islice, pairwise
 from random import sample
 
 import httpx
@@ -103,6 +104,16 @@ def to_float(string: str):
 def shuffled(collection):
     """Not inplace equivalent to usual random.shuffle."""
     return sample(collection, len(collection))
+
+
+def batched(iterable: Iterable, n: int):
+    """Backport of py3.12+ `itertools.batched`."""
+    assert n >= 1
+
+    iterator = iter(iterable)
+
+    while batch := tuple(islice(iterator, n)):
+        yield batch
 
 
 class ThrottledAsyncClient(httpx.AsyncClient):
