@@ -14,7 +14,7 @@ from psychotropic import settings
 from psychotropic.cogs.games import BaseRunningGame, ReplayView, games_group
 from psychotropic.embeds import DefaultEmbed, ErrorEmbed
 from psychotropic.i18n import localize, localize_fmt, set_locale
-from psychotropic.providers import pnwiki
+from psychotropic.providers.pnwiki import PNWikiApi
 from psychotropic.providers.protest import ReagentsDatabase
 from psychotropic.utils import make_gradient, setup_cog, unformat
 
@@ -289,6 +289,7 @@ class RunningReagentsGame(BaseRunningGame):
         """Return a Discord view used to decorate end game embeds."""
         view = ReplayView(callback=self.replay)
 
+        pnwiki = PNWikiApi(self.client.http_session)
         substance = await pnwiki.get_substance(self.game.substance["commonName"])
         # The substance might not be found on PNW
         if substance:
@@ -330,11 +331,11 @@ class ReagentsGameCog(Cog, name="Reagents game module"):
         """`/game reagents` command"""
         await RunningReagentsGame.start(interaction, ReagentsGame(), self.scoreboard)
 
-    reagents.description = _(
+    reagents.description = _(  # type: ignore
         "Start a new Reagents Game. The first player who guess the substance in the "
         "chat wins."
     )
-    reagents.extras = {
+    reagents.extras = {  # type: ignore
         "long_description": _(
             "Start a new Reagents Game. The bot will pick a random substance, and "
             "players can use reagents to identify it. The first player who guess the "
@@ -348,8 +349,8 @@ class ReagentsGameCog(Cog, name="Reagents game module"):
         # Register the method as a subcommand of the `games_group` shared command group.
         # This workaround is needed to keep matching slash-command signatures.
         cmd = command(
-            description=self.reagents.description,
-            extras=self.reagents.extras,
+            description=self.reagents.description,  # type: ignore
+            extras=self.reagents.extras,  # type: ignore
         )(self.reagents)
         games_group.add_command(cmd)
 

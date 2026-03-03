@@ -57,6 +57,7 @@ class BaseRunningGame:
     def __init__(self, interaction, game, scoreboard):
         self.game = game
         self.scoreboard = scoreboard
+        self.client = interaction.client
         self.owner = interaction.user
         self.channel = interaction.channel
         self.locale = str(interaction.locale)
@@ -348,7 +349,7 @@ class GamesCog(Cog, name="Games module"):
             )
         )
 
-    start.description = _("Obsolete command. Please use `/game structure` instead.")
+    start.description = _("Obsolete command. Please use `/game structure` instead.")  # type: ignore
 
     async def scores(self, interaction, page: Range[int, 1] = 1):
         """`/game scores` command"""
@@ -363,7 +364,7 @@ class GamesCog(Cog, name="Games module"):
             ),
         )
 
-    scores.description = _("Show a given page of the scoreboard.")
+    scores.description = _("Show a given page of the scoreboard.")  # type:ignore
 
     async def profile(self, interaction, member: Member | None = None):
         """`/game profile` command"""
@@ -442,7 +443,7 @@ class GamesCog(Cog, name="Games module"):
 
             await interaction.response.send_message(embed=embed, file=file)
 
-    profile.description = _(
+    profile.description = _(  # type:ignore
         "Display profile information and game statistics about yourself or another "
         "player."
     )
@@ -474,7 +475,7 @@ class GamesCog(Cog, name="Games module"):
         await running_game.end()
         await running_game.send_end_message(interaction)
 
-    end.description = _(
+    end.description = _(  # type:ignore
         "End a running game. You must either own it or have permission to manage "
         "messages in this channel."
     )
