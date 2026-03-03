@@ -67,9 +67,10 @@ class PsychotropicBot(Bot):
         if settings.SYNC_GLOBAL_TREE:
             await self.tree.sync()
         else:
-            self.tree.clear_commands(guild=settings.TEST_GUILD)
-            self.tree.copy_global_to(guild=settings.TEST_GUILD)
-            await self.tree.sync(guild=settings.TEST_GUILD)
+            pass
+            # self.tree.clear_commands(guild=settings.TEST_GUILD)
+            # self.tree.copy_global_to(guild=settings.TEST_GUILD)
+            # await self.tree.sync(guild=settings.TEST_GUILD)
 
     async def global_interaction_check(self, interaction: Interaction):
         """Pre-checks triggered upon each interaction event."""
