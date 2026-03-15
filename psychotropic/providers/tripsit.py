@@ -1,19 +1,43 @@
-import httpx
+from difflib import get_close_matches
+
+from aiohttp import ClientSession
 
 
-TRIPSIT_URL = "https://drugs.tripsit.me/"
+class TripsitApi:
+    API_URL = "https://tripsit.me/api/v1/"
 
-TRIPSIT_API_URL = "https://tripbot.tripsit.me/api/tripsit/"
+    FACTSHEETS_URL = "https://drugs.tripsit.me/"
 
+    def __init__(self, session: ClientSession):
+        self.session = session
+        self.aliases: dict[str, str] | None = None
 
-async def get_drug(drug):
-    async with httpx.AsyncClient(base_url=TRIPSIT_API_URL) as client:
-        r = await client.get(
-            "getDrug",
-            params = {'name': drug.lower()}
-        )
-    return r.json()
+    async def get_aliases(self):
+        if self.aliases is None:
+            drugs = await self._get_json("getAllDrugs")
+            self.aliases = {}
 
+            for name, data in drugs.items():
+                self.aliases |= {alias: name for alias in data.get("aliases", [])}
 
-def get_drug_url(drug):
-    return TRIPSIT_URL + drug.lower()
+            self.aliases |= {name: name for name in drugs}
+
+        return self.aliases
+
+    async def get_drug(self, alias: str):
+        if name := (await self.get_aliases()).get(alias, None):
+            return await self._get_json("getDrug/" + name)
+        return None
+
+    async def find_aliases(self, query: str, count: int = 25):
+        return get_close_matches(query, (await self.get_aliases()).keys(), n=count)
+
+    @classmethod
+    def get_factsheet_url(cls, drug_name: str):
+        return cls.FACTSHEETS_URL + drug_name
+
+    async def _get_json(self, path):
+        async with self.session.get(self.API_URL + path) as resp:
+            resp.raise_for_status()
+
+            return (await resp.json())["data"][0]
