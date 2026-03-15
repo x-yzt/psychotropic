@@ -91,7 +91,24 @@ LEVELS = (
 
 # Structure game cog
 
-FETCH_SCHEMATICS = True  # Fetch schematics from PNWiki on each bot start
+# Wether to fetch for schematics from PNWiki on bot start
+FETCH_SCHEMATICS = True
+
+# Overrides to the substance game registry. `None` values will be blacklisted.
+SCHEMATICS_OVERRIDES = {
+    "3-Cl-PCP": "3-cl-pcp.png",
+    "Antihistamine": None,
+    "Barbiturates": "barbiturates.png",
+    "Etomidate": "etomidate.png",
+    "Gabapentinoids": None,
+    "Grayanotoxin": "grayanotoxines.png",
+    "K-Opioid-Agonists": None,
+    "Mephenaqualone": "mephenaqualone.png",
+    "Monoamines": None,
+    "Racetams": "racetams.png",
+    "Rolicyclidine": "rolicyclidine.png",
+    "Substituted morphinans": "morphinans.png",
+}
 
 
 # Entries to be excluded from the DSSTox results.

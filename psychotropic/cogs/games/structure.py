@@ -25,7 +25,7 @@ class SchematicRegistry:
         path.mkdir(parents=True, exist_ok=True)
 
         self.path = path
-        self.schematics = []
+        self.schematics = None
 
     async def fetch_schematics(self, session: ClientSession):
         """Populate the list of all substances to play the game with from PNWiki."""
@@ -63,7 +63,7 @@ class SchematicRegistry:
                         image.save(self.build_schematic_path(name))
                         log.debug(f"Fetched substance {name} ({filename})")
                     else:
-                        log.debug(f"Skipping substance {name} (schematic fetch failed)")
+                        log.info(f"Skipping substance {name} (schematic fetch failed)")
 
             except ClientError:
                 log.error(
@@ -71,15 +71,23 @@ class SchematicRegistry:
                     "empty or incomplete."
                 )
 
-        self.schematics = list(self.path.glob("*.png"))
+        self.schematics = {path.stem: path for path in self.path.glob("*.png")}
+
+        for substance, path in settings.SCHEMATICS_OVERRIDES.items():
+            if path is None:
+                self.schematics.pop(substance, None)
+            else:
+                self.schematics[substance] = (
+                    settings.BASE_DIR / "data" / "img" / "schematics" / path
+                )
 
         log.info(f"{len(self._schematics)} schematics avalaible in cache")
 
     @property
-    def schematics(cls):
-        if not cls._schematics:
-            raise cls.UnfetchedRegistryError()
-        return cls._schematics
+    def schematics(self):
+        if self._schematics is None:
+            raise self.UnfetchedRegistryError()
+        return self._schematics
 
     @schematics.setter
     def schematics(self, value):
@@ -87,28 +95,23 @@ class SchematicRegistry:
 
     def pick_substance(self):
         """Pick a random substance name from what is avalaible in the registry."""
-        return choice(self.schematics).stem
+        return choice(tuple(self.schematics))
 
     def build_schematic_path(self, substance):
         """Build the path of a given substance's schematic. There is no guarantee this
         path will actually exist."""
         return self.path / (substance + ".png")
 
-    def get_schematic(self, substance):
+    def __getitem__(self, substance):
         """Get the path of a given substance's schematic, raises an exception if no
         schematic is found for this substance."""
-        path = self.build_schematic_path(substance)
-
-        if path not in self.schematics:
-            raise FileNotFoundError()
-
-        return path
+        return self.schematics[substance]
 
     class UnfetchedRegistryError(RuntimeError):
         def __init__(self, *args):
             super().__init__(
-                "SchematicRegistry needs schematics to be cached before they "
-                "are used. Please `await` for `fetch_schematics`.",
+                "SchematicRegistry needs schematics to be cached before they are used. "
+                "Please `await` for `fetch_schematics`.",
                 *args,
             )
 
@@ -136,7 +139,7 @@ class StructureGame:
 
     @property
     def schematic(self):
-        return self.schematic_registry.get_schematic(self.substance)
+        return self.schematic_registry[self.substance]
 
     @property
     def clue(self):
