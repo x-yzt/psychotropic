@@ -52,6 +52,10 @@ COMPOUNDS_DESCRIPTION_PROVIDERS = (
     "CAMEO Chemicals",
 )
 
+# Entries to be excluded from the DSSTox results.
+# This is matched against the `model_name` field DSSTox provides.
+DSSTOX_EXCLUDED_MODELS = ("ACD_Sol",)
+
 
 # Games cog
 
@@ -109,11 +113,6 @@ SCHEMATICS_OVERRIDES = {
     "Rolicyclidine": "rolicyclidine.png",
     "Substituted morphinans": "morphinans.png",
 }
-
-
-# Entries to be excluded from the DSSTox results.
-# This is matched against the `model_name` field DSSTox provides.
-DSSTOX_EXCLUDED_MODELS = ("ACD_Sol",)
 
 
 try:
