@@ -2,9 +2,8 @@ from itertools import chain, groupby
 from operator import itemgetter
 
 from discord import Interaction
-from discord.app_commands import Choice, autocomplete, command
+from discord.app_commands import Choice, autocomplete, command, rename
 from discord.app_commands import locale_str as _
-from discord.app_commands import rename
 from discord.ext.commands import Cog
 
 from psychotropic.embeds import ErrorEmbed, send_embed_on_exception
@@ -233,6 +232,7 @@ class CombosCog(Cog, name="Combos module"):
                     ),
                 )
             )
+            return
 
         await interaction.followup.send(
             embeds=[
