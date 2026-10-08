@@ -165,8 +165,8 @@ def make_gradient(colors, width=256, height=256):
 
 
 def make_progress_bar(progress, color=settings.COLOUR.to_rgb(), width=256, height=64):
-    """Draw a progress bar of a given color, representing a float `progress` between 0
-    and 1."""
+    """Draw an image progress bar of a given color, representing a float `progress`
+    between 0 and 1."""
     assert 0 <= progress <= 1
 
     image = Image.new("RGB", (width, height))
@@ -174,6 +174,31 @@ def make_progress_bar(progress, color=settings.COLOUR.to_rgb(), width=256, heigh
     draw.rectangle(((0, 0), (int(width * progress), height)), fill=color)
 
     return image
+
+
+def make_emoji_progress_bar(progress: float, width: int = 10):
+    """Return a string representing a progress bar made of `width` emojis. `progress` is
+    a float between 0 and 1.
+
+    This requires the custom emojis to be uploaded to Discord manually, and the custom
+    IDs to be set in the settings file.
+    """
+    assert 0 <= progress <= 1
+    assert width >= 2
+
+    def segment(n):
+        if n == 0:
+            return "start"
+        if n == width - 1:
+            return "end"
+        return "middle"
+
+    return "".join(
+        settings.PROGRESS_BAR_EMOJIS[
+            "full" if i < round(width * progress) else "empty", segment(i)
+        ]
+        for i in range(width)
+    )
 
 
 def memoize_method(attributes=()):

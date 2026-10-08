@@ -20,9 +20,11 @@ from discord.ui import View, button
 from psychotropic import settings
 from psychotropic.embeds import DefaultEmbed, ErrorEmbed
 from psychotropic.i18n import get_locale, localize, localize_fmt, set_locale
+from psychotropic.providers.schematics import schematic_registry
 from psychotropic.ui import Paginator
 from psychotropic.utils import (
     format_user,
+    make_emoji_progress_bar,
     make_progress_bar,
     memoize_method,
     pretty_list,
@@ -374,7 +376,11 @@ class GamesCog(Cog, name="Games module"):
         rank = self.scoreboard.rank(member)
         ratio = profile.balance / profile.won_games if profile.won_games else 0
 
-        progress_bar = make_progress_bar(
+        structure_found_substances = len(profile.found_structure_substances)
+        structure_substances = len(schematic_registry.schematics)
+        structure_progress = structure_found_substances / structure_substances
+
+        level_progress_bar = make_progress_bar(
             profile.level_progress,
             color=profile.level["color"].to_rgb(),
             width=600,
@@ -417,9 +423,17 @@ class GamesCog(Cog, name="Games module"):
             .add_field(
                 name=localize("🎮 Won games"),
                 value=localize_fmt(
-                    "- __Structure games:__ {structure_games}\n"
-                    "- __Reagents games:__ {reagents_games}\n"
-                    "*({ratio:.2f} 🪙 / game)*",
+                    "__Structure game:__\n"
+                    "\t• Won games: **{structure_games}**\n"
+                    "\t• Found molecules: **{found_substances}** / {total_substances}\n"
+                    "\t\t` {structure_progress:.0f}% ` {structure_bar}\n"
+                    "__Reagents game:__\n"
+                    "\t• Won games: **{reagents_games}**\n\n"
+                    "*Total ratio: {ratio:.2f} 🪙 / game*",
+                    found_substances=structure_found_substances,
+                    total_substances=structure_substances,
+                    structure_progress=structure_progress,
+                    structure_bar=make_emoji_progress_bar(structure_progress),
                     structure_games=profile.won_structure_games,
                     reagents_games=profile.won_reagents_games,
                     ratio=ratio,
@@ -437,7 +451,7 @@ class GamesCog(Cog, name="Games module"):
             )
 
         with BytesIO() as buffer:
-            progress_bar.save(buffer, format="PNG")
+            level_progress_bar.save(buffer, format="PNG")
             buffer.seek(0)
             file = File(fp=buffer, filename="progress.png")
 

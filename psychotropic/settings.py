@@ -44,6 +44,15 @@ AVATAR_URL = "https://cdn.discordapp.com/avatars/665177975053877259/0532c68773e3
 
 AUTHOR_AVATAR_URL = "https://avatars.githubusercontent.com/u/62727704"
 
+PROGRESS_BAR_EMOJIS = {  # Those are to be uploaded manually in the Discord dev panel
+    ("empty", "start"): "<:pbar_empty_start:1557872481585336382>",
+    ("empty", "middle"): "<:pbar_empty_middle:1557872482680307772>",
+    ("empty", "end"): "<:pbar_empty_end:1557872483703460031>",
+    ("full", "start"): "<:pbar_full_start:1557872485062414507>",
+    ("full", "middle"): "<:pbar_full_middle:1557872486194880612>",
+    ("full", "end"): "<:pbar_full_end:1557872487700897873>",
+}
+
 
 # Science cog
 
