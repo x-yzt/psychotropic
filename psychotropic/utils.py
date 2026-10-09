@@ -169,7 +169,7 @@ def make_progress_bar(progress, color=settings.COLOUR.to_rgb(), width=256, heigh
     between 0 and 1."""
     assert 0 <= progress <= 1
 
-    image = Image.new("RGB", (width, height))
+    image = Image.new("RGBA", (width, height), "#80808066")
     draw = ImageDraw.Draw(image)
     draw.rectangle(((0, 0), (int(width * progress), height)), fill=color)
 
