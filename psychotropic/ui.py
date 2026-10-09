@@ -1,7 +1,7 @@
 from functools import partial
 
 from discord import ButtonStyle, Interaction
-from discord.ui import Button, Modal, View
+from discord.ui import Button, Modal, TextDisplay, View
 
 from psychotropic.embeds import DefaultEmbed
 from psychotropic.i18n import localize
@@ -78,3 +78,14 @@ class RetryModalView(View):
 
     async def retry(self, interaction: Interaction):
         await interaction.response.send_modal(self.modal)
+
+
+class Field(TextDisplay):
+    def __init__(self, title: str, body: str, emoji: str | None = None):
+        super().__init__(
+            "## {emoji}{title}\n{body}".format(
+                emoji=emoji + " " if emoji else "",
+                title=title,
+                body=body,
+            )
+        )

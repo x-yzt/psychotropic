@@ -10,18 +10,28 @@ from itertools import chain, count, islice
 from json import JSONDecoder, JSONEncoder
 from math import ceil
 
-from discord import ButtonStyle, Embed, File, Member, User
+from discord import ButtonStyle, File, MediaGalleryItem, Member, SeparatorSpacing, User
 from discord.app_commands import Group, Range, command
 from discord.app_commands import locale_str as _
 from discord.ext.commands import Cog
 from discord.ext.tasks import loop
-from discord.ui import View, button
+from discord.ui import (
+    Container,
+    LayoutView,
+    MediaGallery,
+    Section,
+    Separator,
+    TextDisplay,
+    Thumbnail,
+    View,
+    button,
+)
 
 from psychotropic import settings
 from psychotropic.embeds import DefaultEmbed, ErrorEmbed
 from psychotropic.i18n import get_locale, localize, localize_fmt, set_locale
 from psychotropic.providers.schematics import schematic_registry
-from psychotropic.ui import Paginator
+from psychotropic.ui import Field, Paginator
 from psychotropic.utils import (
     format_user,
     make_emoji_progress_bar,
@@ -47,6 +57,92 @@ class ReplayView(View):
         set_locale(self.locale)
 
         await self.callback(interaction)
+
+
+class ProfileView(LayoutView):
+    def __init__(self, member, profile, scoreboard):
+        super().__init__()
+
+        rank = scoreboard.rank(member)
+        rank_top = rank / len(scoreboard)
+        ratio = profile.balance / profile.won_games if profile.won_games else 0
+
+        structure_found_substances = len(profile.found_structure_substances)
+        structure_substances = len(schematic_registry.schematics)
+        structure_progress = structure_found_substances / structure_substances
+
+        container = Container(
+            Section(
+                "# 👤 " + localize_fmt("{user}'s profile", user=member),
+                accessory=Thumbnail(member.display_avatar.url),
+            ),
+            Separator(),
+            Field(
+                emoji="⚖️",
+                title=localize("Balance"),
+                body=localize_fmt("You own **{balance} 🪙**.", balance=profile.balance),
+            ),
+            Field(
+                emoji="🎚️",
+                title=localize("Level"),
+                body=localize_fmt(
+                    "You're currently at the **{lvl}** level.",
+                    lvl=profile.level["name"],
+                ),
+            ),
+            Field(
+                emoji="🏆",
+                title=localize("Rank"),
+                body=localize_fmt(
+                    "You're ranked **{rank}** out of {total} players.\n"
+                    "\u2800` Top {rank_top:.0f}% ` {rank_bar}",
+                    # Small magic trick here: 0 corresponds to an unranked player
+                    rank="🚫🥇🥈🥉"[rank] if rank <= 3 else rank,
+                    total=len(scoreboard),
+                    rank_top=rank_top * 100 if rank else "?",
+                    rank_bar=make_emoji_progress_bar(
+                        1 - rank_top if rank else 0, width=7
+                    ),
+                ),
+            ),
+            Separator(),
+            Field(
+                emoji="🎮",
+                title=localize("Won games"),
+                body=localize_fmt(
+                    "### __Structure game:__\n"
+                    "\u2800• Won games: **{structure_games}**\n"
+                    "\u2800• Found molecules: **{found_substances}** / "
+                    "{total_substances}\n"
+                    "\u2800\u2800` {structure_progress:.0f}% ` {structure_bar}\n"
+                    "### __Reagents game:__\n"
+                    "\u2800• Won games: **{reagents_games}**\n\n"
+                    "*Total ratio: {ratio:.2f} 🪙 / game*",
+                    found_substances=structure_found_substances,
+                    total_substances=structure_substances,
+                    structure_progress=structure_progress * 100,
+                    structure_bar=make_emoji_progress_bar(structure_progress, width=9),
+                    structure_games=profile.won_structure_games,
+                    reagents_games=profile.won_reagents_games,
+                    ratio=ratio,
+                ),
+            ),
+            Separator(spacing=SeparatorSpacing.large),
+            MediaGallery(MediaGalleryItem("attachment://level_progress.png")),
+            accent_color=profile.level["color"],
+        )
+
+        if profile.next_level_in != float("inf"):
+            container.add_item(
+                TextDisplay(
+                    "-# *⏫ %s*"
+                    % localize_fmt(
+                        "Next level in {amount} 🪙", amount=profile.next_level_in
+                    )
+                )
+            )
+
+        self.add_item(container)
 
 
 class BaseRunningGame:
@@ -371,14 +467,9 @@ class GamesCog(Cog, name="Games module"):
     async def profile(self, interaction, member: Member | None = None):
         """`/game profile` command"""
         member = member or interaction.user
-
         profile = self.scoreboard[member]
-        rank = self.scoreboard.rank(member)
-        ratio = profile.balance / profile.won_games if profile.won_games else 0
 
-        structure_found_substances = len(profile.found_structure_substances)
-        structure_substances = len(schematic_registry.schematics)
-        structure_progress = structure_found_substances / structure_substances
+        view = ProfileView(member=member, profile=profile, scoreboard=self.scoreboard)
 
         level_progress_bar = make_progress_bar(
             profile.level_progress,
@@ -387,75 +478,12 @@ class GamesCog(Cog, name="Games module"):
             height=40,
         )
 
-        embed = (
-            Embed(
-                title=localize_fmt("👤 {user}'s profile", user=member),
-                colour=profile.level["color"],
-            )
-            .add_field(
-                name=localize("⚖️ Balance"),
-                value=localize_fmt(
-                    "You own **{balance} 🪙**.", balance=profile.balance
-                ),
-                inline=False,
-            )
-            .add_field(
-                name=localize("🎚️ Level"),
-                value=localize_fmt(
-                    "You're currently at the **{lvl}** level.",
-                    lvl=profile.level["name"],
-                ),
-                inline=False,
-            )
-            .add_field(
-                name=localize("🏆 Rank"),
-                value=(
-                    localize_fmt(
-                        "You're ranked **{rank}** out of {total} players.",
-                        # Small magic trick here: 0 corresponds to an
-                        # unranked player
-                        rank="🚫🥇🥈🥉"[rank] if rank <= 3 else rank,
-                        total=len(self.scoreboard),
-                    )
-                ),
-                inline=False,
-            )
-            .add_field(
-                name=localize("🎮 Won games"),
-                value=localize_fmt(
-                    "__Structure game:__\n"
-                    "\t• Won games: **{structure_games}**\n"
-                    "\t• Found molecules: **{found_substances}** / {total_substances}\n"
-                    "\t\t` {structure_progress:.0f}% ` {structure_bar}\n"
-                    "__Reagents game:__\n"
-                    "\t• Won games: **{reagents_games}**\n\n"
-                    "*Total ratio: {ratio:.2f} 🪙 / game*",
-                    found_substances=structure_found_substances,
-                    total_substances=structure_substances,
-                    structure_progress=structure_progress,
-                    structure_bar=make_emoji_progress_bar(structure_progress),
-                    structure_games=profile.won_structure_games,
-                    reagents_games=profile.won_reagents_games,
-                    ratio=ratio,
-                ),
-            )
-            .set_image(url="attachment://progress.png")
-            .set_thumbnail(url=member.display_avatar.url)
-        )
-
-        if profile.next_level_in != float("inf"):
-            embed.set_footer(
-                text=localize_fmt(
-                    "⏫ Next level in {amount} 🪙", amount=profile.next_level_in
-                )
-            )
-
         with BytesIO() as buffer:
             level_progress_bar.save(buffer, format="PNG")
             buffer.seek(0)
-            file = File(fp=buffer, filename="progress.png")
+            file = File(fp=buffer, filename="level_progress.png")
 
-            await interaction.response.send_message(embed=embed, file=file)
+        await interaction.response.send_message(view=view, file=file)
 
     profile.description = _(  # type:ignore
         "Display profile information and game statistics about yourself or another "
