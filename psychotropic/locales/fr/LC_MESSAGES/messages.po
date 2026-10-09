@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  0.0.1\n"
 "Report-Msgid-Bugs-To: xyzt_\n"
-"POT-Creation-Date: 2026-02-15 02:29+0100\n"
+"POT-Creation-Date: 2026-10-09 18:20+0200\n"
 "PO-Revision-Date: 2026-01-05 16:43+0100\n"
 "Last-Translator: xyzt_\n"
 "Language: fr\n"
@@ -12,63 +12,63 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.17.0\n"
+"Generated-By: Babel 2.18.0\n"
 
-#: psychotropic/bot.py:89
+#: psychotropic/bot.py:99
 msgid "Invite me to your guild!"
 msgstr "Invite-moi sur ton serveur !"
 
-#: psychotropic/bot.py:101
+#: psychotropic/bot.py:111
 msgid "Display various informations about the Psychotropic bot."
 msgstr "Affiche diverses informations sur le bot Psychotropic."
 
-#: psychotropic/bot.py:112 psychotropic/bot.py:160
+#: psychotropic/bot.py:121 psychotropic/bot.py:168
 msgid "A Discord bot built for harm reduction and chemistry."
 msgstr "Un bot Discord conçu pour la réduction des risques et la chimie."
 
-#: psychotropic/bot.py:117
+#: psychotropic/bot.py:126
 msgid "💡 Help"
 msgstr "💡 Aide"
 
-#: psychotropic/bot.py:118
+#: psychotropic/bot.py:127
 msgid "Use `/help` to display help page."
 msgstr "Utilise `/help` pour afficher la page d'aide."
 
-#: psychotropic/bot.py:121
+#: psychotropic/bot.py:130
 msgid "🛠️ Source code & issues"
 msgstr "🛠️ Code source et tickets"
 
-#: psychotropic/bot.py:123
+#: psychotropic/bot.py:132
 #, python-brace-format
 msgid "[See them on GitHub]({url})"
 msgstr "[Voir sur GitHub]({url})"
 
-#: psychotropic/bot.py:128
+#: psychotropic/bot.py:137
 msgid "📈 Stats"
 msgstr "📈 Statistiques"
 
-#: psychotropic/bot.py:130
+#: psychotropic/bot.py:139
 #, python-brace-format
 msgid "Currently in **{len}** guilds."
 msgstr "Actuellement sur **{len}** serveurs."
 
-#: psychotropic/bot.py:134
+#: psychotropic/bot.py:143
 msgid "📄 Data providers"
 msgstr "📄 Fournisseurs de données"
 
-#: psychotropic/bot.py:143
+#: psychotropic/bot.py:152
 msgid "Psychotropic was carefully trained by xyzt_"
 msgstr "Psychotropic a été soigneusement entraîné par xyzt_"
 
-#: psychotropic/bot.py:152
+#: psychotropic/bot.py:161
 msgid "Display help about Psychotropic commands."
 msgstr "Affiche l'aide des commandes de Psychotropic."
 
-#: psychotropic/bot.py:159
+#: psychotropic/bot.py:167
 msgid "💡 Psychotropic help"
 msgstr "💡 Aide de Psychotropic"
 
-#: psychotropic/bot.py:169
+#: psychotropic/bot.py:177
 msgid "**Parameters:**"
 msgstr "**Paramètres :**"
 
@@ -109,24 +109,24 @@ msgstr "Tranquille, ça va juste prendre un an ou deux."
 msgid "Retry"
 msgstr "Réessayer"
 
-#: psychotropic/utils.py:40
+#: psychotropic/utils.py:41
 msgid "~~Deleted user~~"
 msgstr "~~Compte supprimé~~"
 
-#: psychotropic/utils.py:49
+#: psychotropic/utils.py:50
 msgid "Read more"
 msgstr "Lire la suite"
 
-#: psychotropic/cogs/combos.py:65
+#: psychotropic/cogs/combos.py:62
 #, python-brace-format
 msgid "Interaction: {title}"
 msgstr "Interaction : {title}"
 
-#: psychotropic/cogs/combos.py:71
+#: psychotropic/cogs/combos.py:68
 msgid "🚧 Warning!"
 msgstr "🚧 Avertissement !"
 
-#: psychotropic/cogs/combos.py:73
+#: psychotropic/cogs/combos.py:70
 msgid ""
 "This card is a **draft** and has not been reviewed yet.\n"
 "It can contain **erroneous** or **misleading** information. Use at your "
@@ -136,103 +136,103 @@ msgstr ""
 "Elle peut contenir des informations **erronées** ou **trompeuses**. À vos"
 " risques et périls."
 
-#: psychotropic/cogs/combos.py:81
+#: psychotropic/cogs/combos.py:78
 msgid "Substances"
 msgstr "Substances"
 
-#: psychotropic/cogs/combos.py:89
+#: psychotropic/cogs/combos.py:86
 msgid "Risks"
 msgstr "Risques"
 
-#: psychotropic/cogs/combos.py:90
+#: psychotropic/cogs/combos.py:87
 msgid "Synergy"
 msgstr "Synergie"
 
-#: psychotropic/cogs/combos.py:96
+#: psychotropic/cogs/combos.py:94
 msgid "Reliability:"
 msgstr "Fiabilité :"
 
-#: psychotropic/cogs/combos.py:105
+#: psychotropic/cogs/combos.py:103
 msgid "About risks"
 msgstr "À propos des risques"
 
-#: psychotropic/cogs/combos.py:106
+#: psychotropic/cogs/combos.py:104
 msgid "About effects"
 msgstr "À propos des effets"
 
-#: psychotropic/cogs/combos.py:117
+#: psychotropic/cogs/combos.py:115
 msgid "No data :c"
 msgstr "Pas de données :c"
 
-#: psychotropic/cogs/combos.py:121
+#: psychotropic/cogs/combos.py:119
 msgid "💡 More info"
 msgstr "💡 Plus d'infos"
 
-#: psychotropic/cogs/combos.py:123
+#: psychotropic/cogs/combos.py:121
 #, python-brace-format
 msgid "[**Read more at Mixtures.info**]({url})"
 msgstr "[**Lire la suite sur Mixtures.info**]({url})"
 
-#: psychotropic/cogs/combos.py:132
+#: psychotropic/cogs/combos.py:130
 #, python-brace-format
 msgid "{substance} interactions"
 msgstr "Interactions de la substance {substance}"
 
-#: psychotropic/cogs/combos.py:138
+#: psychotropic/cogs/combos.py:136
 msgid "☣️ About risks"
 msgstr "☣️ À propos des risques"
 
-#: psychotropic/cogs/combos.py:139
+#: psychotropic/cogs/combos.py:137
 msgid "⚡ About effects"
 msgstr "⚡ À propos des effets"
 
-#: psychotropic/cogs/combos.py:166
+#: psychotropic/cogs/combos.py:164
 msgid "Draft!"
 msgstr "Brouillon !"
 
-#: psychotropic/cogs/combos.py:182
+#: psychotropic/cogs/combos.py:180
 msgid "Show risks and effects of a substance combination."
 msgstr "Affiche les risques et effets d'une combinaison de substances."
 
-#: psychotropic/cogs/combos.py:191
+#: psychotropic/cogs/combos.py:189
 msgid "first-substance"
 msgstr "première-substance"
 
-#: psychotropic/cogs/combos.py:192
+#: psychotropic/cogs/combos.py:190
 msgid "second-substance"
 msgstr "deuxième-substance"
 
-#: psychotropic/cogs/combos.py:193
+#: psychotropic/cogs/combos.py:191
 msgid "third-substance"
 msgstr "troisième-substance"
 
-#: psychotropic/cogs/combos.py:194
+#: psychotropic/cogs/combos.py:192
 msgid "fourth-substance"
 msgstr "quatrième-substance"
 
-#: psychotropic/cogs/combos.py:218 psychotropic/cogs/combos.py:264
+#: psychotropic/cogs/combos.py:214 psychotropic/cogs/combos.py:259
 #, python-brace-format
 msgid "Can't find substance {substance}."
 msgstr "Impossible de trouver la substance {substance}."
 
-#: psychotropic/cogs/combos.py:229
+#: psychotropic/cogs/combos.py:225
 msgid "🚨 Warning!"
 msgstr "🚨 Attention !"
 
-#: psychotropic/cogs/combos.py:232
+#: psychotropic/cogs/combos.py:228
 #, python-brace-format
 msgid "{count} interactions were not found."
 msgstr "{count} interactions n'ont pas été trouvées."
 
-#: psychotropic/cogs/combos.py:235
+#: psychotropic/cogs/combos.py:231
 msgid "An interaction was not found."
 msgstr "Une interaction n'a pas été trouvée."
 
-#: psychotropic/cogs/combos.py:249
+#: psychotropic/cogs/combos.py:246
 msgid "Show a summary of interactions involving this substance."
 msgstr "Affiche un récapitulatif des interactions de cette substance."
 
-#: psychotropic/cogs/science.py:48 psychotropic/cogs/science.py:183
+#: psychotropic/cogs/science.py:48 psychotropic/cogs/science.py:185
 msgid "🧪 Dilution Calculator"
 msgstr "🧪 Calculateur de dilution"
 
@@ -293,13 +293,13 @@ msgstr "Entrez un nombre valide pour {field}."
 #: psychotropic/cogs/science.py:130
 #, python-brace-format
 msgid "{field} must be a positive number."
-msgstr "{} doit être un nombre positif."
+msgstr "{field} doit être un nombre positif."
 
-#: psychotropic/cogs/science.py:144
+#: psychotropic/cogs/science.py:146
 msgid "Please fill exactly two fields."
 msgstr "Merci de remplir exactement deux champs."
 
-#: psychotropic/cogs/science.py:158
+#: psychotropic/cogs/science.py:160
 #, python-brace-format
 msgid ""
 "Dissolving **{m} mg** of substance in **{v} mL** results in a "
@@ -308,7 +308,7 @@ msgstr ""
 "Dissoudre **{m} mg** de substance dans **{v} mL** entraîne une "
 "concentration de **{c:.3g} mg/mL**."
 
-#: psychotropic/cogs/science.py:167
+#: psychotropic/cogs/science.py:169
 #, python-brace-format
 msgid ""
 "To prepare **{v} mL** of a solution with a concentration of **{c} "
@@ -317,7 +317,7 @@ msgstr ""
 "Pour préparer **{v} mL** d'une solution concentrée à **{c} mg/mL**, il "
 "vous faut **{m:.3g} mg** de substance."
 
-#: psychotropic/cogs/science.py:176
+#: psychotropic/cogs/science.py:178
 #, python-brace-format
 msgid ""
 "To get **{m} mg** of substance from a solution of **{c} mg/mL** of "
@@ -326,32 +326,32 @@ msgstr ""
 "Pour obtenir **{m} mg** de substance depuis une solution concentrée à "
 "**{c} mg/mL**, vous devez prendre un volume de **{v:.3g} mL**."
 
-#: psychotropic/cogs/science.py:185
+#: psychotropic/cogs/science.py:187
 msgid "🟰 Result"
 msgstr "🟰 Résultat"
 
-#: psychotropic/cogs/science.py:194
+#: psychotropic/cogs/science.py:196
 msgid "📜 Formula"
 msgstr "📜 Formule"
 
-#: psychotropic/cogs/science.py:196
+#: psychotropic/cogs/science.py:198
 msgid "concentration"
 msgstr "concentration"
 
-#: psychotropic/cogs/science.py:197
+#: psychotropic/cogs/science.py:199
 msgid "mass"
 msgstr "masse"
 
-#: psychotropic/cogs/science.py:198
+#: psychotropic/cogs/science.py:200
 msgid "volume"
 msgstr "volume"
 
-#: psychotropic/cogs/science.py:234
+#: psychotropic/cogs/science.py:236
 msgid "Display information about a chemical substance or compound."
 msgstr "Affiche des informations sur une substance ou composé chimique."
 
-#: psychotropic/cogs/science.py:252 psychotropic/cogs/science.py:338
-#: psychotropic/cogs/science.py:394
+#: psychotropic/cogs/science.py:252 psychotropic/cogs/science.py:336
+#: psychotropic/cogs/science.py:390
 #, python-brace-format
 msgid "Can't find substance {substance}"
 msgstr "Impossible de trouver la substance {substance}"
@@ -364,7 +364,7 @@ msgstr "Aucune description disponible 🤔"
 msgid "Substance information: "
 msgstr "Informations sur la substance : "
 
-#: psychotropic/cogs/science.py:287 psychotropic/cogs/science.py:355
+#: psychotropic/cogs/science.py:287 psychotropic/cogs/science.py:353
 msgid "🔬 IUPAC Name"
 msgstr "🔬 Nom IUPAC"
 
@@ -372,7 +372,7 @@ msgstr "🔬 Nom IUPAC"
 msgid "🏷 Synonyms"
 msgstr "🏷 Synonymes"
 
-#: psychotropic/cogs/science.py:293 psychotropic/cogs/science.py:360
+#: psychotropic/cogs/science.py:293 psychotropic/cogs/science.py:358
 msgid "🧪 Formula"
 msgstr "🧪 Formule"
 
@@ -405,11 +405,11 @@ msgstr ""
 "Affiche le schéma d'une substance ou composé chimique. Les modes 2D et 3D"
 " sont supportés."
 
-#: psychotropic/cogs/science.py:352
+#: psychotropic/cogs/science.py:350
 msgid "Substance schematic: "
 msgstr "Schéma de la substance : "
 
-#: psychotropic/cogs/science.py:371
+#: psychotropic/cogs/science.py:369
 msgid ""
 "Display solubility information about a substance. Multiple sources of "
 "data are averaged."
@@ -417,7 +417,7 @@ msgstr ""
 "Affiche les informations de solubilité d'une substance. Plusieurs sources"
 " de données sont moyennées."
 
-#: psychotropic/cogs/science.py:376
+#: psychotropic/cogs/science.py:374
 msgid ""
 "Display solubility information about a substance. Multiple sources of "
 "experimental and predicted data are averaged to improve result accuracy. "
@@ -428,117 +428,131 @@ msgstr ""
 "la précision des résultats. Les plages de résultats sont fournies si "
 "possible."
 
-#: psychotropic/cogs/science.py:405
+#: psychotropic/cogs/science.py:401
 #, python-brace-format
 msgid "Solubility information: {name}"
 msgstr "Informations de solubilité : {name}"
 
-#: psychotropic/cogs/science.py:439
+#: psychotropic/cogs/science.py:435
 #, python-brace-format
 msgid "*({method}, {count} sources)*\n"
 msgstr "*({method}, {count} sources)*\n"
 
-#: psychotropic/cogs/science.py:449
+#: psychotropic/cogs/science.py:445
 msgid "A small dilution calculator to help with volumetric dosing."
 msgstr "Une petite calculatrice pour aider aux dilutions volumétriques."
 
-#: psychotropic/cogs/games/__init__.py:40
+#: psychotropic/cogs/games/__init__.py:53
 msgid "Play again"
 msgstr "Rejouer"
 
-#: psychotropic/cogs/games/__init__.py:120
-msgid "Another game is running in this channel!"
-msgstr "Un autre jeu est en cours dans ce canal !"
-
-#: psychotropic/cogs/games/__init__.py:122
-msgid "Please end the current game before starting another one."
-msgstr "Terminez le jeu en cours avant d'en commencer un autre."
-
-#: psychotropic/cogs/games/__init__.py:299
-msgid "Empty page"
-msgstr "Page vide"
-
-#: psychotropic/cogs/games/__init__.py:302
-msgid "🏆 Scoreboard"
-msgstr "🏆 Classement"
-
-#: psychotropic/cogs/games/__init__.py:307
-msgid "📄 Page number"
-msgstr "📄 Numéro de page"
-
-#: psychotropic/cogs/games/__init__.py:312
-msgid "Manage and play games."
-msgstr "Gérer et jouer aux jeux."
-
-#: psychotropic/cogs/games/__init__.py:331
-msgid "The `/game start` command is obsolete!"
-msgstr "La commande `/game start` est obsolète !"
-
-#: psychotropic/cogs/games/__init__.py:332
-msgid "Please use `/game structure` instead.`"
-msgstr "Utilisez plutôt `/game structure`."
-
-#: psychotropic/cogs/games/__init__.py:336
-msgid "Obsolete command. Please use `/game structure` instead."
-msgstr "Commande obsolète. Utilisez plutôt `/game structure`."
-
-#: psychotropic/cogs/games/__init__.py:353
-msgid "Show a given page of the scoreboard."
-msgstr "Affiche une page donnée du classement."
-
-#: psychotropic/cogs/games/__init__.py:374
+#: psychotropic/cogs/games/__init__.py:76
 #, python-brace-format
-msgid "👤 {user}'s profile"
-msgstr "👤 Profil de {user}"
+msgid "{user}'s profile"
+msgstr "Profil de {user}"
 
-#: psychotropic/cogs/games/__init__.py:378
-msgid "⚖️ Balance"
-msgstr "⚖️ Solde"
+#: psychotropic/cogs/games/__init__.py:82
+msgid "Balance"
+msgstr "Solde"
 
-#: psychotropic/cogs/games/__init__.py:380
+#: psychotropic/cogs/games/__init__.py:83
 #, python-brace-format
 msgid "You own **{balance} 🪙**."
 msgstr "Tu possèdes **{balance} 🪙**."
 
-#: psychotropic/cogs/games/__init__.py:385
-msgid "🎚️ Level"
-msgstr "🎚️ Niveau"
+#: psychotropic/cogs/games/__init__.py:87
+msgid "Level"
+msgstr "Niveau"
 
-#: psychotropic/cogs/games/__init__.py:387
+#: psychotropic/cogs/games/__init__.py:89
 #, python-brace-format
 msgid "You're currently at the **{lvl}** level."
 msgstr "Tu es actuellement au niveau **{lvl}**."
 
-#: psychotropic/cogs/games/__init__.py:393
-msgid "🏆 Rank"
-msgstr "🏆 Rang"
+#: psychotropic/cogs/games/__init__.py:95
+msgid "Rank"
+msgstr "Rang"
 
-#: psychotropic/cogs/games/__init__.py:396
-#, python-brace-format
-msgid "You're ranked **{rank}** out of {total} players."
-msgstr "Tu es classé **{rank}** sur {total} joueureuses."
-
-#: psychotropic/cogs/games/__init__.py:406
-msgid "🎮 Won games"
-msgstr "🎮 Parties gagnés"
-
-#: psychotropic/cogs/games/__init__.py:408
+#: psychotropic/cogs/games/__init__.py:97
 #, python-brace-format
 msgid ""
-"- __Structure games:__ {structure_games}\n"
-"- __Reagents games:__ {reagents_games}\n"
-"*({ratio:.2f} 🪙 / game)*"
+"You're ranked **{rank}** out of {total} players.\n"
+"⠀` Top {rank_top:.0f}% ` {rank_bar}"
 msgstr ""
-"- __Parties de Structure Game :__ {structure_games}\n"
-"- __Parties de Reagents Game :__ {reagents_games}\n"
-"*({ratio:.2f} 🪙 / partie)*"
+"Tu es classé·e **{rank}** sur {total} joueureuses.\n"
+"⠀` Top {rank_top:.0f}% ` {rank_bar}"
 
-#: psychotropic/cogs/games/__init__.py:423
+#: psychotropic/cogs/games/__init__.py:111
+msgid "Won games"
+msgstr "Parties gagnés"
+
+#: psychotropic/cogs/games/__init__.py:113
 #, python-brace-format
-msgid "⏫ Next level in {amount} 🪙"
+msgid ""
+"### __Structure game:__\n"
+"⠀• Won games: **{structure_games}**\n"
+"⠀• Found molecules: **{found_substances}** / {total_substances}\n"
+"⠀⠀` {structure_progress:.0f}% ` {structure_bar}\n"
+"### __Reagents game:__\n"
+"⠀• Won games: **{reagents_games}**\n"
+"\n"
+"*Total ratio: {ratio:.2f} 🪙 / game*"
+msgstr ""
+"### __Structure game:__\n"
+"⠀• Parties gagnées : **{structure_games}**\n"
+"⠀• Molécules trouvées : **{found_substances}** / {total_substances}\n"
+"⠀⠀` {structure_progress:.0f}% ` {structure_bar}\n"
+"### __Reagents game:__\n"
+"⠀• Parties gagnées : **{reagents_games}**\n"
+"\n"
+"*Ratio total: {ratio:.2f} 🪙 / partie*"
+
+#: psychotropic/cogs/games/__init__.py:140
+#, python-brace-format
+msgid "Next level in {amount} 🪙"
 msgstr "Prochain niveau dans {amount} 🪙"
 
-#: psychotropic/cogs/games/__init__.py:435
+#: psychotropic/cogs/games/__init__.py:224
+msgid "Another game is running in this channel!"
+msgstr "Un autre jeu est en cours dans ce canal !"
+
+#: psychotropic/cogs/games/__init__.py:226
+msgid "Please end the current game before starting another one."
+msgstr "Terminez le jeu en cours avant d'en commencer un autre."
+
+#: psychotropic/cogs/games/__init__.py:415
+msgid "Empty page"
+msgstr "Page vide"
+
+#: psychotropic/cogs/games/__init__.py:418
+msgid "🏆 Scoreboard"
+msgstr "🏆 Classement"
+
+#: psychotropic/cogs/games/__init__.py:423
+msgid "📄 Page number"
+msgstr "📄 Numéro de page"
+
+#: psychotropic/cogs/games/__init__.py:428
+msgid "Manage and play games."
+msgstr "Gérer et jouer aux jeux."
+
+#: psychotropic/cogs/games/__init__.py:445
+msgid "The `/game start` command is obsolete!"
+msgstr "La commande `/game start` est obsolète !"
+
+#: psychotropic/cogs/games/__init__.py:446
+msgid "Please use `/game structure` instead.`"
+msgstr "Utilisez plutôt `/game structure`."
+
+#: psychotropic/cogs/games/__init__.py:450
+msgid "Obsolete command. Please use `/game structure` instead."
+msgstr "Commande obsolète. Utilisez plutôt `/game structure`."
+
+#: psychotropic/cogs/games/__init__.py:465
+msgid "Show a given page of the scoreboard."
+msgstr "Affiche une page donnée du classement."
+
+#: psychotropic/cogs/games/__init__.py:488
 msgid ""
 "Display profile information and game statistics about yourself or another"
 " player."
@@ -546,15 +560,15 @@ msgstr ""
 "Affiche ton profil et tes statistiques de jeu, ou celles d'une autre "
 "personne."
 
-#: psychotropic/cogs/games/__init__.py:448
+#: psychotropic/cogs/games/__init__.py:500
 msgid "There is no game running in this channel!"
 msgstr "Il n'y a pas de jeu en cours dans ce canal !"
 
-#: psychotropic/cogs/games/__init__.py:456
+#: psychotropic/cogs/games/__init__.py:508
 msgid "You are not allowed to end this game!"
 msgstr "Tu n'es pas autorisé à terminer ce jeu !"
 
-#: psychotropic/cogs/games/__init__.py:458
+#: psychotropic/cogs/games/__init__.py:510
 msgid ""
 "You need to own this game or have permission to manage messages in this "
 "channel."
@@ -562,7 +576,7 @@ msgstr ""
 "Tu dois avoir commencé ce jeu ou avoir la permission de gérer les "
 "messages dans ce canal."
 
-#: psychotropic/cogs/games/__init__.py:469
+#: psychotropic/cogs/games/__init__.py:520
 msgid ""
 "End a running game. You must either own it or have permission to manage "
 "messages in this channel."
@@ -571,58 +585,58 @@ msgstr ""
 "messages dans ce canal."
 
 #: psychotropic/cogs/games/reagents.py:91
-#: psychotropic/cogs/games/structure.py:172
+#: psychotropic/cogs/games/structure.py:99
 #, python-brace-format
 msgid "✅ Correct answer, {user}!"
 msgstr "✅ Bonne réponse, {user} !"
 
 #: psychotropic/cogs/games/reagents.py:93
-#: psychotropic/cogs/games/structure.py:175
+#: psychotropic/cogs/games/structure.py:102
 #, python-brace-format
 msgid "Well played! The answer was **{answer}**."
 msgstr "Bien joué ! La réponse était **{answer}**."
 
 #: psychotropic/cogs/games/reagents.py:99
-#: psychotropic/cogs/games/structure.py:182
+#: psychotropic/cogs/games/structure.py:109
 msgid "⏱️ Elapsed time"
 msgstr "⏱️ Temps écoulé"
 
 #: psychotropic/cogs/games/reagents.py:101
-#: psychotropic/cogs/games/structure.py:184
+#: psychotropic/cogs/games/structure.py:111
 #, python-brace-format
 msgid "You answered in {time:.2f} seconds."
 msgstr "Tu as répondu en {time:.2f} secondes."
 
 #: psychotropic/cogs/games/reagents.py:105
-#: psychotropic/cogs/games/structure.py:188
+#: psychotropic/cogs/games/structure.py:115
 msgid "🪙 Reward"
 msgstr "🪙 Récompense"
 
 #: psychotropic/cogs/games/reagents.py:107
-#: psychotropic/cogs/games/structure.py:190
+#: psychotropic/cogs/games/structure.py:117
 #, python-brace-format
 msgid "You won **{amount} coins**."
 msgstr "Tu as gagné **{amount} pièces**."
 
 #: psychotropic/cogs/games/reagents.py:113
-#: psychotropic/cogs/games/structure.py:196
+#: psychotropic/cogs/games/structure.py:123
 msgid "🥇 First try bonus!"
 msgstr "🥇 Du premier coup !"
 
 #: psychotropic/cogs/games/reagents.py:114
-#: psychotropic/cogs/games/structure.py:197
+#: psychotropic/cogs/games/structure.py:124
 msgid "Yay!"
 msgstr "Chouette !"
 
 #: psychotropic/cogs/games/reagents.py:127
-#: psychotropic/cogs/games/structure.py:222
+#: psychotropic/cogs/games/structure.py:149
 msgid "😔 No one found the solution."
 msgstr "😔 Personne n'a trouvé la solution."
 
 #: psychotropic/cogs/games/reagents.py:129
-#: psychotropic/cogs/games/reagents.py:281
-#: psychotropic/cogs/games/structure.py:224
-#: psychotropic/cogs/games/structure.py:256
+#: psychotropic/cogs/games/reagents.py:279
+#: psychotropic/cogs/games/structure.py:151
+#: psychotropic/cogs/games/structure.py:183
 #, python-brace-format
 msgid "The answer was **{answer}**."
 msgstr "La réponse était **{answer}**."
@@ -640,74 +654,74 @@ msgstr "Pouvez-vous trouver ce que c'est ?"
 msgid "Wow, shady stuff..."
 msgstr "Wow, c'est louche..."
 
-#: psychotropic/cogs/games/reagents.py:179
+#: psychotropic/cogs/games/reagents.py:177
 msgid "Reaction error 💣"
 msgstr "Erreur de réaction 💣"
 
-#: psychotropic/cogs/games/reagents.py:181
+#: psychotropic/cogs/games/reagents.py:179
 #, python-brace-format
 msgid "Sadly I can't perform a {reagent} test on this mysterious substance."
 msgstr ""
 "Déso, je ne peux pas faire de test {reagent} sur cette mystérieuse "
 "substance."
 
-#: psychotropic/cogs/games/reagents.py:193
+#: psychotropic/cogs/games/reagents.py:191
 #, python-brace-format
 msgid "⚗️ {reagent} test results"
 msgstr "⚗️ Résultats du test {reagent}"
 
-#: psychotropic/cogs/games/reagents.py:197
+#: psychotropic/cogs/games/reagents.py:195
 msgid "🔎 Observed results"
 msgstr "🔎 Résultats observés"
 
-#: psychotropic/cogs/games/reagents.py:200
+#: psychotropic/cogs/games/reagents.py:198
 msgid "Mhh..."
 msgstr "Hum..."
 
-#: psychotropic/cogs/games/reagents.py:205
+#: psychotropic/cogs/games/reagents.py:203
 msgid "🎁 I'll treat you!"
 msgstr "🎁 Je t'invite !"
 
-#: psychotropic/cogs/games/reagents.py:207
+#: psychotropic/cogs/games/reagents.py:205
 #, python-brace-format
 msgid "{user} was low on 🪙, I gave them a reagent."
 msgstr "{user} est à court de 🪙, je lui offre un réactif."
 
-#: psychotropic/cogs/games/reagents.py:214
+#: psychotropic/cogs/games/reagents.py:212
 msgid "💸 Thank you!"
 msgstr "💸 Merci !"
 
-#: psychotropic/cogs/games/reagents.py:216
+#: psychotropic/cogs/games/reagents.py:214
 #, python-brace-format
 msgid "{user} paid {cost} 🪙 for the reagent."
 msgstr "{user} a payé {cost} 🪙 pour le réactif."
 
-#: psychotropic/cogs/games/reagents.py:244
+#: psychotropic/cogs/games/reagents.py:242
 msgid "Buy and use a reagent..."
 msgstr "Acheter et utiliser un réactif..."
 
-#: psychotropic/cogs/games/reagents.py:258
+#: psychotropic/cogs/games/reagents.py:256
 #, python-brace-format
 msgid "{reagent} test"
 msgstr "Réactif {reagent}"
 
-#: psychotropic/cogs/games/reagents.py:260
+#: psychotropic/cogs/games/reagents.py:258
 #, python-brace-format
 msgid "Buy and use this test for {cost} 🪙"
 msgstr "Acheter et utiliser ce test pour {cost} 🪙"
 
-#: psychotropic/cogs/games/reagents.py:277
-#: psychotropic/cogs/games/structure.py:254
+#: psychotropic/cogs/games/reagents.py:275
+#: psychotropic/cogs/games/structure.py:181
 #, python-brace-format
 msgid "🛑 {user} ended the game."
 msgstr "🛑 {user} a mis fin à la partie."
 
-#: psychotropic/cogs/games/reagents.py:299
-#: psychotropic/cogs/games/structure.py:280
+#: psychotropic/cogs/games/reagents.py:298
+#: psychotropic/cogs/games/structure.py:207
 msgid "What's that?"
 msgstr "Qu'est-ce que c'est ?"
 
-#: psychotropic/cogs/games/reagents.py:338
+#: psychotropic/cogs/games/reagents.py:334
 msgid ""
 "Start a new Reagents Game. The first player who guess the substance in "
 "the chat wins."
@@ -715,7 +729,7 @@ msgstr ""
 "Commence une partie de Reagents Game. La première personne à nommer la "
 "substance dans le chat gagne."
 
-#: psychotropic/cogs/games/reagents.py:343
+#: psychotropic/cogs/games/reagents.py:340
 msgid ""
 "Start a new Reagents Game. The bot will pick a random substance, and "
 "players can use reagents to identify it. The first player who guess the "
@@ -732,28 +746,28 @@ msgstr ""
 "Effectuer le test coûte quelques pièces (🪙), mais trouver la réponse sera"
 " récompensé !"
 
-#: psychotropic/cogs/games/structure.py:214
+#: psychotropic/cogs/games/structure.py:141
 msgid "💡 Here's a bit of help:"
 msgstr "💡 Voici un petit indice :"
 
-#: psychotropic/cogs/games/structure.py:241
+#: psychotropic/cogs/games/structure.py:168
 #, python-brace-format
 msgid "🚀 {user} started a new game!"
 msgstr "🚀 {user} a démarré une nouvelle partie !"
 
-#: psychotropic/cogs/games/structure.py:242
+#: psychotropic/cogs/games/structure.py:169
 msgid "What substance is this?"
 msgstr "Quelle est cette substance ?"
 
-#: psychotropic/cogs/games/structure.py:325
+#: psychotropic/cogs/games/structure.py:250
 msgid "The Structure Game is warming up"
 msgstr "Le Structure Game est en cours de préparation"
 
-#: psychotropic/cogs/games/structure.py:326
+#: psychotropic/cogs/games/structure.py:251
 msgid "Please retry in a few moments!"
 msgstr "Réessaie dans quelques instants !"
 
-#: psychotropic/cogs/games/structure.py:334
+#: psychotropic/cogs/games/structure.py:258
 msgid ""
 "Start a new Structure Game. The first player to guess the molecule in the"
 " chat wins."
@@ -761,7 +775,7 @@ msgstr ""
 "Démarre une partie de Structure Game. La première personne à deviner la "
 "molécule dans le chat gagne."
 
-#: psychotropic/cogs/games/structure.py:339
+#: psychotropic/cogs/games/structure.py:264
 msgid ""
 "Start a new Structure Game. The bot will pick a random molecule "
 "schematic, and the first player to write its name in the chat wins.\n"
@@ -828,4 +842,3 @@ msgstr "supposée"
 #: psychotropic/providers/mixtures.py:111
 msgid "proven"
 msgstr "avérée"
-
